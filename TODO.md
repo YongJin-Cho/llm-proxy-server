@@ -37,7 +37,7 @@
   - Artifact: `spec/AC.md`
   - Depends: T-003
 
-- [ ] **T-005** — AC별 설계 결정 및 ADR/Direct Input 기록
+- [x] **T-005** — AC별 설계 결정 및 ADR/Direct Input 기록
   - Phase: ③ AC review
   - Artifact: `spec/AC.md`, `adr/`
   - Depends: T-004

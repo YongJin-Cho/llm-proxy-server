@@ -26,13 +26,13 @@
 - [ ] **PB-005** — 트래픽 모니터링 웹 UI
   - Story: localhost 웹 UI에서 저장 로그 목록을 최신순으로 확인하고 상태·모델·기간 필터, 페이지네이션, 요청·응답·메타데이터·오류 상세를 볼 수 있다.
   - Spec: `spec/llm-proxy-server.md` §Requirements R-008–R-009; §Constraints C-005–C-006
-  - Sprint: sprint-01
+  - Sprint: sprint-02
   - Depends: PB-004
 
 - [ ] **PB-006** — 자동화된 핵심 동작 검증과 실행 문서
   - Story: 정상·실패 프록시, SSE, 저장·조회, 마스킹, UI 목록·상세를 자동화된 검증으로 재현하고 단일 프로세스 실행 설정을 문서화한다.
   - Spec: `spec/llm-proxy-server.md` §Requirements R-010–R-011; §Constraints C-007–C-008
-  - Sprint: sprint-01
+  - Sprint: sprint-02
   - Depends: PB-002, PB-003, PB-004, PB-005
 
 - [x] **PB-001** — 초기 제품 백로그 생성
