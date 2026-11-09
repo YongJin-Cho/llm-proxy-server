@@ -21,11 +21,17 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 | ASR-013 | 독립 API adapter contract | AC-011 | AC-011 | — |
 | ASR-014 | API write와 UI read port 분리 | AC-012 | AC-012 | adr/api-log-write-ui-read-boundary.md |
 | ASR-015 | Migration·회귀·실행 검증 기준 | AC-013 | AC-013 | — |
+| ASR-016 | 다중 API public contract와 payload 변환 경계 | AC-014 | AC-014 | adr/multi-api-contract-adapter-boundary.md |
+| ASR-017 | Claude provider 인증·header 설정 계약 | AC-015 | AC-015 | adr/claude-provider-authentication-headers.md |
+| ASR-018 | API별 streaming 종료·오류 계약 | AC-016 | AC-016 | adr/api-streaming-completion-and-error-contract.md |
+| ASR-019 | 다중 API traffic log metadata 정규화 | AC-017 | AC-017 | adr/traffic-log-api-metadata.md |
+| ASR-020 | Token usage·cost metadata 추출과 저장 | AC-018 | AC-018 | adr/usage-and-cost-metadata.md |
 
 ## Dependency Order (recommended Spec encoding path)
 
 1. ASR-001 → ASR-002 → ASR-003 → ASR-004 → ASR-005 → ASR-006 → ASR-007 → ASR-008 → ASR-009
 2. ASR-010 → ASR-011 → ASR-012 → ASR-013 → ASR-014 → ASR-015
+3. ASR-016 → ASR-017 → ASR-018 → ASR-019 → ASR-020
 
 ## ASR Detail
 
@@ -139,6 +145,46 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 - **Depends on:** ASR-010, ASR-011, ASR-012, ASR-013, ASR-014
 - **Related AC:** AC-013
 
+### ASR-016 — 다중 API public contract와 payload 변환 경계
+- **Source:** AC-014 — 다중 API public contract와 payload 변환 경계
+- **Statement:** Responses, OpenAI Chat Completions, Claude Messages는 각 public API 계약과 provider endpoint 계약을 가능한 한 투명하게 전달한다. Proxy는 API 간 canonical payload 변환을 수행하지 않으며, provider 오류는 client가 식별 가능한 오류와 로그 상태로 전달한다.
+- **Decision summary:** Option A — Transparent pass-through.
+- **Depends on:** ASR-013
+- **Related AC:** AC-014
+- **Related ADRs:** `adr/multi-api-contract-adapter-boundary.md` — approved
+
+### ASR-017 — Claude provider 인증·header 설정 계약
+- **Source:** AC-015 — Claude provider 인증·header 설정 계약
+- **Statement:** Upstream 인증은 Bearer를 기본으로 사용한다. 공식 Anthropic endpoint처럼 native 인증이 필요한 provider는 설정된 `anthropic` mode에 따라 `x-api-key`와 `anthropic-version`을 사용한다. 기존 `apiKeyEnv` 환경변수 secret loading과 redaction 정책을 유지한다.
+- **Decision summary:** Bearer default with explicitly configured native Anthropic mode.
+- **Depends on:** ASR-012
+- **Related AC:** AC-015
+- **Related ADRs:** `adr/claude-provider-authentication-headers.md` — approved
+
+### ASR-018 — API별 streaming 종료·오류 계약
+- **Source:** AC-016 — API별 streaming 종료·오류 계약
+- **Statement:** API kind별 정상 종료를 감지하면서 원본 SSE bytes는 투명하게 전달한다. Responses는 `response.completed` 또는 `[DONE]`, Chat Completions는 `[DONE]`, Claude Messages는 `message_stop`을 정상 종료 기준으로 사용한다. 조기 종료, upstream 오류, client disconnect는 `failed`로 기록하고 부분 결과를 보존한다.
+- **Decision summary:** Option A — API-specific completion detectors with transparent streaming.
+- **Depends on:** ASR-016
+- **Related AC:** AC-016
+- **Related ADRs:** `adr/api-streaming-completion-and-error-contract.md` — approved
+
+### ASR-019 — 다중 API traffic log metadata 정규화
+- **Source:** AC-017 — 다중 API traffic log metadata 정규화
+- **Statement:** Traffic log domain model과 SQLite table에 first-class `api_kind` column을 추가하고 Responses, Chat Completions, Messages를 구분한다. 기존 Responses row는 migration 시 `responses` 기본값을 사용한다. API별 raw request/response body는 기존 bounded JSON/text 정책으로 보존한다.
+- **Decision summary:** Option B — Add first-class `api_kind` column.
+- **Depends on:** ASR-016, ASR-018
+- **Related AC:** AC-017
+- **Related ADRs:** `adr/traffic-log-api-metadata.md` — approved
+
+### ASR-020 — Token usage·cost metadata 추출과 저장
+- **Source:** AC-018 — Token usage·cost metadata 추출과 저장
+- **Statement:** API별 usage 응답을 `input_tokens`, `cached_input_tokens`, `output_tokens`로 정규화하고 `total_tokens = input_tokens + output_tokens`로 계산한다. `cost_usd`는 provider가 명시한 USD 비용만 저장하며, 비용이 없거나 통화가 불명확하면 `NULL`로 둔다. Proxy-owned pricing table은 도입하지 않는다.
+- **Decision summary:** Option A — Provider-reported cost only.
+- **Depends on:** ASR-019
+- **Related AC:** AC-018
+- **Related ADRs:** `adr/usage-and-cost-metadata.md` — approved
+
 ## Approval
 
 - 2026-03-10: 기존 ASR-001~ASR-009 승인.
@@ -148,3 +194,4 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 
 - 2026-03-10: 모든 blocking AC와 승인된 ADR을 PRD의 제품 요구사항과 함께 통합했다.
 - 2026-03-10: sprint-02 delta의 AC-008~AC-013 결과를 ASR-010~ASR-015로 append했다.
+- 2026-03-10: Sprint 07의 승인된 AC-014~AC-018과 관련 ADR 결과를 ASR-016~ASR-020으로 통합했다. ASR approval gate 대기 중.

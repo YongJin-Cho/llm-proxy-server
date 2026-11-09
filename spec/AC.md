@@ -23,7 +23,7 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 | AC-015 | Claude provider 인증·header 설정 계약 | Integration & dependencies | designed | adr/claude-provider-authentication-headers.md | ASR-017 |
 | AC-016 | API별 streaming 종료·오류 계약 | Constraints (structural) | designed | adr/api-streaming-completion-and-error-contract.md | ASR-018 |
 | AC-017 | 다중 API traffic log metadata 정규화 | Structure & organization | designed | adr/traffic-log-api-metadata.md | ASR-019 |
-| AC-018 | Token usage·cost metadata 추출과 저장 | Integration & dependencies | reviewing | adr/usage-and-cost-metadata.md | — |
+| AC-018 | Token usage·cost metadata 추출과 저장 | Integration & dependencies | designed | adr/usage-and-cost-metadata.md | ASR-020 |
 
 ## Dependency Order (recommended review path)
 
@@ -238,14 +238,14 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 ### AC-018 — Token usage·cost metadata 추출과 저장
 
 - **Category:** Integration & dependencies
-- **Status:** reviewing
+- **Status:** designed
 - **Statement:** Responses, Chat Completions, Claude Messages의 서로 다른 usage 응답에서 input tokens, cached input tokens, output tokens, total tokens 및 dollar cost를 어떻게 추출·정규화·저장할 것인가?
 - **Why it matters:** API별 usage 필드명이 다르고 cost는 provider가 직접 제공하지 않거나 모델별 가격표가 필요할 수 있어, 잘못된 계산은 운영·비용 판단을 왜곡한다.
 - **Depends on:** AC-014, AC-017
 - **Related ADRs:**
-  - `adr/usage-and-cost-metadata.md` — proposed
-- **Resolution path:** adr
-- **Resolution:**
+  - `adr/usage-and-cost-metadata.md` — approved
+  - **Resolution path:** adr
+  - **Resolution:** Option A — provider-reported cost only. API별 usage를 `input_tokens`, `cached_input_tokens`, `output_tokens`로 정규화하고 `total_tokens = input_tokens + output_tokens`로 계산한다. `cost_usd`는 provider가 명시한 USD 비용만 저장하며, 비용이 없거나 통화가 불명확하면 `NULL`로 둔다. Proxy-owned pricing table은 도입하지 않는다.
 
 ## Notes
 

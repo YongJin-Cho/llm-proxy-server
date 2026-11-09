@@ -4,7 +4,7 @@
 Responses, Chat Completions, Claude Messages의 서로 다른 usage 응답에서 token usage와 dollar cost를 어떻게 추출·정규화·저장할 것인가?
 
 ## Status
-proposed
+approved
 
 ## Context
 - 사용자는 `input_tokens`, `cached_input_tokens`, `output_tokens`, `total_tokens`, `cost ($)`를 응답에서 추출해 별도 저장하기를 원한다.
@@ -14,6 +14,7 @@ proposed
 - provider가 cost를 직접 응답하지 않을 수 있으며, proxy가 모델별 요금표를 관리하면 가격 변경·provider별 할인·통화 기준을 책임져야 한다.
 
 ## Decision
+**Option A — Provider-reported cost only.** Token usage는 API별 응답에서 정규화하되, `cost_usd`는 provider가 명시한 USD 비용만 저장하고 비용이 없거나 통화가 불명확하면 `NULL`로 둔다. Proxy-owned pricing table은 도입하지 않는다.
 
 ## Options
 ### Option A — Provider-reported cost only
@@ -55,7 +56,7 @@ proposed
 - [x] **directly resolved — Pricing table:** 이번 범위에서는 proxy-owned pricing table을 도입하지 않는다.
 - [x] **directly resolved — Currency:** 저장 cost는 provider가 USD로 명시한 값만 `cost_usd`에 저장한다. 통화가 불명확하면 `NULL`이다.
 - [x] **covered — Secret and body policy:** usage와 cost도 기존 redaction·body size limit 정책을 따른다.
-- [ ] **ADR candidate — API-specific usage field map:** 실제 구현 시 필드 위치가 API 계약으로 명확하지 않은 provider가 있으면 구현 task에서 field map을 확정한다.
+- [x] **deferred assumption — API-specific usage field map:** 각 API의 공식 응답 계약에 따라 구현 Spec과 implementation task에서 field map을 확정한다. provider 계약이 불명확해 별도 설계 trade-off가 생길 때만 ADR을 추가한다.
 
 ## Related
 - `spec/AC.md` — AC-017, AC-018
@@ -64,3 +65,4 @@ proposed
 
 ## Notes
 - 2026-03-10: 사용자 요구로 token usage와 cost metadata를 별도 저장하는 AC-018을 추가하고 세 가지 cost source 전략을 비교하는 proposed ADR을 작성했다.
+- 2026-03-10: 사용자 go-ahead("A로해줘")로 Status → approved; Option A를 선택하고 provider-reported USD cost only 및 미제공·불명확 통화 시 `NULL` 정책을 확정했다.
