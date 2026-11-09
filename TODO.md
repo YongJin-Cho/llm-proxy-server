@@ -1,7 +1,7 @@
 # TODO: LLM Proxy Server
 
 > **Project root:** `llm-proxy-server`
-> **Current sprint:** sprint-04 — [모듈 분리·소스 구조 정리와 실행 검증 완성](./scrum/sprint-04.md)
+> **Current sprint:** sprint-05 — [Provider 라우팅과 로그 access 경계 완성](./scrum/sprint-05.md)
 > **Product Backlog:** [`scrum/product-backlog.md`](./scrum/product-backlog.md)
 
 ## Snapshot
@@ -10,69 +10,71 @@
 |------|------|---------|---------|
 | 6 | 2 | 0 | 0 |
 
-**Sprint goal:** React source를 `src/ui/`로 정리하고 module extraction, AGENTS.md, 실행 문서와 자동화 검증을 완성한다.
+**Sprint goal:** 설정 기반 provider/model routing과 writer/read access 경계를 완성하고 기존 proxy·SSE·log·UI 동작을 보존한다.
 **Current focus:** T-007 — Sprint completion review
 **Recommended next:** T-007 — Sprint completion review
 
 ## Tasks
 
-- [x] **T-001** — AGENTS.md 및 UI source 위치 정리
+- [x] **T-001** — provider/model routing configuration
   - Phase: ⑦ Implementation
-  - Artifact: `AGENTS.md`, `src/ui/`, `ui/`, `vite.config.ts`
+  - Artifact: `src/configuration.ts`, `src/application/`
   - Depends: —
-  - Notes: `AGENTS.md` 생성, React source를 `src/ui/`로 이동, `ui/` 중복 source 제거, Vite 경로 갱신 및 `npm run build` 통과.
+  - Notes: `CONFIG_PATH` JSON의 providers/models schema와 환경변수 secret 참조를 도입하고 legacy `PROVIDER_URL`/`PROVIDER_API_KEY` 실행을 유지했다. 시작 시 provider/model 설정을 검증한다.
 
-- [x] **T-002** — server module extraction
+- [x] **T-002** — routing-aware proxy forwarding and error handling
   - Phase: ⑦ Implementation
-  - Artifact: `src/`
+  - Artifact: `src/application/proxy-service.ts`, `src/api/routes.ts`
   - Depends: T-001
-  - Notes: configuration/domain/persistence/application/api/delivery 모듈 생성 및 server bootstrap 교체. `npm run build` 통과.
+  - Notes: model별 endpoint와 provider model payload 변환, 미등록 model·잘못된 routing 오류를 provider 호출 전에 처리하고 provider key는 Authorization으로만 전달한다. `npm run build` 통과.
 
-- [x] **T-003** — writer/reader port와 SQLite adapter 연결
+- [x] **T-003** — writer/read access boundary verification
   - Phase: ⑦ Implementation
-  - Artifact: `src/domain/`, `src/persistence/`, `src/application/`
+  - Artifact: `src/domain/`, `src/persistence/`, `src/api/`, `src/application/`
   - Depends: T-002
-  - Notes: `TrafficLogWriter`/`TrafficLogReader` port와 `SqliteTrafficLogStore` adapter 연결. `npm run verify`에서 persistence, masking, query 검증 통과.
+  - Notes: `ProxyService → TrafficLogWriter`, `TrafficLogQueryService → TrafficLogReader`, `routes → query service` 경계를 반영했다. SQLite adapter는 두 port의 concrete implementation이며 route/application에 SQL import가 없다. `npm run build` 통과.
 
-- [x] **T-004** — 실행 문서와 검증 보강
-  - Phase: ⑦ Implementation / ⑧ Verification
-  - Artifact: `README.md`, `scripts/verify.mjs`, `verification/llm-proxy-server.md`
+- [x] **T-004** — migration and runtime documentation
+  - Phase: ⑦ Implementation
+  - Artifact: `README.md`, `AGENTS.md`, `verification/llm-proxy-server.md`
   - Depends: T-003
-  - Notes: 설정·secret·SQLite·host/port·build/start 절차와 verification evidence를 기록했다.
+  - Notes: README에 `CONFIG_PATH` schema·secret handling·routing 오류를 기록하고 AGENTS/verification에 현재 module map과 access boundary를 반영했다.
 
-- [x] **T-005** — build·verify 및 PB-005/PB-006/PB-007 검증
+- [x] **T-005** — automated routing and regression verification
   - Phase: ⑧ Verification
-  - Artifact: `verification/llm-proxy-server.md`
+  - Artifact: `scripts/verify.mjs`, `verification/llm-proxy-server.md`
   - Depends: T-004
-  - Notes: `npm run build`, `npm run verify` 통과; C-008/R-016 partial을 해소했다.
+  - Notes: `npm run verify` 통과. 두 provider routing, provider model mapping, unknown model rejection, provider secret header, redaction, SQLite read/write boundary를 자동 검증했다.
 
-- [x] **T-006** — Demo checklist 확인
-  - Phase: gate
-  - Artifact: `scrum/sprint-04.md`
+- [x] **T-006** — Sprint 05 Demo checklist
+  - Phase: demo
+  - Artifact: `scrum/sprint-05.md`, `verification/llm-proxy-server.md`
   - Depends: T-005
-  - Notes: source placement, module map, bootstrap, ports/adapter, 회귀 검증, 실행 문서를 확인했다.
+  - Notes: `npm run build`와 `npm run verify` 통과. config.json runtime 설정, 두 provider routing, model mapping, unknown model rejection, secret redaction, SQLite read/write boundary를 확인했다.
 
 - [ ] **T-007** — Sprint completion review
   - Phase: gate
   - Artifact: `TODO.md`, `verification/llm-proxy-server.md`
   - Depends: T-006
 
-- [ ] **T-008** — Sprint Boundary → sprint-05
+- [ ] **T-008** — Sprint Boundary → sprint-06
   - Phase: cross-cutting
-  - Artifact: `scrum/TODO-04.md`
+  - Artifact: `scrum/TODO-05.md`
   - Depends: T-001, T-002, T-003, T-004, T-005, T-006, T-007
-  - Notes: completion 승인 후 archive하고 다음 구현 slice를 계획한다.
+  - Notes: completion 승인 후 archive하고 다음 slice를 계획한다.
 
 ## Completed sprints
 
 | Sprint | Goal | Closed | Archive |
-|--------|------|---------|---------|
+|--------|------|--------|---------|
 | 00 | 초기 제품 백로그 정의 | 2026-03-10 | [`scrum/TODO-00.md`](./scrum/TODO-00.md) |
 | 01 | LLM Proxy MVP 구현 | 2026-03-10 | [`scrum/TODO-01.md`](./scrum/TODO-01.md) |
 | 02 | 확장 가능한 아키텍처 설계와 백로그 갱신 | 2026-03-10 | [`scrum/TODO-02.md`](./scrum/TODO-02.md) |
 | 03 | 승인된 구조 기반 UI 구현과 검증 기반 구축 | 2026-03-10 | [`scrum/TODO-03.md`](./scrum/TODO-03.md) |
+| 04 | 모듈 분리·소스 구조 정리와 실행 검증 완성 | 2026-03-10 | [`scrum/TODO-04.md`](./scrum/TODO-04.md) |
 
 ## Notes
 
-- 2026-03-10: sprint-04 계획 수정 및 사용자 재승인 완료.
-- React source를 `src/ui/`로 이동하고 `AGENTS.md`를 생성·관리하는 범위를 포함한다.
+- 2026-03-10: Sprint 05 Goal, Scope, DoD, Demo Checklist 사용자 승인 완료.
+- 2026-03-10: 승인된 Scope로 Execute 시작. T-001 provider/model routing configuration이 현재 작업이다.
+- 2026-03-10: Spec 재확인 후 config.json 기반 runtime 설정으로 구현·문서·verify를 정렬했고 T-006 Demo checklist를 완료했다.

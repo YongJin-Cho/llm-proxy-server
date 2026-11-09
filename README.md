@@ -4,51 +4,55 @@
 
 ## 실행
 
-### 설정 파일과 환경변수
+### config.json과 secret 환경변수
 
-현재 실행 설정은 환경변수로 로드됩니다. 기본값을 사용하면 `HOST=127.0.0.1`, `PORT=3000`, `SQLITE_PATH=./data/traffic.db`, `MAX_BODY_BYTES=65536`입니다. Provider URL은 `PROVIDER_URL`, secret은 평문 설정 파일이 아닌 `PROVIDER_API_KEY` 환경변수로 제공합니다.
-
+모든 runtime 설정은 프로젝트 루트의 `config.json`에서 로드합니다. 기본 파일은 host, port, SQLite 경로, body size limit, provider endpoint, model routing을 정의합니다. API key 값 자체는 파일에 저장하지 않으며, provider의 `apiKeyEnv`가 지정한 process environment 변수에서만 읽습니다.
 
 ```bash
 npm install
-PROVIDER_URL=https://api.openai.com/v1/responses \
-PROVIDER_API_KEY=sk-... \
-SQLITE_PATH=./data/traffic.db \
-PORT=3000 \
-npm run build && npm start
+export OPENROUTER_API_KEY=sk-...
+npm run build
+npm start
 ```
 
-기본 바인딩 주소는 `127.0.0.1`이며 다음 환경변수로 변경할 수 있습니다.
+기본 `config.json`은 다음과 같습니다.
 
-- `HOST`: 수신 주소 (기본값 `127.0.0.1`)
-- `PORT`: 수신 포트 (기본값 `3000`)
-- `PROVIDER_URL`: Provider Responses API URL
-- `PROVIDER_API_KEY`: Provider 인증 키
-- `SQLITE_PATH`: SQLite 파일 경로 (기본값 `./data/traffic.db`)
-- `MAX_BODY_BYTES`: 저장·수신 본문 최대 크기 (기본값 `65536`)
+```json
+{
+  "host": "127.0.0.1",
+  "port": 8888,
+  "databasePath": "./data/traffic.db",
+  "maxBodyBytes": 65536,
+  "providers": {
+    "openrouter": {
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "apiKeyEnv": "OPENROUTER_API_KEY"
+    }
+  },
+  "models": {
+    "gpt-6-luna": {
+      "provider": "openrouter",
+      "providerModel": "openai/gpt-6-luna"
+    }
+  }
+}
+```
+
+서버는 시작 전에 필수 설정, provider/model 참조, secret 존재 여부를 검증합니다. 설정 오류나 SQLite migration 실패가 있으면 listen하지 않습니다. 등록되지 않은 model은 Provider 호출 전에 400 오류로 거부합니다. `.env`, `PROVIDER_URL`, `PROVIDER_API_KEY`는 사용하지 않습니다.
 
 ## API
 
 - `POST /api/v1/responses`: Provider로 요청 전달
-- `GET /api/v1/logs`: 최신순 로그 목록
-  - `status`, `model`, `from`, `to`, `limit`, `offset` 쿼리 지원
-  - `from`/`to`는 ISO 8601 `started_at` 범위로 비교
+- `GET /api/v1/logs`: 최신순 로그 목록 (`status`, `model`, `from`, `to`, `limit`, `offset` 지원)
 - `GET /api/v1/logs/:id`: 로그 상세 조회
 
-Authorization, API 키, Cookie 계열 헤더는 `[REDACTED]`로 저장됩니다. 요청·응답 본문은 `MAX_BODY_BYTES`를 넘지 않도록 제한됩니다.
+Authorization, API 키, Cookie 계열 헤더는 `[REDACTED]`로 저장됩니다. 요청·응답 본문은 `config.json`의 `maxBodyBytes`를 넘지 않도록 제한됩니다.
 
 ## 검증
 
-빌드:
-
 ```bash
 npm run build
-```
-
-통합 검증:
-
-```bash
 npm run verify
 ```
 
-`verify`는 npm 11의 install-script 정책으로 `better-sqlite3` 네이티브 빌드가 차단된 환경에서도 필요한 패키지 install script를 승인한 뒤 rebuild합니다. mock Provider를 `127.0.0.1`에 띄워 정상 요청, SQLite 저장, 마스킹, 기간 필터, 페이지네이션, 상세 조회를 재현합니다. 스트리밍·Provider 오류 자동 검증은 T-005 범위입니다.
+`verify`는 임시 `config.json`과 process environment secret을 사용해 두 mock Provider routing, provider model mapping, unknown model rejection, secret redaction, SQLite read/write boundary를 재현합니다.

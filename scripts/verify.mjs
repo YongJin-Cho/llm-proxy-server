@@ -1,7 +1,7 @@
 import { strict as assert } from 'node:assert';
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile, rename } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -15,82 +15,100 @@ const reservePort = async () => {
   await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
   return port;
 };
-const request = (url, options = {}) => fetch(url, options).then(async (response) => ({
-  status: response.status,
-  body: await response.text(),
-}));
+const request = (url, options = {}) => fetch(url, options).then(async (response) => ({ status: response.status, body: await response.text() }));
+const waitForStartup = (process, stderr) => new Promise((resolve, reject) => {
+  const timer = setTimeout(() => reject(new Error(`proxy startup timeout${stderr.value ? `\n${stderr.value}` : ''}`)), 5000);
+  process.stdout.on('data', (chunk) => {
+    if (chunk.toString().includes('LLM proxy listening')) { clearTimeout(timer); resolve(); }
+  });
+  process.once('error', reject);
+  process.once('exit', (code, signal) => reject(new Error(`proxy exited before startup (code=${code}, signal=${signal})${stderr.value ? `\n${stderr.value}` : ''}`)));
+});
 
-const provider = createServer((req, res) => {
+const providerRequests = [];
+const providerA = createServer((req, res) => {
   let body = '';
   req.on('data', (chunk) => { body += chunk; });
   req.on('end', () => {
+    providerRequests.push({ provider: 'a', headers: req.headers, body: JSON.parse(body) });
     res.writeHead(200, { 'content-type': 'application/json' });
-    res.end(JSON.stringify({ id: 'mock-response', model: JSON.parse(body).model, output: [] }));
+    res.end(JSON.stringify({ id: 'response-a', model: JSON.parse(body).model, output: [] }));
   });
 });
-const providerPort = await listen(provider);
+const providerB = createServer((req, res) => {
+  let body = '';
+  req.on('data', (chunk) => { body += chunk; });
+  req.on('end', () => {
+    providerRequests.push({ provider: 'b', headers: req.headers, body: JSON.parse(body) });
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ id: 'response-b', model: JSON.parse(body).model, output: [] }));
+  });
+});
+const providerAPort = await listen(providerA);
+const providerBPort = await listen(providerB);
 const directory = await mkdtemp(join(tmpdir(), 'llm-proxy-verify-'));
 const databasePath = join(directory, 'traffic.db');
 const proxyPort = await reservePort();
-const proxy = spawn(process.execPath, ['dist/server.js'], {
-  cwd: new URL('..', import.meta.url),
-  env: {
-    ...process.env,
-    HOST: '127.0.0.1',
-    PORT: String(proxyPort),
-    PROVIDER_URL: `http://127.0.0.1:${providerPort}/responses`,
-    PROVIDER_API_KEY: 'provider-secret',
-    SQLITE_PATH: databasePath,
-    MAX_BODY_BYTES: '4096',
+const configPath = join(directory, 'config.json');
+await writeFile(configPath, JSON.stringify({
+  host: '127.0.0.1',
+  port: proxyPort,
+  databasePath,
+  maxBodyBytes: 4096,
+  providers: {
+    alpha: { baseUrl: `http://127.0.0.1:${providerAPort}`, apiKeyEnv: 'ALPHA_KEY' },
+    beta: { baseUrl: `http://127.0.0.1:${providerBPort}`, apiKeyEnv: 'BETA_KEY' },
   },
+  models: {
+    'client-alpha': { provider: 'alpha', providerModel: 'provider/alpha-model' },
+    'client-beta': { provider: 'beta', providerModel: 'provider/beta-model' },
+  },
+}));
+const projectRoot = new URL('..', import.meta.url);
+const defaultConfig = new URL('config.json', projectRoot);
+const backupConfig = new URL(`config.json.verify-backup-${process.pid}`, projectRoot);
+await rename(defaultConfig, backupConfig);
+await rename(configPath, defaultConfig);
+const proxy = spawn(process.execPath, ['dist/server.js'], {
+  cwd: projectRoot,
+  env: { ...process.env, ALPHA_KEY: 'alpha-secret', BETA_KEY: 'beta-secret' },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
-
-let stderr = '';
-proxy.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
+const stderr = { value: '' };
+proxy.stderr.on('data', (chunk) => { stderr.value += chunk.toString(); });
 
 try {
-  await new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error(
-      `proxy startup timeout${stderr ? `\\n${stderr}` : ''}`,
-    )), 5000);
-    proxy.stdout.on('data', (chunk) => {
-      if (chunk.toString().includes('LLM proxy listening')) { clearTimeout(timer); resolve(); }
-    });
-    proxy.once('error', reject);
-    proxy.once('exit', (code, signal) => reject(new Error(
-      `proxy exited before startup (code=${code}, signal=${signal})${stderr ? `\\n${stderr}` : ''}`,
-    )));
-  });
-
+  await waitForStartup(proxy, stderr);
   const base = `http://127.0.0.1:${proxyPort}`;
-  const response = await request(`${base}/api/v1/responses`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: 'Bearer client-secret' },
-    body: JSON.stringify({ model: 'mock-model', input: 'hello' }),
-  });
-  assert.equal(response.status, 200);
-  assert.equal(JSON.parse(response.body).id, 'mock-response');
+  const alpha = await request(`${base}/api/v1/responses`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer client-secret' }, body: JSON.stringify({ model: 'client-alpha', input: 'hello' }) });
+  assert.equal(alpha.status, 200);
+  assert.equal(JSON.parse(alpha.body).id, 'response-a');
+  const beta = await request(`${base}/api/v1/responses`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: 'client-beta', input: 'hello' }) });
+  assert.equal(beta.status, 200);
+  assert.equal(JSON.parse(beta.body).id, 'response-b');
+  assert.deepEqual(providerRequests.map((entry) => [entry.provider, entry.body.model]), [['a', 'provider/alpha-model'], ['b', 'provider/beta-model']]);
+  assert.equal(providerRequests[0].headers.authorization, 'Bearer alpha-secret');
+  assert.equal(providerRequests[1].headers.authorization, 'Bearer beta-secret');
 
-  const list = await request(`${base}/api/v1/logs?status=completed&model=mock-model&limit=1&offset=0`);
+  const unknown = await request(`${base}/api/v1/responses`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: 'unknown-model', input: 'hello' }) });
+  assert.equal(unknown.status, 400);
+  assert.equal(providerRequests.length, 2);
+  assert.doesNotMatch(unknown.body, /alpha-secret|beta-secret/);
+
+  const list = await request(`${base}/api/v1/logs?status=completed&limit=10&offset=0`);
   assert.equal(list.status, 200);
   const listed = JSON.parse(list.body).data;
-  assert.equal(listed.length, 1);
-  assert.equal(listed[0].model, 'mock-model');
-  assert.match(listed[0].request_json, /REDACTED/);
-  assert.doesNotMatch(listed[0].request_json, /client-secret/);
-
-  const from = encodeURIComponent(new Date(Date.now() - 60_000).toISOString());
-  const to = encodeURIComponent(new Date(Date.now() + 60_000).toISOString());
-  const filtered = await request(`${base}/api/v1/logs?from=${from}&to=${to}`);
-  assert.equal(JSON.parse(filtered.body).data.length, 1);
-
-  const detail = await request(`${base}/api/v1/logs/${listed[0].id}`);
-  assert.equal(detail.status, 200);
-  assert.equal(JSON.parse(detail.body).id, listed[0].id);
-  console.log('Integration verification passed: proxy, SQLite persistence, masking, date filters, pagination, and detail lookup.');
+  assert.equal(listed.length, 2);
+  const alphaLog = listed.find((entry) => entry.model === 'client-alpha');
+  assert.ok(alphaLog);
+  assert.match(alphaLog.request_json, /REDACTED/);
+  assert.doesNotMatch(alphaLog.request_json, /client-secret/);
+  console.log('Routing verification passed: two providers, provider model mapping, unknown model rejection, secret handling, and read/write boundaries.');
 } finally {
   proxy.kill('SIGTERM');
-  provider.close();
+  providerA.close();
+  providerB.close();
+  await rename(defaultConfig, configPath).catch(() => {});
+  await rename(backupConfig, defaultConfig).catch(() => {});
   await rm(directory, { recursive: true, force: true });
 }

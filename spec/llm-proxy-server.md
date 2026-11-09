@@ -22,11 +22,11 @@ LLM 클라이언트와 OpenAI Model Provider 사이에서 요청을 중계하고
 - R-009: API별 adapter는 route/payload 변환과 Provider 요청·응답 변환만 담당해야 한다. 공통 application service는 client model ID를 routing contract로 전달하고 adapter는 provider client를 직접 선택하지 않아야 하며, log persistence는 `TrafficLogWriter` port를 통해야 한다. Responses·Chat Completions·Messages는 독립 adapter/plugin으로 등록할 수 있어야 한다. ← ASR-013; AC-011
 - R-010: UI는 로그 API를 통해서만 데이터를 조회해야 하며 React page/component/data-query 모듈로 로그 목록, 개별 상세, 요청·응답·metadata·오류·저장 content viewer를 제공해야 한다. 향후 분석·report·chart feature는 기존 화면과 독립된 feature/module로 추가할 수 있어야 한다. ← ASR-006; ASR-011; adr/monitoring-ui-scope.md; adr/ui-framework-and-monitoring-structure.md
 - R-011: UI 로그 목록은 최신순으로 표시하고 상태·모델·기간 filter와 pagination 입력을 제공해야 하며, UI에는 저장된 redaction 결과만 표시해야 한다. 전문 검색, chart, 자동 refresh, 실시간 streaming 화면은 초기 구현에서 제공하지 않는다. ← ASR-004; ASR-006
-- R-012: provider 설정은 설정 파일의 `providers`와 `models` 섹션으로 표현해야 한다. 각 provider는 base URL과 API key 환경변수 참조를 가지며, 각 client model entry는 `provider`와 `providerModel`을 가져야 한다. 예를 들어 `gpt-6-luna`는 `openrouter` provider의 `openai/gpt-6-luna`로 매핑될 수 있다. ← ASR-012; adr/provider-routing-configuration.md
-- R-013: 서버 시작 전 provider URL, model mapping, required secret reference, SQLite 경로 등 필수 설정을 validation해야 하며 잘못된 설정이나 migration 실패 시 listen 전에 종료해야 한다. 등록되지 않은 client model은 Provider 호출 전에 명확한 4xx configuration/model 오류로 거부해야 한다. secret 값은 오류·로그·UI에 노출하지 않는다. ← ASR-012; ASR-015; adr/provider-routing-configuration.md
+- R-012: provider 설정은 기본 `config.json` 파일의 `providers`와 `models` 섹션으로 표현해야 한다. 각 provider는 base URL과 API key 환경변수 참조를 가지며, 각 client model entry는 `provider`와 `providerModel`을 가져야 한다. 예를 들어 `gpt-6-luna`는 `openrouter` provider의 `openai/gpt-6-luna`로 매핑될 수 있다. `.env`, `PROVIDER_URL`, `PROVIDER_API_KEY`는 사용하지 않는다. ← ASR-012; adr/provider-routing-configuration.md
+- R-013: 서버 시작 전 기본 `config.json`의 provider URL, model mapping, required secret reference, host, port, SQLite 경로, body size limit 등 필수 설정을 validation해야 하며 잘못된 설정이나 migration 실패 시 listen 전에 종료해야 한다. 등록되지 않은 client model은 Provider 호출 전에 명확한 4xx configuration/model 오류로 거부해야 한다. secret 값은 오류·로그·UI에 노출하지 않는다. ← ASR-012; ASR-015; adr/provider-routing-configuration.md
 - R-014: API adapter와 persistence 변경은 기존 MVP 동작을 보존하는 순서로 migration해야 한다: 기존 동작 회귀 테스트 고정 → domain/configuration/persistence 분리 → Fastify bootstrap·adapter 도입 → provider routing 연결 → writer/reader와 SQLite adapter 연결 → React build/static delivery 연결 → schema/data compatibility 검증. ← ASR-015
 - R-015: 자동화 검증은 정상·실패 proxy, SSE 정상·중단, provider/model routing, SQLite write/read, redaction·body size limit, logs API, UI list/detail을 재현해야 하며 `npm run build`와 `npm run verify`를 검증 진입점으로 유지해야 한다. ← ASR-009; ASR-015
-- R-016: 단일 프로세스 실행 문서는 configuration file 경로와 schema, secret 환경변수, SQLite 경로, host/port, frontend build, server build/start 절차를 설명해야 한다. ← ASR-007; ASR-015
+- R-016: 단일 프로세스 실행 문서는 기본 `config.json` 경로와 schema, API key 환경변수, SQLite 경로, host/port, frontend build, server build/start 절차를 설명해야 한다. `.env`, `PROVIDER_URL`, `PROVIDER_API_KEY` 사용법은 설명하거나 지원하지 않는다. ← ASR-007; ASR-015
 
 ## Constraints
 
@@ -36,7 +36,7 @@ LLM 클라이언트와 OpenAI Model Provider 사이에서 요청을 중계하고
 - C-004: Authorization, API key, cookie 등 알려진 secret header는 저장 전에 mask해야 한다. 요청·응답 JSON 본문은 설정 가능한 maximum size까지만 저장하고 초과분은 truncate한다. UI는 저장된 mask 결과만 표시한다. ← ASR-004; ASR-014
 - C-005: proxy와 monitoring UI는 localhost에만 bind하고 초기에는 authentication, external network exposure, user-specific RBAC를 지원하지 않는다. ← ASR-005
 - C-006: 애플리케이션은 single process로 실행해야 하며, bootstrap, configuration, API routing/adapter, provider/routing, logging/domain, persistence, UI delivery/query 책임을 내부 module로 분리해야 한다. container deployment와 horizontal scaling은 초기 범위가 아니다. ← ASR-007; ASR-010
-- C-007: API key는 설정 파일에 평문으로 요구하지 않고 환경변수 reference/process environment에서 로드해야 하며, 설정 오류·traffic log·UI에 평문으로 기록·표시해서는 안 된다. 외부 secret/config service와 실행 중 자동 secret rotation은 초기 범위가 아니다. ← ASR-012; adr/provider-routing-configuration.md
+- C-007: API key는 기본 `config.json`에 평문으로 저장하지 않고 provider별 `apiKeyEnv`가 지정한 process environment에서 로드해야 하며, `.env`, `PROVIDER_URL`, `PROVIDER_API_KEY`는 사용하지 않는다. 설정 오류·traffic log·UI에 API key를 평문으로 기록·표시해서는 안 된다. 외부 secret/config service와 실행 중 자동 secret rotation은 초기 범위가 아니다. ← ASR-012; adr/provider-routing-configuration.md
 - C-008: 승인된 API framework는 Fastify이며, 승인된 UI framework는 React다. Fastify static delivery는 React build output을 제공해야 하고 UI bundle에는 DB driver를 포함하지 않아야 한다. ← ASR-010; ASR-011; adr/api-framework-and-server-structure.md; adr/ui-framework-and-monitoring-structure.md
 - C-009: schema migration 및 module migration은 기존 MVP 회귀 검증을 통과해야 하며 필수 설정 누락이나 migration 실패 시 server가 listen해서는 안 된다. ← ASR-015
 
