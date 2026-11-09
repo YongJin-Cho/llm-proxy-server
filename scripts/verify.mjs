@@ -29,7 +29,14 @@ const providerRequests = [];
 const streamResponse = (req, res, payload) => {
   res.writeHead(200, { 'content-type': 'text/event-stream' });
   if (req.url === '/messages') res.end('event: message_stop\ndata: {}\n\n');
-  else if (req.url === '/chat/completions') res.end('data: {"choices":[]}\n\ndata: [DONE]\n\n');
+  else if (req.url === '/chat/completions') res.end([
+    'data: {"id":"chat-stream-1","object":"chat.completion.chunk","model":"provider/chat-model","choices":[{"index":0,"delta":{"role":"assistant","content":"Hello "},"finish_reason":null}]}',
+    'data: {"choices":[{"index":0,"delta":{"content":"world"},"finish_reason":null}]}',
+    'data: {"choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"id":"call-1","type":"function","function":{"name":"lookup","arguments":"{\\"q\\": "}}]},"finish_reason":null}]}',
+    'data: {"choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"\\"test\\"}"}}]},"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":5,"completion_tokens":3}}',
+    'data: [DONE]',
+    '',
+  ].join('\n\n'));
   else res.end('data: {"type":"response.completed","usage":{"input_tokens":2,"output_tokens":1}}\n\ndata: [DONE]\n\n');
 };
 const providerA = createServer((req, res) => {
@@ -140,6 +147,16 @@ try {
   const streamedLog = listed.find((entry) => entry.streaming === 1);
   assert.ok(streamedLog);
   assert.doesNotMatch(streamedLog.response_json, /data:\s/);
+  const streamedChatLog = listed.find((entry) => entry.api_kind === 'chat_completions' && entry.streaming === 1);
+  assert.ok(streamedChatLog);
+  const streamedChatResponse = JSON.parse(streamedChatLog.response_json);
+  assert.equal(streamedChatResponse.choices[0].message.role, 'assistant');
+  assert.equal(streamedChatResponse.choices[0].message.content, 'Hello world');
+  assert.equal(streamedChatResponse.choices[0].message.tool_calls[0].id, 'call-1');
+  assert.equal(streamedChatResponse.choices[0].message.tool_calls[0].function.name, 'lookup');
+  assert.equal(streamedChatResponse.choices[0].message.tool_calls[0].function.arguments, '{"q": "test"}');
+  assert.equal(streamedChatResponse.choices[0].finish_reason, 'tool_calls');
+  assert.equal(streamedChatResponse.usage.prompt_tokens, 5);
   assert.equal(listed.filter((entry) => entry.api_kind === 'responses').length, 3);
   const chatLog = listed.find((entry) => entry.api_kind === 'chat_completions' && entry.streaming === 0);
   const messagesLog = listed.find((entry) => entry.api_kind === 'messages' && entry.streaming === 0);
