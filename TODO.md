@@ -8,11 +8,11 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 5 | 3 | 0 | 0 |
+| 8 | 0 | 0 | 0 |
 
 **Sprint goal:** OpenAI Chat Completions API와 Claude Messages API를 기존 Responses 프록시에 추가하기 위한 사용자 승인 PRD·AC·설계 결정·ASR·Spec을 확정하고 구현 가능한 product backlog를 만든다.
-**Current focus:** T-008 — PB-012 세분화 및 Sprint Boundary → sprint-08
-**Recommended next:** T-008 — PB-012 세분화 및 Sprint Boundary → sprint-08
+**Current focus:** —
+**Recommended next:** Sprint 08 계획 승인 후 새 실행 보드 seed
 
 ## Tasks
 
@@ -61,7 +61,7 @@
   - Phase: backlog encode / cross-cutting
   - Artifact: `scrum/product-backlog.md`
   - Depends: T-007
-  - Notes: PB-012를 PB-013~PB-018 구현 story로 분해했다. Sprint Boundary 실행 승인을 기다린다.
+  - Notes: PB-012를 PB-013~PB-018 구현 story로 분해하고 Sprint Boundary를 완료했다.
 
 ## Completed sprints
 
@@ -74,7 +74,10 @@
 | 04 | 모듈 분리·소스 구조 정리와 실행 검증 완성 | 2026-03-10 | [`TODO-04.md`](./scrum/TODO-04.md) |
 | 05 | Provider 라우팅과 로그 access 경계 완성 | 2026-03-10 | [`TODO-05.md`](./scrum/TODO-05.md) |
 | 06 | 확장 가능한 모니터링 UI 구조 완성 | 2026-03-10 | [`TODO-06.md`](./scrum/TODO-06.md) |
+| 07 | Chat Completions·Claude Messages 지원 요구사항 확정 | 2026-03-10 | [`TODO-07.md`](./scrum/TODO-07.md) |
 
 ## Notes
 
 - 2026-03-10: Sprint 07 계획 승인. 실행 보드를 seed하고 PRD delta 작업을 시작했다.
+- 2026-03-10: Sprint 07 완료 승인과 Boundary 실행 승인을 반영했다. `scrum/TODO-07.md`에 보드를 아카이브했다.
+- 2026-03-10: Sprint 08 구현 계획 초안은 작성했지만 Sprint plan approval 전까지 실행 보드는 전환하지 않는다.
