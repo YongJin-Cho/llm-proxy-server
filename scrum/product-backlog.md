@@ -25,17 +25,49 @@
   - Sprint: sprint-01
   - Depends: PB-002
 
-- [ ] **PB-005** — 트래픽 모니터링 웹 UI
-  - Story: localhost 웹 UI에서 저장 로그 목록을 최신순으로 확인하고 상태·모델·기간 필터, 페이지네이션, 요청·응답·메타데이터·오류 상세를 볼 수 있다.
-  - Spec: `spec/llm-proxy-server.md` §Requirements R-008–R-009; §Constraints C-005–C-006
-  - Sprint: sprint-02
-  - Depends: PB-004
+- [ ] **PB-005** — 확장 가능한 트래픽 모니터링 웹 UI 구현
+  - Story: localhost 웹 UI에서 저장 로그 목록을 최신순으로 확인하고 상태·모델·기간 필터, 페이지네이션, 요청·응답·메타데이터·오류·content 상세를 볼 수 있으며 향후 분석·report·chart feature를 추가할 수 있다.
+  - Spec: `spec/llm-proxy-server.md` §Requirements R-008–R-009 (delta 갱신 예정)
+  - Sprint: sprint-03
+  - Depends: PB-004, PB-007, PB-009, PB-010
+  - Notes: sprint-02 설계 결과를 반영한 구현으로 이월.
 
 - [ ] **PB-006** — 자동화된 핵심 동작 검증과 실행 문서
-  - Story: 정상·실패 프록시, SSE, 저장·조회, 마스킹, UI 목록·상세를 자동화된 검증으로 재현하고 단일 프로세스 실행 설정을 문서화한다.
-  - Spec: `spec/llm-proxy-server.md` §Requirements R-010–R-011; §Constraints C-007–C-008
+  - Story: 정상·실패 프록시, SSE, provider/model 라우팅, 저장·조회, 마스킹, UI 목록·상세를 자동화된 검증으로 재현하고 단일 프로세스 실행 설정을 문서화한다.
+  - Spec: `spec/llm-proxy-server.md` §Requirements R-010–R-011 (delta 갱신 예정)
+  - Sprint: sprint-03
+  - Depends: PB-002, PB-003, PB-004, PB-005, PB-007, PB-008, PB-009
+  - Notes: sprint-02 설계 결과를 반영한 구현으로 이월.
+
+- [ ] **PB-007** — 모듈형 서버·API 확장 구조와 framework 기반
+  - Story: `server.ts`의 bootstrap, configuration, routing, API adapter, provider client, logging, persistence, UI delivery 책임을 모듈로 분리하고 승인된 API framework 및 adapter contract를 적용할 수 있는 구조를 정의한다.
+  - Spec: sprint-02 delta Spec 예정
   - Sprint: sprint-02
-  - Depends: PB-002, PB-003, PB-004, PB-005
+  - Depends: PB-002, PB-004
+
+- [ ] **PB-008** — 복수 LLM provider 및 model ID 라우팅
+  - Story: 설정 파일에서 provider의 API URL·key를 정의하고 client model ID를 provider와 provider model ID에 매핑하여 요청을 올바른 provider로 전달하며, 미등록 model·잘못된 설정·비밀정보 노출을 명확히 처리한다.
+  - Spec: sprint-02 delta Spec 예정
+  - Sprint: sprint-02
+  - Depends: PB-007
+
+- [ ] **PB-009** — API 로그 기록과 UI 조회를 분리하는 DB access 구조
+  - Story: API request path의 log writer와 UI query path의 read repository/query service를 분리하고 SQLite schema·migration·redaction·본문 크기 제한 책임과 공통 domain model을 명확히 한다.
+  - Spec: sprint-02 delta Spec 예정
+  - Sprint: sprint-02
+  - Depends: PB-004, PB-007
+
+- [ ] **PB-010** — 확장 가능한 모니터링 UI 구조
+  - Story: 승인된 UI framework와 page/component/data-query 구조를 사용해 log list/detail 및 content viewer를 제공할 기반을 만들고, 향후 분석·report·chart feature를 기존 화면과 독립적으로 추가할 수 있게 한다.
+  - Spec: sprint-02 delta Spec 예정
+  - Sprint: sprint-02
+  - Depends: PB-007, PB-009
+
+- [ ] **PB-011** — 구조 변경 마이그레이션·검증·실행 문서
+  - Story: 기존 MVP 동작을 보존하는 모듈 분리·DB migration 순서, provider routing 및 UI/API 회귀 검증, 단일 프로세스 실행·설정 문서를 정의한다.
+  - Spec: sprint-02 delta Spec 예정
+  - Sprint: sprint-02
+  - Depends: PB-007, PB-008, PB-009, PB-010
 
 - [x] **PB-001** — 초기 제품 백로그 생성
   - Story: LLM Proxy Server의 승인된 PRD, 설계 결정, Spec을 바탕으로 구현 가능한 제품 백로그를 정의한다.
