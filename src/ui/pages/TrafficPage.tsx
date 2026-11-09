@@ -44,11 +44,15 @@ export function TrafficPage() {
 
   const changeFilters = (next: FiltersValue) => { setFilters(next); setOffset(0); };
   const selectTurn = (id: string) => { writeSelection(id); setSelection({ turn: id }); setDetail(undefined); };
-  const selectTraffic = (id: string) => { writeSelection(selection.turn, id); setSelection({ turn: selection.turn, traffic: id }); fetchLog(id).then(setDetail).catch((reason: Error) => setError(reason.message)); };
+  const selectTraffic = (turnId: string, id: string) => { writeSelection(turnId, id); setSelection({ turn: turnId, traffic: id }); fetchLog(id).then(setDetail).catch((reason: Error) => setError(reason.message)); };
 
-  if (detail) return <main><LogDetail log={detail} onBack={() => { writeSelection(selection.turn); setSelection({ turn: selection.turn }); setDetail(undefined); }} /></main>;
+  const sidebar = <TurnTree nodes={turns} selectedTurn={selection.turn} selectedTraffic={selection.traffic} onTurn={selectTurn} onTraffic={selectTraffic} />;
 
-  return <main className="traffic-layout"><TurnTree nodes={turns} selectedTurn={selection.turn} selectedTraffic={selection.traffic} onTurn={selectTurn} onTraffic={selectTraffic} />
+  if (detail) return <main className="traffic-layout">{sidebar}
+    <section className="traffic-content"><LogDetail log={detail} onBack={() => { writeSelection(selection.turn); setSelection({ turn: selection.turn }); setDetail(undefined); }} /></section>
+  </main>;
+
+  return <main className="traffic-layout">{sidebar}
     <section className="traffic-content"><h1>LLM Proxy Traffic</h1>
       {treeLoading && <p>turn을 불러오는 중…</p>}
       {error && <p className="error">{error}</p>}

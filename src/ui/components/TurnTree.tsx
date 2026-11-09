@@ -1,6 +1,6 @@
 import type { TurnNode } from '../types.js';
 
-type Props = { nodes: TurnNode[]; selectedTurn?: string; selectedTraffic?: string; onTurn: (id: string) => void; onTraffic: (id: string) => void };
+type Props = { nodes: TurnNode[]; selectedTurn?: string; selectedTraffic?: string; onTurn: (id: string) => void; onTraffic: (turnId: string, trafficId: string) => void };
 
 export function TurnTree({ nodes, selectedTurn, selectedTraffic, onTurn, onTraffic }: Props) {
   return <nav className="turn-tree" aria-label="Turn traffic tree">
@@ -11,7 +11,7 @@ export function TurnTree({ nodes, selectedTurn, selectedTraffic, onTurn, onTraff
         {node.kind === 'legacy' ? 'Legacy' : 'Turn'} {node.id.slice(0, 8)} · {node.status} ({node.traffic_count})
       </button>
       <div className="traffic-children">
-        {node.traffic.map((traffic) => <button key={traffic.id} className={selectedTraffic === traffic.id ? 'selected' : ''} onClick={() => onTraffic(traffic.id)}>
+        {node.traffic.map((traffic) => <button key={traffic.id} className={selectedTraffic === traffic.id ? 'selected' : ''} onClick={() => onTraffic(node.id, traffic.id)}>
           Traffic {traffic.turn_sequence ?? '—'} · {traffic.status}
         </button>)}
       </div>
