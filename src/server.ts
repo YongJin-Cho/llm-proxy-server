@@ -77,11 +77,37 @@ async function proxy(req: IncomingMessage, res: ServerResponse) {
     const upstream = await fetch(config.providerUrl, { method: 'POST', headers, body: raw });
     if (streaming && upstream.body) {
       res.writeHead(upstream.status, { 'content-type': upstream.headers.get('content-type') ?? 'text/event-stream' });
-      const reader = upstream.body.getReader(); const chunks: Buffer[] = [];
-      while (true) { const part = await reader.read(); if (part.done) break; const buffer = Buffer.from(part.value); chunks.push(buffer); res.write(buffer); }
+      const reader = upstream.body.getReader();
+      const chunks: Buffer[] = [];
+      let clientDisconnected = false;
+      res.once('close', () => { clientDisconnected = true; });
+
+      try {
+        while (true) {
+          const part = await reader.read();
+          if (part.done) break;
+          const buffer = Buffer.from(part.value);
+          chunks.push(buffer);
+          if (!clientDisconnected) res.write(buffer);
+        }
+      } finally {
+        reader.releaseLock();
+      }
+
       const response = Buffer.concat(chunks).toString('utf8');
-      finishLog.run({ id, finishedAt: new Date().toISOString(), status: upstream.ok ? 'completed' : 'failed', httpStatus: upstream.status, latencyMs: Date.now() - started, responseJson: bounded(response), error: upstream.ok ? null : bounded(response) });
-      res.end(); return;
+      const normalCompletion = response.includes('response.completed') || response.includes('data: [DONE]');
+      const completed = upstream.ok && normalCompletion && !clientDisconnected;
+      finishLog.run({
+        id,
+        finishedAt: new Date().toISOString(),
+        status: completed ? 'completed' : 'failed',
+        httpStatus: upstream.status,
+        latencyMs: Date.now() - started,
+        responseJson: bounded(response),
+        error: completed ? null : bounded(clientDisconnected ? 'client disconnected before stream completion' : response || 'stream ended before completion'),
+      });
+      if (!clientDisconnected) res.end();
+      return;
     }
     const response = await upstream.text();
     finishLog.run({ id, finishedAt: new Date().toISOString(), status: upstream.ok ? 'completed' : 'failed', httpStatus: upstream.status, latencyMs: Date.now() - started, responseJson: bounded(response), error: upstream.ok ? null : bounded(response) });
