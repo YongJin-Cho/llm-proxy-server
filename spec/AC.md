@@ -24,12 +24,12 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 | AC-016 | API별 streaming 종료·오류 계약 | Constraints (structural) | designed | adr/api-streaming-completion-and-error-contract.md | ASR-018 |
 | AC-017 | 다중 API traffic log metadata 정규화 | Structure & organization | designed | adr/traffic-log-api-metadata.md | ASR-019 |
 | AC-018 | Token usage·cost metadata 추출과 저장 | Integration & dependencies | designed | adr/usage-and-cost-metadata.md | ASR-020 |
-| AC-019 | Turn grouping metadata와 저장 lifecycle | Structure & organization | reviewing | adr/turn-grouping-storage-lifecycle.md (proposed) | — |
-| AC-020 | Turn/traffic 조회 API와 tree projection | Integration & dependencies | identified | — | — |
-| AC-021 | Sidebar 선택 상태와 메인 뷰 계약 | Deliverable form | identified | — | — |
-| AC-022 | Non-migration legacy traffic 호환 표시 | Constraints (structural) | identified | — | — |
-| AC-023 | Turn grouping 순서·동시성·완료 판정 | Quality bar (architectural) | identified | — | — |
-| AC-024 | SSE 최종 응답 통합 저장 | Structure & organization | identified | — | — |
+| AC-019 | Turn grouping metadata와 저장 lifecycle | Structure & organization | designed | adr/turn-grouping-storage-lifecycle.md (approved) | ASR-021 |
+| AC-020 | Turn/traffic 조회 API와 tree projection | Integration & dependencies | designed | adr/turn-traffic-query-tree-projection.md (approved) | ASR-025 |
+| AC-021 | Sidebar 선택 상태와 메인 뷰 계약 | Deliverable form | designed | adr/sidebar-selection-main-view-contract.md (approved) | ASR-027 |
+| AC-022 | Non-migration legacy traffic 호환 표시 | Constraints (structural) | designed | adr/legacy-traffic-tree-compatibility.md (approved) | ASR-026 |
+| AC-023 | Turn grouping 순서·동시성·완료 판정 | Quality bar (architectural) | designed | adr/turn-order-concurrency-completion.md (approved) | ASR-022 |
+| AC-024 | SSE 최종 응답 통합 저장 | Structure & organization | designed | adr/sse-final-response-aggregation.md (approved) | ASR-023 |
 
 ## Dependency Order (recommended review path)
 
@@ -257,70 +257,86 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 ### AC-019 — Turn grouping metadata와 저장 lifecycle
 
 - **Category:** Structure & organization
-- **Status:** identified
-- **Statement:** harness가 전달하는 turn 식별자와 traffic의 부모 관계를 어떤 domain model, writer contract, SQLite schema로 저장하며 turn은 언제 생성·갱신·완료되는가?
+- **Status:** designed
+- **Statement:** client/harness 변경 없이 proxy가 traffic request/response를 분석해 turn의 부모 관계를 어떤 domain model, writer contract, SQLite schema로 저장하며 turn은 언제 생성·갱신·완료되는가?
 - **Why it matters:** turn 경계와 저장 lifecycle이 불명확하면 하나의 사용자 요청이 여러 turn으로 분리되거나 서로 다른 요청이 잘못 묶인다.
 - **Depends on:** AC-003, AC-012
 - **Related ADRs:**
-  - 없음
+  - `adr/turn-grouping-storage-lifecycle.md` — approved
 - **Resolution path:** adr
+- **Resolution:** Client와 harness는 변경하지 않는다. Proxy가 API별 semantic adapter로 traffic request/response를 분석해 tool call과 대응하는 tool message를 식별한다. response에 tool call이 있으면 turn은 진행 중이고, tool call이 없는 response면 turn을 종료한다. 다음 request에 이전 response의 tool call들에 대한 tool message가 있으면 같은 turn의 다음 traffic으로 연결한다. 복수 tool call/tool message는 tool call ID 기준으로 매칭하며 응답 순서는 보장하지 않는다. 표준 adapter contract는 request의 tool result identities, response의 tool call identities/`hasToolCalls`, stream aggregator factory를 제공하고 API별 최종 response JSON은 adapter가 생성한다. turn grouping과 상태는 proxy가 저장·조회 가능한 traffic metadata/projection으로 관리한다.
 
 ### AC-020 — Turn/traffic 조회 API와 tree projection
 
 - **Category:** Integration & dependencies
-- **Status:** identified
+- **Status:** designed
 - **Statement:** UI가 sidebar tree를 구성할 수 있도록 turn과 traffic을 어떤 조회 API 응답 모델, 정렬, pagination 및 계층 projection으로 제공할 것인가?
 - **Why it matters:** flat traffic API를 그대로 재사용할지 별도 tree endpoint를 둘지에 따라 query 복잡도, 성능, UI 결합도가 달라진다.
 - **Depends on:** AC-019
 - **Related ADRs:**
-  - 없음
+  - `adr/turn-traffic-query-tree-projection.md` — approved
 - **Resolution path:** adr
+- **Resolution:** `GET /api/v1/turns` tree 전용 aggregate endpoint를 제공한다. turn 단위 pagination과 child traffic summary를 sequence 순으로 반환하며 request/response 본문은 포함하지 않는다. traffic 본문은 선택 시 기존 detail API로 지연 조회하고 turn 선택은 tree 응답의 summary/child 관계를 사용한다.
+
 
 ### AC-021 — Sidebar 선택 상태와 메인 뷰 계약
 
 - **Category:** Deliverable form
-- **Status:** identified
+- **Status:** designed
 - **Statement:** sidebar에서 turn 또는 traffic을 선택했을 때 URL/state를 어떻게 표현하고 메인 뷰에 각각 어떤 요약·상세 내용을 표시할 것인가?
 - **Why it matters:** 선택 상태와 표시 계약이 없으면 새로고침·뒤로가기·직접 링크 동작이 흔들리고 turn 선택과 traffic 선택의 UX가 일관되지 않는다.
 - **Depends on:** AC-020
 - **Related ADRs:**
-  - 없음
+  - `adr/sidebar-selection-main-view-contract.md` — approved
 - **Resolution path:** adr
+- **Resolution:** 선택 상태를 URL query/route로 표현하고 turn 선택과 traffic 선택을 구분한다. turn 선택 시 turn summary, 상태, traffic 개수/순서와 child 목록을 표시한다. traffic 선택 시 기존 `LogDetail`로 request/response/error/metadata를 조회한다. URL state로 새로고침과 browser back/forward를 지원하며 stable turn/traffic ID를 사용한다.
+
 
 ### AC-022 — Non-migration legacy traffic 호환 표시
 
 - **Category:** Constraints (structural)
-- **Status:** identified
+- **Status:** designed
 - **Statement:** 기존 schema/data를 migration하지 않고 turn metadata가 없는 traffic을 tree에서 어떻게 표현하며 기존 flat 목록·상세 조회와 어떤 호환성을 유지할 것인가?
 - **Why it matters:** migration을 하지 않기로 한 결정이 기존 데이터의 유실·중복 표시·조회 불능으로 이어지지 않도록 명시적 fallback이 필요하다.
 - **Depends on:** AC-019, AC-020
-- **Related ADRs:
-  - 없음
-- **Resolution path:** direct-input
+- **Related ADRs:**
+  - `adr/legacy-traffic-tree-compatibility.md` — approved
+- **Resolution path:** adr
+- **Resolution:** turn metadata가 없는 각 traffic을 `/api/v1/turns`에서 `kind: "legacy"`인 synthetic single-traffic turn으로 표시한다. child traffic 하나를 연결하고 실제 grouping 결과가 아님을 표시한다. 기존 flat logs list/detail API는 유지하며 legacy traffic 간의 과거 turn 관계는 추론하지 않는다.
+
 
 ### AC-023 — Turn grouping 순서·동시성·완료 판정
 
 - **Category:** Quality bar (architectural)
-- **Status:** identified
+- **Status:** designed
 - **Statement:** 같은 turn 안의 traffic 순서를 어떤 기준으로 보장하고, tool call에 대한 harness 재요청이 진행 중인 turn을 어떻게 조회·표시하며, 최종 답변 traffic 이후 turn 완료를 어떻게 판정·검증할 것인가?
 - **Why it matters:** 순서·진행 상태·완료 판정이 불안정하면 tree가 실제 LLM interaction 흐름을 잘못 보여준다.
 - **Depends on:** AC-019
-- **Related ADRs:
-  - 없음
+- **Related ADRs:**
+  - `adr/turn-order-concurrency-completion.md` — approved
 - **Resolution path:** adr
+- **Resolution:** Proxy는 여러 미완료 turn을 동시에 유지하고 각 turn의 미해결 tool call ID를 역색인한다. incoming request의 tool message ID가 일치하는 turn에 traffic을 연결하며, 복수 tool message의 도착 순서는 tool call 순서와 무관하게 ID 기준으로 처리한다. response에 tool call이 없으면 turn을 완료하고 이후 traffic에 연결하지 않는다. traffic sequence는 proxy가 관찰한 저장 순서를 사용한다.
+
 
 ### AC-024 — SSE 최종 응답 통합 저장
 
 - **Category:** Structure & organization
-- **Status:** identified
+- **Status:** designed
 - **Statement:** SSE streaming traffic을 client에는 원본 event 흐름으로 전달하면서, 저장 시에는 개별 `data` event를 나열하지 않고 API별 규칙에 따라 최종 응답 하나로 통합하려면 어떤 누적·병합·완료 시점 계약을 사용할 것인가?
 - **Why it matters:** event stream을 그대로 저장하면 기존 traffic 상세가 최종 응답으로 재사용되지 않고 저장량과 조회 복잡도가 증가하며, API별 content/tool call/usage 결과가 누락되거나 중복될 수 있다.
 - **Depends on:** AC-002, AC-016, AC-019
 - **Related ADRs:**
   - `adr/streaming-response-handling.md` — approved
+  - `adr/sse-final-response-aggregation.md` — approved
 - **Resolution path:** adr
+- **Resolution:** API별 adapter가 SSE event를 API별 규칙으로 누적한다. content delta는 순서대로 병합하고 복수 tool call delta는 tool call ID 기준으로 병합하며 usage와 finish metadata를 반영한다. 표준 adapter contract의 stream aggregator가 이 lifecycle을 제공한다. 정상 종료 시 provider API 계약에 맞는 최종 response JSON 하나를 저장하고 개별 `data` event 배열은 저장하지 않는다. client에는 원본 SSE bytes를 투명하게 전달한다. 정상 종료 전 upstream failure 또는 client disconnect가 발생하면 중단 시점의 partial aggregate를 `response_json`에 저장하고 status를 `failed`로 기록하며 원인은 `error`에 저장한다.
+
 
 ## Notes
 
 - 2026-03-10: 승인된 PRD를 바탕으로 초기 blocking AC 7개를 식별했다.
 - 2026-03-10: 승인된 PRD delta를 바탕으로 AC-008~AC-013을 추가 식별했다. 기존 AC-003(저장 모델)과 구분하여 AC-012는 API write/UI read의 access boundary에 집중한다.
+- 2026-03-10: Turn grouping·tree UI delta에 대해 AC-019~AC-023을 추가 식별했다.
+- 2026-03-10: SSE streaming 저장 응답을 최종 통합 응답 하나로 제한하기 위해 AC-024를 추가 식별했다.
+- 2026-03-10: 사용자 결정으로 AC-019를 designed 처리했다. client/harness 변경 없이 proxy semantic grouping을 사용하며, 복수 tool call/tool message는 ID 기준으로 매칭하고 순서는 보장하지 않는다.
+- 2026-03-10: 사용자 go-ahead("ok")로 AC-023의 Option B를 승인했다. 미완료 turn pool, tool-call ID 역색인, 관찰 순서 기반 traffic sequence를 사용한다.

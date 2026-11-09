@@ -4,7 +4,7 @@
 하나의 사용자 요청에서 발생한 여러 LLM traffic을 어떤 turn metadata와 저장 lifecycle로 그룹핑할 것인가?
 
 ## Status
-proposed
+approved
 
 ## Context
 - 한 번의 사용자 요청은 LLM 응답에 tool call이 포함될 때 여러 provider traffic으로 이어질 수 있다.
@@ -13,6 +13,7 @@ proposed
 - 기존 traffic schema/data migration은 이번 범위에서 제외한다.
 
 ## Decision
+**Proxy semantic grouping with API-specific adapters.** Client와 harness는 변경하지 않는다. Proxy가 traffic의 request/response를 API별 adapter로 분석해 tool call과 대응하는 tool message를 식별하고, tool call이 남아 있으면 turn을 진행 중으로 유지하며 tool call이 없는 최종 response에서 turn을 종료한다. 복수 tool call/tool message는 tool call ID를 기준으로 매칭하고 배열 순서는 의미 있는 순서로 가정하지 않는다.
 
 ## Options
 ### Option A — Harness-owned turn ID를 각 traffic에 기록
@@ -31,26 +32,34 @@ proposed
 - Pro: turn lifecycle과 summary를 명시적으로 저장하고 조회하기 쉽다.
 - Con: proxy/harness 간 turn lifecycle 계약과 orphan/incomplete 상태 관리가 추가된다.
 
+### Option D — Proxy semantic grouping with API-specific adapters
+- client/harness 변경 없이 proxy가 request/response의 tool call과 tool message를 분석한다.
+- response에 tool call이 있으면 turn을 종료하지 않고, 다음 request에 대응하는 tool message가 있으면 같은 turn의 다음 traffic으로 연결한다.
+- Pro: 현재 외부 계약을 보존하면서 실제 LLM 상호작용 의미로 turn을 판정한다.
+- Con: API별 메시지·tool schema를 표준 adapter interface로 정의하고, 불완전·비정상 traffic fallback을 명시해야 한다.
+
 ## Tradeoffs
 | | Option A | Option B | Option C |
 |---|---|---|---|
 | 그룹 경계 정확성 | 높음 | 낮음 | 높음 |
 | harness 연동 비용 | metadata 전달 필요 | 없음 | lifecycle 계약 필요 |
 | 동시 요청 안전성 | 높음 | 낮음 | 높음 |
-| 저장 모델 복잡도 | 낮음~중간 | 낮음 | 높음 |
-| lifecycle 표현력 | traffic 기반 계산 | 추론 기반 | 명시적 저장 |
+| 저장 모델 복잡도 | 낮음~중간 | 낮음 | 높음 | 중간 |
+| lifecycle 표현력 | traffic 기반 계산 | 추론 기반 | 명시적 저장 | semantic 추론 |
+| 외부 계약 변경 | 필요 | 없음 | 필요 | 없음 |
 
 ## Recommendation
-- **Option A — Harness-owned turn ID를 각 traffic에 기록**을 권장한다. 실제 turn 경계를 알고 있는 harness가 ID를 생성하고, proxy는 전달받은 식별자와 순서를 보존하는 역할에 집중하는 것이 가장 정확하면서 현재 traffic 중심 저장 구조와도 잘 맞는다.
+- **Option D — Proxy semantic grouping with API-specific adapters**를 채택한다. client/harness를 변경할 수 없으므로 proxy가 API별 adapter를 통해 tool call과 tool message 관계를 분석해야 하며, tool call이 없는 response를 turn 종료로 판정하는 규칙이 현재 요구사항과 일치한다.
 
 ## Consequences
-- proxy 입력 경계에서 turn ID와 traffic sequence metadata를 받는 계약이 필요하다.
+- proxy는 traffic request/response를 API별 adapter를 통해 분석하고 turn 관계와 순서를 저장해야 한다.
+- 복수 tool call과 tool message는 tool call ID 기준으로 매칭하며 응답 순서는 보장하지 않는다.
 - turn summary와 완료 상태는 traffic metadata에서 계산하거나 별도 query projection으로 제공한다.
-- turn metadata가 없는 기존 traffic은 AC-022에서 별도 fallback을 결정한다.
-- turn ID 생성 자체와 tool execution은 proxy 범위에 포함하지 않는다.
+- 기존 traffic migration은 하지 않으며 turn metadata가 없는 traffic은 AC-022에서 fallback을 결정한다.
+- tool execution과 harness orchestration은 proxy 범위에 포함하지 않는다.
 
 ## Downstream Concerns
-- [ ] **ADR candidate — Turn ID 전달 계약:** turn ID·sequence를 HTTP header, request metadata, 또는 harness 내부 adapter 중 어디에서 전달할지 결정해야 한다.
+- [ ] **ADR candidate — API semantic adapter contract:** API별 tool call/tool message 차이를 숨기는 표준 interface의 필드와 매칭·불완전 데이터 계약을 결정해야 한다.
 - [x] **deferred assumption — 기존 traffic migration:** 이번 요구사항에서는 기존 schema/data를 migration하지 않는다. 기존 traffic 표시 fallback은 AC-022에서 결정한다.
 - [x] **out of scope — tool execution:** tool call 실행과 harness orchestration은 이 concern의 범위가 아니다.
 
@@ -60,3 +69,4 @@ proposed
 
 ## Notes
 - 2026-03-10: AC-019 review를 위해 proposed ADR을 작성했다.
+- 2026-03-10: 사용자 결정에 따라 Option D를 채택하고 Status를 approved로 변경했다. client/harness 변경 없이 proxy semantic grouping과 API별 adapter를 사용한다.

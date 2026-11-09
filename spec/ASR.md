@@ -26,12 +26,20 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 | ASR-018 | API별 streaming 종료·오류 계약 | AC-016 | AC-016 | adr/api-streaming-completion-and-error-contract.md |
 | ASR-019 | 다중 API traffic log metadata 정규화 | AC-017 | AC-017 | adr/traffic-log-api-metadata.md |
 | ASR-020 | Token usage·cost metadata 추출과 저장 | AC-018 | AC-018 | adr/usage-and-cost-metadata.md |
+| ASR-021 | Proxy semantic turn grouping | AC-019 | AC-019 | adr/turn-grouping-storage-lifecycle.md |
+| ASR-022 | Turn 동시성·순서·완료 판정 | AC-023 | AC-023 | adr/turn-order-concurrency-completion.md |
+| ASR-023 | SSE 최종·partial aggregate 저장 | AC-024 | AC-024 | adr/sse-final-response-aggregation.md; adr/partial-stream-aggregate-failure.md |
+| ASR-024 | 표준 semantic·stream adapter contract | AC-019, AC-024 | AC-019, AC-024 | adr/standard-semantic-stream-adapter-interface.md |
+| ASR-025 | Turn tree aggregate query API | AC-020 | AC-020 | adr/turn-traffic-query-tree-projection.md |
+| ASR-026 | Legacy traffic non-migration compatibility | AC-022 | AC-022 | adr/legacy-traffic-tree-compatibility.md |
+| ASR-027 | Sidebar selection and main-view contract | AC-021 | AC-021 | adr/sidebar-selection-main-view-contract.md |
 
 ## Dependency Order (recommended Spec encoding path)
 
 1. ASR-001 → ASR-002 → ASR-003 → ASR-004 → ASR-005 → ASR-006 → ASR-007 → ASR-008 → ASR-009
 2. ASR-010 → ASR-011 → ASR-012 → ASR-013 → ASR-014 → ASR-015
 3. ASR-016 → ASR-017 → ASR-018 → ASR-019 → ASR-020
+4. ASR-021 → ASR-022 → ASR-023 → ASR-024 → ASR-025 → ASR-026 → ASR-027
 
 ## ASR Detail
 
@@ -185,6 +193,62 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 - **Related AC:** AC-018
 - **Related ADRs:** `adr/usage-and-cost-metadata.md` — approved
 
+### ASR-021 — Proxy semantic turn grouping
+- **Source:** AC-019 — Turn grouping metadata와 저장 lifecycle
+- **Statement:** Client와 harness를 변경하지 않고 proxy가 API별 semantic adapter로 traffic request/response를 분석해야 한다. response에 tool call이 있으면 turn을 진행 중으로 유지하고, tool call이 없는 response면 turn을 종료한다. 다음 request에 이전 response의 tool call들에 대응하는 tool message가 있으면 같은 turn의 다음 traffic으로 연결한다. 복수 tool call/tool message는 tool call ID 기준으로 매칭하고 배열 순서는 의미 있는 순서로 가정하지 않는다.
+- **Decision summary:** Proxy semantic grouping with API-specific adapters를 채택한다. Tool execution과 harness orchestration은 proxy 범위에 포함하지 않는다.
+- **Depends on:** ASR-019
+- **Related AC:** AC-019
+- **Related ADRs:** `adr/turn-grouping-storage-lifecycle.md` — approved
+
+### ASR-022 — Turn 동시성·순서·완료 판정
+- **Source:** AC-023 — Turn grouping 순서·동시성·완료 판정
+- **Statement:** Proxy는 여러 미완료 turn을 동시에 유지하고 각 turn의 미해결 tool call ID를 역색인해야 한다. incoming request의 tool message ID가 일치하는 turn에 traffic을 연결하고, 복수 tool message의 도착 순서는 tool call 순서와 무관하게 ID 기준으로 처리한다. response에 tool call이 없으면 turn을 완료하고 이후 traffic에 연결하지 않는다. traffic sequence는 proxy가 관찰한 저장 순서를 사용한다.
+- **Decision summary:** 미완료 turn pool과 tool-call ID 역색인을 사용한다.
+- **Depends on:** ASR-021
+- **Related AC:** AC-023
+- **Related ADRs:** `adr/turn-order-concurrency-completion.md` — approved
+
+### ASR-023 — SSE 최종·partial aggregate 저장
+- **Source:** AC-024 — SSE 최종 응답 통합 저장
+- **Statement:** API별 adapter가 SSE event를 API별 규칙으로 누적하고 content delta를 순서대로 병합하며 복수 tool call delta를 tool call ID 기준으로 병합하고 usage/finish metadata를 반영해야 한다. 정상 종료 시 provider API 계약에 맞는 최종 response JSON 하나만 `response_json`에 저장하고 개별 `data` event 배열은 저장하지 않는다. 정상 종료 전 upstream failure 또는 client disconnect가 발생하면 중단 시점의 partial aggregate를 `response_json`에 저장하고 status를 `failed`로 기록하며 원인을 `error`에 저장한다. Client에는 원본 SSE bytes를 투명하게 전달한다.
+- **Decision summary:** API별 adapter-owned final response aggregation과 failed partial aggregate 저장을 사용한다. Event-level persistence, retry/recovery, stream replay는 제공하지 않는다.
+- **Depends on:** ASR-018, ASR-022
+- **Related AC:** AC-024
+- **Related ADRs:** `adr/sse-final-response-aggregation.md` — approved; `adr/partial-stream-aggregate-failure.md` — approved
+
+### ASR-024 — 표준 semantic·stream adapter contract
+- **Source:** AC-019, AC-024 — 승인된 후속 adapter concern
+- **Statement:** 표준 adapter contract는 request의 tool result identities, response의 tool call identities와 `hasToolCalls`, stream aggregator factory를 제공해야 한다. 공통 proxy service는 이 semantic operation만 호출하며 API별 최종 response JSON 생성은 adapter가 담당한다. API 간 canonical response 변환은 수행하지 않는다.
+- **Decision summary:** 최소 semantic + stream aggregate contract를 채택한다.
+- **Depends on:** ASR-021, ASR-023
+- **Related AC:** AC-019, AC-024
+- **Related ADRs:** `adr/standard-semantic-stream-adapter-interface.md` — approved
+
+### ASR-025 — Turn tree aggregate query API
+- **Source:** AC-020 — Turn/traffic 조회 API와 tree projection
+- **Statement:** `GET /api/v1/turns` tree 전용 aggregate endpoint를 제공해야 한다. 응답은 turn 단위 pagination과 child traffic summary를 포함하고 child는 sequence 순으로 정렬해야 한다. Sidebar 응답에는 request/response 본문을 포함하지 않으며 traffic 본문은 선택 시 기존 detail API로 지연 조회한다.
+- **Decision summary:** Turn 전용 aggregate endpoint와 traffic detail 지연 조회를 사용한다.
+- **Depends on:** ASR-022, ASR-024
+- **Related AC:** AC-020
+- **Related ADRs:** `adr/turn-traffic-query-tree-projection.md` — approved
+
+### ASR-026 — Legacy traffic non-migration compatibility
+- **Source:** AC-022 — Non-migration legacy traffic 호환 표시
+- **Statement:** 기존 schema/data를 migration하지 않는다. turn metadata가 없는 각 traffic은 `/api/v1/turns`에서 `kind: "legacy"`인 synthetic single-traffic turn으로 표시하고 child traffic 하나를 연결해야 한다. 기존 flat logs list/detail API는 유지하며 legacy traffic 간 과거 turn 관계는 추론하지 않는다.
+- **Decision summary:** Legacy traffic을 synthetic single-traffic turn으로 표시한다. Legacy node 순서는 기존 `started_at DESC` 목록 순서를 따른다.
+- **Depends on:** ASR-025
+- **Related AC:** AC-022
+- **Related ADRs:** `adr/legacy-traffic-tree-compatibility.md` — approved
+
+### ASR-027 — Sidebar selection and main-view contract
+- **Source:** AC-021 — Sidebar 선택 상태와 메인 뷰 계약
+- **Statement:** 선택 상태를 URL query/route로 표현하고 turn 선택과 traffic 선택을 구분해야 한다. Turn 선택 시 turn summary, 상태, traffic 개수/순서와 child 목록을 표시하고, traffic 선택 시 기존 `LogDetail`로 request/response/error/metadata를 조회해야 한다. URL state로 새로고침과 browser back/forward를 지원하며 stable turn/traffic ID를 사용한다.
+- **Decision summary:** URL-addressable selection과 turn/traffic 분리 메인 뷰를 사용한다.
+- **Depends on:** ASR-025, ASR-026
+- **Related AC:** AC-021
+- **Related ADRs:** `adr/sidebar-selection-main-view-contract.md` — approved
+
 ## Approval
 
 - 2026-03-10: 기존 ASR-001~ASR-009 승인.
@@ -196,3 +260,5 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 - 2026-03-10: 모든 blocking AC와 승인된 ADR을 PRD의 제품 요구사항과 함께 통합했다.
 - 2026-03-10: sprint-02 delta의 AC-008~AC-013 결과를 ASR-010~ASR-015로 append했다.
 - 2026-03-10: Sprint 07의 승인된 AC-014~AC-018과 관련 ADR 결과를 ASR-016~ASR-020으로 통합했고 사용자 승인을 받았다.
+- 2026-03-10: Sprint 09의 승인된 AC-019~AC-024와 관련 ADR 결과를 ASR-021~ASR-027로 통합했다. 기존 traffic migration 제외, proxy semantic grouping, API별 adapter aggregation, turn tree query, legacy compatibility, URL selection을 반영했다.
+- 2026-03-10: 사용자 go-ahead("ok")로 Sprint 09 ASR registry를 승인했다. `spec/llm-proxy-turn-traffic.md` 작성으로 진행한다.

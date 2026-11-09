@@ -8,11 +8,11 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 3 | 7 | 0 | 0 |
+| 9 | 1 | 0 | 0 |
 
 **Sprint goal:** turn 기반 traffic 저장·탐색 UI의 승인 요구사항과 Spec, 후속 구현 backlog를 확정한다.
-**Current focus:** T-004
-**Recommended next:** T-004 — AC 목록 승인 gate
+**Current focus:** T-009
+**Recommended next:** T-009 — Spec review 및 승인 gate
 
 ## Tasks
 
@@ -34,27 +34,32 @@
   - Artifact: `spec/AC.md`
   - Depends: T-002
 
-- [ ] **T-004** — AC 목록 승인 gate
+- [x] **T-004** — AC 목록 승인 gate
+  - Notes: 사용자 go-ahead로 AC 목록과 AC-024 추가를 승인했다.
   - Phase: gate
   - Artifact: `spec/AC.md`
   - Depends: T-003
 
-- [ ] **T-005** — Blocking AC 설계 결정 및 필요한 ADR 작성
+- [x] **T-005** — Blocking AC 설계 결정 및 필요한 ADR 작성
+  - Notes: AC-019, AC-020, AC-021, AC-022, AC-023, AC-024를 모두 designed 처리했다. 관련 ADR과 후속 concern 승인도 기록했다. AC review stage-exit gate를 요청한다.
   - Phase: AC review
   - Artifact: `spec/AC.md`, `adr/`
   - Depends: T-004
 
-- [ ] **T-006** — ASR consolidation
+- [x] **T-006** — ASR consolidation
+  - Notes: 승인된 AC-019~AC-024를 ASR-021~ASR-027로 통합했다.
   - Phase: ASR
   - Artifact: `spec/ASR.md`
   - Depends: T-005
 
-- [ ] **T-007** — ASR 승인 gate
+- [x] **T-007** — ASR 승인 gate
+  - Notes: 사용자 go-ahead로 ASR-021~ASR-027과 전체 ASR registry를 승인했다.
   - Phase: gate
   - Artifact: `spec/ASR.md`
   - Depends: T-006
 
-- [ ] **T-008** — Turn/traffic 요구사항 Spec 작성
+- [x] **T-008** — Turn/traffic 요구사항 Spec 작성
+  - Notes: `spec/llm-proxy-turn-traffic.md`에 R-001~R-010, C-001~C-008과 open question을 작성했다. 공통 SSE contract는 `spec/llm-proxy-server.md` 소유로 정리했다.
   - Phase: Spec
   - Artifact: `spec/llm-proxy-turn-traffic.md`
   - Depends: T-007
