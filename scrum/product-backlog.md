@@ -47,33 +47,33 @@
   - Depends: PB-002, PB-004
   - Notes: sprint-02 설계 DoD 충족. 실제 module extraction과 `src/ui/` source placement를 sprint-04에서 수행한다.
 
-  - [ ] **PB-008** — 복수 LLM provider 및 model ID 라우팅
+  - [x] **PB-008** — 복수 LLM provider 및 model ID 라우팅
   - Story: 설정 파일에서 provider의 API URL·key를 정의하고 client model ID를 provider와 provider model ID에 매핑하여 요청을 올바른 provider로 전달하며, 미등록 model·잘못된 설정·비밀정보 노출을 명확히 처리한다.
   - Spec: `spec/llm-proxy-server.md` §Requirements R-002, R-003, R-006, R-012–R-013; §Constraints C-007
   - Sprint: sprint-05
   - Depends: PB-007
-  - Notes: sprint-02 Spec→backlog DoD 충족. sprint-05에서 실제 provider routing을 구현한다.
+  - Notes: sprint-02 Spec→backlog DoD 충족. sprint-05에서 실제 provider routing을 구현하고 자동 검증했다.
 
-  - [ ] **PB-009** — API 로그 기록과 UI 조회를 분리하는 DB access 구조
+  - [x] **PB-009** — API 로그 기록과 UI 조회를 분리하는 DB access 구조
   - Story: API request path의 log writer와 UI query path의 read repository/query service를 분리하고 SQLite schema·migration·redaction·본문 크기 제한 책임과 공통 domain model을 명확히 한다.
   - Spec: `spec/llm-proxy-server.md` §Requirements R-007–R-008; §Constraints C-003–C-004
   - Sprint: sprint-05
   - Depends: PB-004, PB-007
-  - Notes: sprint-02 Spec→backlog DoD 충족. sprint-05에서 writer/query access boundary를 실제 검증한다.
+  - Notes: sprint-02 Spec→backlog DoD 충족. sprint-05에서 writer/query access boundary를 실제 코드와 자동 검증에 반영했다.
 
   - [ ] **PB-010** — 확장 가능한 모니터링 UI 구조
   - Story: 승인된 UI framework와 page/component/data-query 구조를 사용해 log list/detail 및 content viewer를 제공할 기반을 만들고, 향후 분석·report·chart feature를 기존 화면과 독립적으로 추가할 수 있게 한다.
   - Spec: `spec/llm-proxy-server.md` §Requirements R-010–R-011; §Constraints C-006, C-008
-  - Sprint: sprint-02
+  - Sprint: sprint-06
   - Depends: PB-007, PB-009
-  - Notes: sprint-02 Spec→backlog DoD 충족. 실제 React UI 구현은 sprint-03 PB-005에서 수행.
+  - Notes: sprint-02 Spec→backlog DoD 충족. sprint-06에서 확장 가능한 page/component/data-query 구조를 실제 검증한다.
 
-  - [ ] **PB-011** — 구조 변경 마이그레이션·검증·실행 문서
+  - [x] **PB-011** — 구조 변경 마이그레이션·검증·실행 문서
   - Story: 기존 MVP 동작을 보존하는 모듈 분리·DB migration 순서, provider routing 및 UI/API 회귀 검증, 단일 프로세스 실행·설정 문서를 정의한다.
   - Spec: `spec/llm-proxy-server.md` §Requirements R-014–R-016; §Constraints C-009
   - Sprint: sprint-05
   - Depends: PB-007, PB-008, PB-009, PB-010
-  - Notes: sprint-02 Spec→backlog DoD 충족. sprint-05에서 migration·회귀 자동화·실행 문서를 현재 구조에 맞게 완성한다.
+  - Notes: sprint-02 Spec→backlog DoD 충족. sprint-05에서 migration·회귀 자동화·실행 문서를 현재 구조에 맞게 완성했다.
 
   - [x] **PB-001** — 초기 제품 백로그 생성
   - Story: LLM Proxy Server의 승인된 PRD, 설계 결정, Spec을 바탕으로 구현 가능한 제품 백로그를 정의한다.
@@ -90,3 +90,4 @@
 - 2026-03-10: sprint-02 Spec→backlog Boundary 완료. PB-007~PB-011의 설계 DoD를 충족하고 실제 구현은 implementation sprint로 이월했다.
 - 2026-03-10: sprint-03 Boundary 완료. PB-005 UI 기능은 구현했으며 C-008 module extraction과 R-016 실행 문서는 sprint-04 Scope로 carry-over했다.
 - 2026-03-10: sprint-04 Boundary 완료. PB-005~PB-007을 종료하고 sprint-05에 PB-008, PB-009, PB-011을 커밋 후보로 계획했다.
+- 2026-03-10: sprint-05 Boundary 완료. PB-008, PB-009, PB-011을 종료하고 PB-010을 sprint-06 Scope로 계획했다.
