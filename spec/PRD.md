@@ -50,6 +50,49 @@ Codex와 유사한 LLM 클라이언트와 OpenAI Model Provider 사이에서 요
 ## Approval
 
 - 2026-03-10: 사용자 go-ahead(“ok”)로 PRD 승인.
+- 2026-03-10: Chat Completions·Claude Messages 지원 delta는 Sprint 07에서 별도 요구사항으로 확정하기로 했다. 아래 Delta 섹션은 사용자 승인을 기다린다.
+
+## Delta: Chat Completions·Claude Messages API 지원
+
+### Delta Summary
+기존 `/api/v1/responses` 프록시를 보존하면서 OpenAI Chat Completions API와 Claude Messages API를 추가 지원한다. 클라이언트는 기존 client model ID 기반 routing을 사용하고, 각 API의 public payload·response·error·streaming 계약은 해당 API 클라이언트가 기대하는 형식을 유지한다.
+
+### Delta Goals
+- `/api/v1/chat/completions`를 통해 OpenAI Chat Completions 클라이언트 요청을 provider로 전달하고 응답을 반환한다.
+- `/api/v1/messages`를 통해 Claude Messages 클라이언트 요청을 provider로 전달하고 응답을 반환한다.
+- Responses, Chat Completions, Messages API를 독립 adapter/plugin으로 확장·검증할 수 있게 한다.
+- Claude provider의 API key와 필수 version/header 요구사항을 설정·환경변수 원칙에 맞게 전달한다.
+- 세 API의 성공·오류·비스트리밍·스트리밍 트래픽을 기존 SQLite 로그 모델에 안전하게 기록하고 기존 Responses 동작을 회귀 검증한다.
+
+### Delta In Scope
+- 두 public route의 경로와 upstream endpoint mapping
+- Chat Completions 및 Claude Messages의 요청·응답·오류 payload 변환 또는 투명 전달 범위
+- OpenAI Bearer와 Claude 인증/header 설정
+- 세 API의 SSE streaming 전달 및 완료·중단 판정
+- API 종류와 provider/model 정보를 포함한 로그 metadata 정규화
+- configuration validation, model routing, secret redaction, body size limit
+- 기존 Responses API 회귀 검증과 신규 API 통합 검증
+- 실행 문서 및 구현 backlog 갱신
+
+### Delta Out of Scope
+- 제품 코드 구현 자체는 Sprint 07의 Spec→backlog 범위에 포함하지 않는다.
+- Anthropic SDK 의존성 도입, provider별 고급 기능의 완전한 추상화, API 간 자동 payload 변환은 별도 결정 없이 추가하지 않는다.
+- Claude Messages를 OpenAI 호환 형식으로 노출하거나 그 반대의 번역은 승인된 계약에 명시된 경우에만 포함한다.
+- UI의 실시간 streaming 화면, 과금·토큰 분석, 다중 사용자 인증은 포함하지 않는다.
+
+### Delta Constraints
+- 기존 `/api/v1/responses` route, configuration convention, SQLite writer/reader boundary, secret redaction 정책을 보존한다.
+- public route는 `/api/v1` namespace를 유지한다.
+- provider secret은 `config.json`에 평문으로 저장하지 않고 `apiKeyEnv`가 가리키는 process environment에서 로드한다.
+- API adapter는 route/payload/provider response 변환 책임을 가지며 공통 application service와 `TrafficLogWriter` port를 직접 결합하지 않는다.
+- 구현은 승인된 Delta Spec 이후 별도 implementation sprint에서 진행한다.
+
+### Delta Success Criteria
+- Chat Completions와 Messages의 정상·실패 요청이 올바른 provider endpoint와 인증 방식으로 전달되고 client contract에 맞는 응답을 반환한다.
+- 두 API의 비스트리밍·스트리밍 성공 및 upstream/client disconnect 실패가 로그에 추적 가능하게 기록된다.
+- 기존 Responses의 정상·실패·streaming·routing·secret redaction 검증이 계속 통과한다.
+- 잘못된 model/configuration, upstream 오류, payload size 초과가 secret을 노출하지 않고 식별 가능한 오류로 반환된다.
+- 승인된 Spec에서 구현 task와 검증 task를 독립적으로 계획할 수 있다.
 
 ## Success Criteria
 - 구성된 클라이언트 요청이 프록시를 통해 제공자에 도달하고, 제공자 응답이 클라이언트에 반환된다.

@@ -23,6 +23,9 @@ OpenAI Chat Completions API와 Claude Messages API를 기존 Responses 프록시
 6. PB-012를 구현 가능한 세부 product backlog story로 분해하고 다음 Backlog→Implementation sprint의 후보로 남긴다.
 7. 제품 코드는 이 스프린트에서 변경하지 않는다.
 
+## Approval
+- 2026-03-10: 사용자 go-ahead("ok")로 Sprint 07 계획 승인. `TODO.md`를 seed하고 Execute를 시작했다.
+
 ## Demo Checklist
 - [ ] Delta PRD와 변경 범위를 설명할 수 있다.
 - [ ] Chat Completions·Claude Messages의 endpoint 및 계약 결정이 기록되어 있다.
