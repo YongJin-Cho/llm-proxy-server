@@ -12,7 +12,7 @@
 
 **Sprint goal:** OpenAI Chat Completions API와 Claude Messages API를 기존 Responses 프록시에 추가하기 위한 사용자 승인 PRD·AC·설계 결정·ASR·Spec을 확정하고 구현 가능한 product backlog를 만든다.
 **Current focus:** T-004 — AC별 ADR/Direct Input 설계 결정 및 승인
-**Recommended next:** T-004 — AC-014 ADR 검토 및 승인
+**Recommended next:** T-004 — AC-017 Option B 기록 및 AC-018 ADR 검토
 
 ## Tasks
 
@@ -37,12 +37,9 @@
   - Phase: ③ AC review
   - Artifact: `adr/multi-api-contract-adapter-boundary.md`, `spec/AC.md`
   - Depends: T-003
-  - Notes: 현재 AC-014 ADR 승인 대기
-  - Phase: ③ AC review
-  - Artifact: `adr/`, `spec/AC.md`
-  - Depends: T-003
+  - Notes: AC-014 Option A, AC-015 Bearer 기본, AC-016 Option A 승인 완료. AC-017 Option B 기록 및 AC-018 ADR 검토 대기.
 
-- [ ] **T-005** — ASR delta 통합 및 승인
+  - [ ] **T-005** — ASR delta 통합 및 승인
   - Phase: ④ ASR consolidation
   - Artifact: `spec/ASR.md`
   - Depends: T-004

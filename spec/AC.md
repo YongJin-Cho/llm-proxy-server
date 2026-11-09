@@ -19,16 +19,17 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 | AC-011 | API adapter 확장 경계 | Structure & organization | designed | — | ASR-013 |
 | AC-012 | API log writer와 UI read 경계 | Structure & organization | designed | adr/api-log-write-ui-read-boundary.md | ASR-014 |
 | AC-013 | 구조 변경의 migration·회귀·실행 기준 | Quality bar (architectural) | designed | — | ASR-015 |
-| AC-014 | 다중 API public contract와 payload 변환 경계 | Integration & dependencies | reviewing | adr/multi-api-contract-adapter-boundary.md | — |
-| AC-015 | Claude provider 인증·header 설정 계약 | Integration & dependencies | identified | — | — |
-| AC-016 | API별 streaming 종료·오류 계약 | Constraints (structural) | identified | — | — |
-| AC-017 | 다중 API traffic log metadata 정규화 | Structure & organization | identified | — | — |
+| AC-014 | 다중 API public contract와 payload 변환 경계 | Integration & dependencies | designed | adr/multi-api-contract-adapter-boundary.md | ASR-016 |
+| AC-015 | Claude provider 인증·header 설정 계약 | Integration & dependencies | designed | adr/claude-provider-authentication-headers.md | ASR-017 |
+| AC-016 | API별 streaming 종료·오류 계약 | Constraints (structural) | designed | adr/api-streaming-completion-and-error-contract.md | ASR-018 |
+| AC-017 | 다중 API traffic log metadata 정규화 | Structure & organization | designed | adr/traffic-log-api-metadata.md | ASR-019 |
+| AC-018 | Token usage·cost metadata 추출과 저장 | Integration & dependencies | reviewing | adr/usage-and-cost-metadata.md | — |
 
 ## Dependency Order (recommended review path)
 
 1. AC-001 → AC-002 → AC-003 → AC-004 → AC-005 → AC-006 → AC-007
 2. AC-008 → AC-009 → AC-010 → AC-011 → AC-012 → AC-013
-3. AC-014 → AC-015 → AC-016 → AC-017
+3. AC-014 → AC-015 → AC-016 → AC-017 → AC-018
 
 ## AC Detail
 
@@ -189,49 +190,61 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 ### AC-014 — 다중 API public contract와 payload 변환 경계
 
 - **Category:** Integration & dependencies
-- **Status:** reviewing
+- **Status:** designed
 - **Statement:** Responses, OpenAI Chat Completions, Claude Messages를 어떤 public route와 provider endpoint 계약으로 노출하며, 요청·응답 payload를 투명 전달할지 API별 adapter에서 변환할지 결정해야 하는가?
 - **Why it matters:** API 계약을 잘못 정하면 기존 클라이언트 호환성이 깨지고, API별 차이가 공통 application service와 로그 저장 계층으로 새어 향후 provider/API 추가 비용이 커진다.
 - **Depends on:** AC-011
 - **Related ADRs:**
-  - 없음
+  - `adr/multi-api-contract-adapter-boundary.md` — approved
 - **Resolution path:** adr
-- **Resolution:**
+- **Resolution:** Option A — Transparent pass-through. 각 public API 요청과 provider 응답은 가능한 한 해당 provider 계약 그대로 전달한다. Provider가 해당 API를 지원하지 않거나 endpoint가 실패하면 provider의 오류를 client가 식별 가능한 오류로 반환하며, proxy가 API 간 canonical payload 변환을 수행하지 않는다.
 
 ### AC-015 — Claude provider 인증·header 설정 계약
 
 - **Category:** Integration & dependencies
-- **Status:** identified
+- **Status:** designed
 - **Statement:** Claude Messages provider에 API key, `anthropic-version` 등 API별 필수 header를 어떤 provider configuration schema와 secret loading 방식으로 표현하고 전달할 것인가?
 - **Why it matters:** OpenAI Bearer 인증과 Claude 인증 방식은 다르며, 설정을 잘못 추상화하면 인증 실패·secret 노출·provider별 예외 코드 확산이 발생한다.
 - **Depends on:** AC-010
 - **Related ADRs:**
-  - 없음
+  - `adr/claude-provider-authentication-headers.md` — approved
 - **Resolution path:** adr
-- **Resolution:**
+- **Resolution:** Bearer를 기본 upstream 인증으로 사용한다. Claude Messages payload를 지원하더라도 기본적으로 `Authorization: Bearer <api-key>`를 구성한다. 공식 Anthropic endpoint처럼 native 인증이 필요한 provider는 설정에서 `anthropic` 인증 모드를 선택해 `x-api-key`와 provider가 지정한 `anthropic-version`을 사용한다. 기존 `apiKeyEnv` process environment secret loading과 redaction 정책은 유지한다.
 
 ### AC-016 — API별 streaming 종료·오류 계약
 
 - **Category:** Constraints (structural)
-- **Status:** identified
+- **Status:** designed
 - **Statement:** Chat Completions와 Claude Messages의 SSE event, 정상 종료 sentinel, upstream 오류, client disconnect를 어떻게 전달하고 완료/실패 로그로 판정할 것인가?
 - **Why it matters:** 현재 Responses 전용 종료 판정은 API별 event schema와 맞지 않을 수 있으며, 잘못된 판정은 부분 응답을 completed로 저장하거나 정상 stream을 failed로 기록할 수 있다.
 - **Depends on:** AC-014
 - **Related ADRs:**
-  - 없음
+  - `adr/api-streaming-completion-and-error-contract.md` — approved
 - **Resolution path:** adr
-- **Resolution:**
+- **Resolution:** Option A — API-specific completion detectors with transparent streaming. API kind별 정상 종료 event/sentinel을 감지하고 원본 SSE bytes는 그대로 client에 전달한다. Chat Completions는 `data: [DONE]`, Claude Messages는 `message_stop`, Responses는 기존 `response.completed` 또는 `[DONE]`를 정상 종료 기준으로 사용한다. Sentinel/event 이전 종료, upstream 오류, client disconnect는 `failed`로 기록하고 부분 결과를 보존한다.
 
 ### AC-017 — 다중 API traffic log metadata 정규화
 
 - **Category:** Structure & organization
-- **Status:** identified
+- **Status:** designed
 - **Statement:** 서로 다른 API 계약의 요청·응답·streaming traffic을 기존 SQLite log model에 어떤 API kind, provider, model, status 및 raw content metadata로 기록할 것인가?
 - **Why it matters:** API 종류를 잃으면 운영자가 traffic을 구분할 수 없고, API별 raw payload를 보존하지 않으면 디버깅·회귀 검증이 어려워진다.
 - **Depends on:** AC-014, AC-016
 - **Related ADRs:**
-  - 없음
-- **Resolution path:** direct-input
+  - `adr/traffic-log-api-metadata.md` — approved
+- **Resolution path:** adr
+- **Resolution:** Option B — Add first-class `api_kind` column. Traffic log table과 domain model에 `api_kind`를 추가하고 Responses, Chat Completions, Messages를 구분한다. 기존 Responses row와 기존 호출 경로에는 `responses` 기본값을 사용해 migration compatibility를 유지한다. API별 raw request/response body는 기존 bounded JSON/text 정책으로 보존하며 API 간 변환하지 않는다.
+
+### AC-018 — Token usage·cost metadata 추출과 저장
+
+- **Category:** Integration & dependencies
+- **Status:** reviewing
+- **Statement:** Responses, Chat Completions, Claude Messages의 서로 다른 usage 응답에서 input tokens, cached input tokens, output tokens, total tokens 및 dollar cost를 어떻게 추출·정규화·저장할 것인가?
+- **Why it matters:** API별 usage 필드명이 다르고 cost는 provider가 직접 제공하지 않거나 모델별 가격표가 필요할 수 있어, 잘못된 계산은 운영·비용 판단을 왜곡한다.
+- **Depends on:** AC-014, AC-017
+- **Related ADRs:**
+  - `adr/usage-and-cost-metadata.md` — proposed
+- **Resolution path:** adr
 - **Resolution:**
 
 ## Notes

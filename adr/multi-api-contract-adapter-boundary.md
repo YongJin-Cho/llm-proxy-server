@@ -4,7 +4,7 @@
 Responses, OpenAI Chat Completions, Claude Messages를 어떤 public route와 provider endpoint 계약으로 노출하며, 요청·응답 payload를 투명 전달할지 API별 adapter에서 변환할지 어떻게 결정할 것인가?
 
 ## Status
-proposed
+approved
 
 ## Context
 - 기존 프록시는 `/api/v1/responses`를 제공하고 upstream `/responses`로 요청을 전달한다.
@@ -14,6 +14,7 @@ proposed
 - 이번 결정은 AC-011을 실제 두 API 확장에 적용하는 구체적인 경계와 변환 수준을 확정한다.
 
 ## Decision
+**Option A — Transparent pass-through.** 각 public API 요청과 provider 응답은 가능한 한 해당 provider 계약 그대로 전달한다. Provider가 해당 API를 지원하지 않거나 endpoint가 실패하면 provider의 오류를 client가 식별 가능한 오류로 반환하며, proxy가 API 간 canonical payload 변환을 수행하지 않는다.
 
 ## Options
 ### Option A — Transparent pass-through
@@ -43,22 +44,22 @@ proposed
 | 향후 API 추가 | 공통 코드 결합 위험 | canonical 확장 필요 | adapter/plugin 추가 |
 
 ## Recommendation
-- **Option C — Route-specific adapter with provider contract mapping**을 권장한다.
-- 기존 AC-011의 adapter 경계를 구체화하면서 public API 호환성을 보존하고, Chat Completions와 Messages의 서로 다른 payload·error·SSE event를 각 adapter 안에 격리할 수 있다.
-- 내부 공통 모델은 routing context와 traffic log metadata 수준으로 제한하고, public request/response 전체를 하나의 canonical contract로 억지로 합치지 않는다.
+- **Option C — Route-specific adapter with provider contract mapping**을 권장했으나, 사용자는 **Option A — Transparent pass-through**를 선택했다.
+- 선택 이유는 proxy가 API 간 payload 변환을 책임지지 않고 provider 지원 여부와 오류를 provider 응답으로 판단하게 하여 구현 범위를 단순하게 유지하기 위해서다.
 
 ## Consequences
 - `/api/v1/responses`, `/api/v1/chat/completions`, `/api/v1/messages`는 독립 route/adapter로 등록한다.
-- 각 adapter는 public request를 해당 provider contract로 변환하고 response/error/stream event를 public contract로 반환한다.
-- 공통 application service는 API adapter가 전달한 API kind와 client model ID를 사용해 routing 및 `TrafficLogWriter` 호출을 조정한다.
-- API별 정상·오류·비스트리밍·streaming 검증이 필요하다.
+- API adapter는 public body를 임의의 canonical payload로 변환하지 않고 해당 API의 provider endpoint로 전달한다.
+- Provider 응답 body와 content type은 가능한 한 그대로 client에 반환한다. Provider가 API를 지원하지 않거나 endpoint가 실패하면 provider 오류 상태·body를 보존해 반환하고 로그 상태는 `failed`로 기록한다.
+- 공통 application service는 API kind, client model ID, routing 결과와 `TrafficLogWriter` 연결만 조정한다.
+- API별 정상·오류·비스트리밍·streaming 검증이 필요하며, 특히 provider capability 미지원 오류를 검증한다.
 - 하나의 canonical public response 형식으로 세 API를 통합하지 않는다.
 
 ## Downstream Concerns
 - [ ] **ADR candidate — Provider endpoint 및 API capability 설정:** provider별 base URL만으로 route를 유추할지, API kind별 endpoint/capability를 설정에 명시할지 결정한다.
-- [ ] **ADR candidate — API별 public error 변환:** provider 오류를 public API 원래 계약으로 변환할 범위와 pass-through 범위를 결정한다.
+- [x] **directly resolved — API별 public error 변환:** provider 오류의 status, content type, body를 가능한 한 pass-through한다. proxy 자체 오류(라우팅·설정·네트워크)는 기존 proxy error 계약으로 반환한다.
 - [x] **covered — Adapter 등록 구조:** AC-011의 승인된 Resolution에 따라 독립 adapter/plugin으로 등록한다.
-- [x] **deferred assumption — SDK 도입:** 공식 SDK 의존성 도입 여부는 이번 AC의 public contract 경계 결정 이후 구현 단계에서 필요할 때 별도 검토한다.
+- [x] **deferred assumption — SDK 도입:** 공식 SDK 의존성 도입 여부는 구현 단계에서 필요할 때 별도 검토한다.
 
 ## Related
 - `spec/AC.md` — AC-011, AC-014
@@ -66,3 +67,4 @@ proposed
 
 ## Notes
 - 2026-03-10: AC-014 검토를 위해 세 가지 public contract·adapter 경계를 비교하는 proposed ADR을 작성했다.
+- 2026-03-10: 사용자 선택으로 Option A를 승인했다. Provider contract pass-through를 사용하고 provider 미지원·endpoint 실패는 provider 오류로 반환한다.
