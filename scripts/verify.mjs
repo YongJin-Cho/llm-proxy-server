@@ -80,6 +80,10 @@ proxy.stderr.on('data', (chunk) => { stderr.value += chunk.toString(); });
 try {
   await waitForStartup(proxy, stderr);
   const base = `http://127.0.0.1:${proxyPort}`;
+  const ui = await request(`${base}/`);
+  assert.equal(ui.status, 200);
+  assert.match(ui.body, /<div id="root"><\/div>/);
+
   const alpha = await request(`${base}/api/v1/responses`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer client-secret' }, body: JSON.stringify({ model: 'client-alpha', input: 'hello' }) });
   assert.equal(alpha.status, 200);
   assert.equal(JSON.parse(alpha.body).id, 'response-a');
@@ -103,7 +107,7 @@ try {
   assert.ok(alphaLog);
   assert.match(alphaLog.request_json, /REDACTED/);
   assert.doesNotMatch(alphaLog.request_json, /client-secret/);
-  console.log('Routing verification passed: two providers, provider model mapping, unknown model rejection, secret handling, and read/write boundaries.');
+  console.log('Routing verification passed: UI entrypoint, two providers, provider model mapping, unknown model rejection, secret handling, and read/write boundaries.');
 } finally {
   proxy.kill('SIGTERM');
   providerA.close();

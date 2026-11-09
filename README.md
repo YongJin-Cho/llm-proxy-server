@@ -55,4 +55,16 @@ npm run build
 npm run verify
 ```
 
-`verify`는 임시 `config.json`과 process environment secret을 사용해 두 mock Provider routing, provider model mapping, unknown model rejection, secret redaction, SQLite read/write boundary를 재현합니다.
+`verify`는 임시 `config.json`과 process environment secret을 사용해 UI entrypoint, 두 mock Provider routing, provider model mapping, unknown model rejection, secret redaction, SQLite read/write boundary를 재현합니다.
+
+## UI 구조
+
+React UI는 기능별 책임을 분리해 확장할 수 있도록 구성되어 있습니다.
+
+- `src/ui/data-query/`: `/api/v1/logs`와 `/api/v1/logs/:id` HTTP 조회 및 오류 변환
+- `src/ui/pages/`: 화면 상태, 필터·pagination·상세 이동 조합
+- `src/ui/components/`: `Filters`, `LogTable`, `LogDetail` 등 API에 직접 의존하지 않는 표시·입력 컴포넌트
+- `src/ui/types.ts`: UI 공통 view-model과 filter 타입
+- `src/ui/main.tsx`: 선택한 page를 React root에 연결하는 bootstrap
+
+새로운 analysis/report/chart 기능은 별도 page 또는 feature module로 추가합니다. 기존 `TrafficPage`와 `main.tsx`에 기능별 조회·상태를 누적하지 않아 기존 traffic 화면과 독립적으로 확장할 수 있습니다.

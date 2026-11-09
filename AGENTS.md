@@ -35,7 +35,14 @@ llm-proxy-server/
 - `src/application/log-query-service.ts`: UI/API log query use case; depends on `TrafficLogReader`
 - `src/api/routes.ts`: HTTP route and payload adapter; depends on application services, not SQLite
 - `src/persistence/sqlite-traffic-log.ts`: SQLite schema and writer/reader adapter
-- `src/ui/`: React page, component, data-query, and styles
+- `src/ui/data-query/`: browser-side HTTP query functions only; API URL, query parameters, and response/error mapping live here
+- `src/ui/pages/`: page-level state and use-case composition; pages coordinate data-query and presentational components
+- `src/ui/components/`: reusable presentation and user-input components; components do not call the API directly
+- `src/ui/types.ts`: shared UI view-model and filter types
+- `src/ui/main.tsx`: React bootstrap only
+- `src/ui/styles.css`: shared UI styling
+
+The current Traffic page is split into `pages/TrafficPage.tsx`, `components/Filters.tsx`, `components/LogTable.tsx`, `components/LogDetail.tsx`, and `data-query/log-api.ts`. Add future analysis/report/chart features as separate page or feature modules; do not place their data fetching or state into `TrafficPage` or `main.tsx`.
 
 Application code depends on domain ports; the SQLite adapter is the concrete persistence implementation. The proxy application service depends only on `TrafficLogWriter`, while `TrafficLogQueryService` depends only on `TrafficLogReader`. Route handlers contain no SQL statements or SQLite imports.
 
@@ -45,10 +52,11 @@ Application code depends on domain ports; the SQLite adapter is the concrete per
 2. Keep source TypeScript/TSX/CSS under `src/`; `ui/` contains only Vite's entry HTML.
 3. Runtime settings belong in root `config.json`; only secret values may come from environment variables named by `apiKeyEnv`.
 4. Run `npm run build` after structural changes and `npm run verify` for proxy, SSE, persistence, redaction, or UI changes.
+5. Keep UI imports directed inward: pages may import data-query and components; components must remain API-agnostic; `main.tsx` only bootstraps the selected page.
 
 ## Verification guide
 
-`npm run build` validates the Vite UI build and TypeScript server compilation. `npm run verify` creates a temporary config.json and secret environment values, starts mock Providers and a temporary proxy/SQLite instance, and validates routing, persistence, masking, model rejection, and detail lookup. Verification records map evidence to `spec/llm-proxy-server.md` requirement IDs.
+`npm run build` validates the Vite UI build and TypeScript server compilation. `npm run verify` creates a temporary config.json and secret environment values, starts mock Providers and a temporary proxy/SQLite instance, validates the UI entrypoint, routing, persistence, masking, model rejection, and detail lookup. Verification records map evidence to `spec/llm-proxy-server.md` requirement IDs.
 
 ## Notes
 

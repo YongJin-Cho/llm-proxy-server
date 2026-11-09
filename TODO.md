@@ -8,11 +8,11 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 1 | 6 | 0 | 0 |
+| 5 | 2 | 0 | 0 |
 
 **Sprint goal:** 기존 로그 목록·상세 UI를 확장 가능한 page/component/data-query 구조로 정리하고 향후 분석·report·chart 기능의 독립적 확장 기반을 완성한다.
-**Current focus:** T-002 — 로그 목록·상세·content viewer 기능 보존
-**Recommended next:** T-002 — 로그 목록·상세·content viewer 기능 보존
+**Current focus:** T-006 — Sprint completion review
+**Recommended next:** T-006 — Sprint completion review
 
 ## Tasks
 
@@ -22,31 +22,31 @@
   - Depends: —
   - Notes: 기존 `main.tsx`의 API data-query, page, component 책임을 분리했다. `npm run build` 통과.
 
-  - [ ] **T-002** — 로그 목록·상세·content viewer 기능 보존
-  - Phase: ⑦ Implementation
-  - Artifact: `src/ui/`
-  - Depends: T-001
-  - Notes: 기존 filters, pagination, detail navigation, request/response content rendering과 오류 표시를 새 구조에서 유지한다.
+  - [x] **T-002** — 로그 목록·상세·content viewer 기능 보존
+    - Phase: ⑦ Implementation
+    - Artifact: `src/ui/`
+    - Depends: T-001
+    - Notes: 목록·필터·pagination·상세 이동·request/response/error 표시를 유지했다. UI entrypoint 검증과 전체 `npm run verify` 통과.
 
-- [ ] **T-003** — UI 확장 지점 및 import 경계 문서화
+  - [x] **T-003** — UI 확장 지점 및 import 경계 문서화
   - Phase: ⑦ Implementation
   - Artifact: `AGENTS.md`, `README.md`, `verification/llm-proxy-server.md`
   - Depends: T-002
-  - Notes: page/component/data-query 책임과 향후 analysis/report/chart feature의 독립 확장 규칙을 문서화한다.
+  - Notes: `AGENTS.md`, `README.md`, verification report에 page/component/data-query 책임, import 방향, 독립 feature 확장 규칙을 기록했다.
 
-- [ ] **T-004** — Sprint 06 자동 회귀 검증
-  - Phase: ⑧ Verification
-  - Artifact: `scripts/verify.mjs`, `verification/llm-proxy-server.md`
-  - Depends: T-003
-  - Notes: provider routing, SSE, persistence/query, masking, UI build 및 핵심 UI 동작 회귀를 자동 검증한다.
+  - [x] **T-004** — Sprint 06 자동 회귀 검증
+    - Phase: ⑧ Verification
+    - Artifact: `scripts/verify.mjs`, `verification/llm-proxy-server.md`
+    - Depends: T-003
+    - Notes: `npm run build`와 `npm run verify` 통과. UI entrypoint, provider routing, model mapping, unknown model rejection, secret handling, persistence/read-write boundary를 확인했다.
 
-- [ ] **T-005** — Sprint 06 Demo checklist
-  - Phase: demo
-  - Artifact: `scrum/sprint-06.md`, `verification/llm-proxy-server.md`
-  - Depends: T-004
-  - Notes: 목록·상세·content viewer, import 경계, 확장 지점, 기존 proxy/SSE/log 회귀, build/verify 결과를 확인한다.
+  - [x] **T-005** — Sprint 06 Demo checklist
+    - Phase: demo
+    - Artifact: `scrum/sprint-06.md`, `verification/llm-proxy-server.md`
+    - Depends: T-004
+    - Notes: 목록·상세·content viewer 동작, component의 API 비의존성, page→data-query 경계, 확장 지점 문서, UI entrypoint와 전체 회귀 검증을 확인했다. `npm run build` 및 `npm run verify` 통과.
 
-- [ ] **T-006** — Sprint completion review
+  - [ ] **T-006** — Sprint completion review
   - Phase: gate
   - Artifact: `TODO.md`, `verification/llm-proxy-server.md`
   - Depends: T-005
