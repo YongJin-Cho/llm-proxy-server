@@ -6,6 +6,13 @@
 
 ## Stories
 
+- [x] **PB-001** — 초기 제품 백로그 생성
+  - Story: LLM Proxy Server의 승인된 PRD, 설계 결정, Spec을 바탕으로 구현 가능한 제품 백로그를 정의한다.
+  - Spec: `spec/llm-proxy-server.md` §Requirements, §Constraints
+  - Sprint: sprint-00
+  - Depends: —
+  - Notes: Spec→backlog 스프린트에서 DoD 충족 후 Boundary에서 종료.
+
 - [x] **PB-002** — Responses API 프록시와 오류 전달
   - Story: localhost의 LLM 클라이언트가 `/api/v1/responses`로 요청하면 Provider에 전달되고 성공·Provider 오류·네트워크 오류가 클라이언트와 로그에 추적 가능한 형태로 반환된다.
   - Spec: `spec/llm-proxy-server.md` §Requirements R-001–R-003; §Constraints C-001, C-005, C-007
@@ -75,13 +82,6 @@
   - Depends: PB-007, PB-008, PB-009, PB-010
   - Notes: sprint-02 Spec→backlog DoD 충족. sprint-05에서 migration·회귀 자동화·실행 문서를 현재 구조에 맞게 완성했다.
 
-  - [x] **PB-001** — 초기 제품 백로그 생성
-  - Story: LLM Proxy Server의 승인된 PRD, 설계 결정, Spec을 바탕으로 구현 가능한 제품 백로그를 정의한다.
-  - Spec: `spec/llm-proxy-server.md` §Requirements, §Constraints
-  - Sprint: sprint-00
-  - Depends: —
-  - Notes: Spec→backlog 스프린트에서 DoD 충족 후 Boundary에서 종료.
-
 - [x] **PB-012** — Chat Completions와 Claude Messages API 지원 요구사항 및 구현 backlog 확정
   - Story: 기존 Responses 프록시와 로그·provider routing 구조를 보존하면서 OpenAI Chat Completions API와 Claude Messages API를 지원하기 위해, 승인된 계약·설정·보안·streaming·오류·회귀 검증 기준과 구현 가능한 하위 backlog가 확정된다.
   - Spec: `spec/llm-proxy-server.md` §Requirements/§Constraints — delta 예정
@@ -130,6 +130,13 @@
   - Sprint: sprint-08
   - Depends: PB-013, PB-014, PB-015, PB-016, PB-017
   - Notes: Sprint 08에서 세 API·기존 Responses 회귀, streaming, migration, redaction, usage/cost 및 실행 문서를 검증했다.
+
+- [ ] **PB-019** — Turn 기반 traffic 저장·탐색 UI 요구사항 확정
+  - Story: 하나의 사용자 요청에서 발생한 복수 LLM traffic을 하나의 turn으로 그룹핑해 저장하고, 왼쪽 sidebar tree에서 turn과 하위 traffic을 탐색하며 선택한 항목의 내용을 메인 뷰에서 확인할 수 있도록 구현 가능한 요구사항·설계·검증 기준과 후속 구현 backlog를 확정한다.
+  - Spec: `spec/llm-proxy-turn-traffic.md` — 예정
+  - Sprint: sprint-09
+  - Depends: PB-004, PB-005, PB-009, PB-010
+  - Notes: 이번 Spec→backlog 스프린트의 Scope. 제품 코드 구현은 승인 Spec 이후 별도 Backlog→Implementation sprint에서 수행한다.
 
 ## Notes
 
