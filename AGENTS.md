@@ -32,7 +32,7 @@ llm-proxy-server/
 - `src/configuration.ts`: config.json loading, validation, apiKeyEnv secret resolution, and provider auth mode validation
 - `src/domain/`: traffic log types, writer/reader ports, redaction and size policies
 - `src/application/proxy-service.ts`: common routing, auth, provider I/O, logging, and SSE orchestration; depends on `TrafficLogWriter`
-- `src/application/proxy-adapters/`: API-specific route path, traffic-log kind, provider endpoint mapping, and streaming completion detectors; `ProxyAdapter` is the shared base for Responses, Chat Completions, and Messages
+- `src/application/proxy-adapters/`: API-specific route path, traffic-log kind, provider endpoint mapping, streaming completion detectors, and usage/cost parsing; `ProxyAdapter` is the shared base for Responses, Chat Completions, and Messages
 - `src/application/log-query-service.ts`: UI/API log query use case; depends on `TrafficLogReader`
 - `src/api/routes.ts`: HTTP route and payload adapter; depends on application services, not SQLite
 - `src/persistence/sqlite-traffic-log.ts`: SQLite schema and writer/reader adapter
@@ -45,7 +45,7 @@ llm-proxy-server/
 
 The current Traffic page is split into `pages/TrafficPage.tsx`, `components/Filters.tsx`, `components/LogTable.tsx`, `components/LogDetail.tsx`, and `data-query/log-api.ts`. Add future analysis/report/chart features as separate page or feature modules; do not place their data fetching or state into `TrafficPage` or `main.tsx`.
 
-Application code depends on domain ports; the SQLite adapter is the concrete persistence implementation. The proxy application service depends only on `TrafficLogWriter`, while API-specific differences are isolated in `src/application/proxy-adapters/`. `TrafficLogQueryService` depends only on `TrafficLogReader`. Route handlers contain no SQL statements or SQLite imports.
+Application code depends on domain ports; the SQLite adapter is the concrete persistence implementation. The proxy application service depends only on `TrafficLogWriter` and the generic `ProxyAdapter` contract; API-specific request/response usage interpretation is isolated in `src/application/proxy-adapters/`. Text/tool-call extraction is not persisted as separate columns in the current scope. `TrafficLogQueryService` depends only on `TrafficLogReader`. Route handlers contain no SQL statements or SQLite imports.
 
 ### How to implement
 

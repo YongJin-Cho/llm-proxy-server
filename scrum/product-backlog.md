@@ -89,47 +89,47 @@
   - Depends: PB-002, PB-003, PB-007, PB-008, PB-009, PB-011
   - Notes: Sprint 07에서 Spec→backlog DoD를 충족하고 PB-013~PB-018로 분해했다. 실제 제품 코드 구현은 후속 Backlog→Implementation sprint에서 수행한다.
 
-  - [ ] **PB-013** — 다중 API public route와 transparent adapter contract 구현
+  - [x] **PB-013** — 다중 API public route와 transparent adapter contract 구현
   - Story: `/api/v1/responses`, `/api/v1/chat/completions`, `/api/v1/messages`를 독립 adapter/plugin으로 제공하고 API별 payload·response·error를 canonical conversion 없이 provider 계약에 따라 전달한다.
   - Spec: `spec/llm-proxy-server.md` §Requirements R-009, R-017; §Constraints C-010
-  - Sprint: —
+  - Sprint: sprint-08
   - Depends: PB-012
-  - Notes: 다음 Backlog→Implementation sprint 후보.
+  - Notes: Sprint 08에서 API별 ProxyAdapter 구조까지 구현하고 검증했다.
 
-  - [ ] **PB-014** — Claude 인증 mode와 provider header 설정
+  - [x] **PB-014** — Claude 인증 mode와 provider header 설정
   - Story: 기본 Bearer 인증과 명시적 Anthropic native mode의 `x-api-key`·`anthropic-version` header를 `apiKeyEnv` secret loading 및 redaction 정책과 함께 검증한다.
   - Spec: `spec/llm-proxy-server.md` §Requirements R-018; §Constraints C-007
-  - Sprint: —
+  - Sprint: sprint-08
   - Depends: PB-013
-  - Notes: 다음 Backlog→Implementation sprint 후보.
+  - Notes: Sprint 08에서 Bearer/native Anthropic auth mode와 header를 구현·검증했다.
 
-  - [ ] **PB-015** — API별 streaming completion/error 처리
+  - [x] **PB-015** — API별 streaming completion/error 처리
   - Story: Responses, Chat Completions, Claude Messages의 API별 정상 종료 detector를 적용하고 원본 SSE를 투명 전달하며 조기 종료·upstream failure·client disconnect를 부분 결과와 함께 failed log로 저장한다.
   - Spec: `spec/llm-proxy-server.md` §Requirements R-004, R-005, R-019; §Constraints C-002, C-011
-  - Sprint: —
+  - Sprint: sprint-08
   - Depends: PB-013
-  - Notes: 다음 Backlog→Implementation sprint 후보.
+  - Notes: Sprint 08에서 API별 completion detector와 partial failure logging을 구현·검증했다.
 
-  - [ ] **PB-016** — `api_kind` traffic log schema migration
+  - [x] **PB-016** — `api_kind` traffic log schema migration
   - Story: domain model과 SQLite에 `api_kind`를 추가하고 `responses`, `chat_completions`, `messages`를 구분하며 legacy row를 `responses`로 보존한다.
   - Spec: `spec/llm-proxy-server.md` §Requirements R-006, R-020; §Constraints C-003, C-011
-  - Sprint: —
+  - Sprint: sprint-08
   - Depends: PB-013
-  - Notes: 다음 Backlog→Implementation sprint 후보.
+  - Notes: Sprint 08에서 legacy compatibility를 포함한 SQLite migration을 구현·검증했다.
 
-  - [ ] **PB-017** — Token usage normalization과 provider cost metadata
+  - [x] **PB-017** — Token usage normalization과 provider cost metadata
   - Story: API별 usage를 `input_tokens`, `cached_input_tokens`, `output_tokens`, `total_tokens`로 저장하고 provider가 명시한 USD cost만 `cost_usd`에 기록하며 unavailable/ambiguous cost는 NULL로 둔다.
   - Spec: `spec/llm-proxy-server.md` §Requirements R-021–R-022; §Constraints C-012
-  - Sprint: —
+  - Sprint: sprint-08
   - Depends: PB-016
-  - Notes: 다음 Backlog→Implementation sprint 후보. Proxy-owned pricing table은 구현하지 않는다.
+  - Notes: Sprint 08에서 adapter별 usage/cost 해석과 normalized columns를 구현·검증했다. Proxy-owned pricing table은 구현하지 않는다.
 
-  - [ ] **PB-018** — 다중 API 회귀·통합 검증과 실행 문서
+  - [x] **PB-018** — 다중 API 회귀·통합 검증과 실행 문서
   - Story: 세 API의 non-streaming/streaming 성공·실패, routing, auth, schema migration, redaction, usage/cost metadata와 기존 Responses 회귀를 자동 검증하고 실행 문서를 갱신한다.
   - Spec: `spec/llm-proxy-server.md` §Requirements R-013–R-016; §Constraints C-009
-  - Sprint: —
+  - Sprint: sprint-08
   - Depends: PB-013, PB-014, PB-015, PB-016, PB-017
-  - Notes: 다음 Backlog→Implementation sprint 후보.
+  - Notes: Sprint 08에서 세 API·기존 Responses 회귀, streaming, migration, redaction, usage/cost 및 실행 문서를 검증했다.
 
 ## Notes
 
@@ -142,3 +142,4 @@
 - 2026-03-10: sprint-05 Boundary 완료. PB-008, PB-009, PB-011을 종료하고 PB-010을 sprint-06 Scope로 계획했다.
 - 2026-03-10: sprint-06 Boundary 완료. PB-010을 종료하고 현재 제품 backlog의 모든 story를 완료했다.
 - 2026-03-10: sprint-07 Boundary 완료. PB-012를 종료하고 PB-013~PB-018을 Backlog→Implementation 후보로 유지했다.
+- 2026-03-10: sprint-08 Boundary 완료. PB-013~PB-018을 종료했으며 구현 backlog의 모든 story가 완료되었다.

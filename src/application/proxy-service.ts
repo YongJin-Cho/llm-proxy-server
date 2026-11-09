@@ -24,20 +24,6 @@ async function readBody(req: IncomingMessage, max: number) {
   return Buffer.concat(chunks).toString('utf8');
 }
 
-function usageMetadata(response: string) {
-  try {
-    const body = JSON.parse(response) as Record<string, unknown>;
-    const usage = body.usage && typeof body.usage === 'object' ? body.usage as Record<string, unknown> : undefined;
-    const input = typeof usage?.input_tokens === 'number' ? usage.input_tokens : typeof usage?.prompt_tokens === 'number' ? usage.prompt_tokens : null;
-    const cached = typeof usage?.cached_input_tokens === 'number' ? usage.cached_input_tokens : null;
-    const output = typeof usage?.output_tokens === 'number' ? usage.output_tokens : typeof usage?.completion_tokens === 'number' ? usage.completion_tokens : null;
-    const cost = typeof body.cost_usd === 'number' ? body.cost_usd : null;
-    return { inputTokens: input, cachedInputTokens: cached, outputTokens: output, totalTokens: input !== null && output !== null ? input + output : null, costUsd: cost };
-  } catch {
-    return { inputTokens: null, cachedInputTokens: null, outputTokens: null, totalTokens: null, costUsd: null };
-  }
-}
-
 export class ProxyService {
   private readonly adapters: ReadonlyMap<ProxyApiPath, ProxyAdapter>;
 
@@ -100,7 +86,7 @@ export class ProxyService {
         latencyMs: Date.now() - started,
         responseJson: bounded(response, this.config.maxBodyBytes),
         error: upstream.ok ? null : bounded(response, this.config.maxBodyBytes),
-        ...usageMetadata(response),
+        ...adapter.usageMetadata(response),
       });
       res.writeHead(upstream.status, { 'content-type': upstream.headers.get('content-type') ?? 'application/json' });
       res.end(response);
@@ -143,7 +129,7 @@ export class ProxyService {
     }
     const response = Buffer.concat(chunks).toString('utf8');
     const completed = upstream.ok && adapter.isComplete(response) && !disconnected;
-    this.writer.finish({ id, finishedAt: new Date().toISOString(), status: completed ? 'completed' : 'failed', httpStatus: upstream.status, latencyMs: Date.now() - started, responseJson: bounded(response, this.config.maxBodyBytes), error: completed ? null : bounded(disconnected ? 'client disconnected before stream completion' : response || 'stream ended before completion', this.config.maxBodyBytes), ...usageMetadata(response) });
+    this.writer.finish({ id, finishedAt: new Date().toISOString(), status: completed ? 'completed' : 'failed', httpStatus: upstream.status, latencyMs: Date.now() - started, responseJson: bounded(response, this.config.maxBodyBytes), error: completed ? null : bounded(disconnected ? 'client disconnected before stream completion' : response || 'stream ended before completion', this.config.maxBodyBytes), ...adapter.usageMetadata(response) });
     if (!disconnected) res.end();
   }
 }

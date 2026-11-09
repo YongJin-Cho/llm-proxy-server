@@ -3,6 +3,14 @@ import type { TrafficLogApiKind } from '../../domain/traffic-log.js';
 
 export type ProxyApiPath = '/responses' | '/chat/completions' | '/messages';
 
+export type UsageMetadata = {
+  inputTokens: number | null;
+  cachedInputTokens: number | null;
+  outputTokens: number | null;
+  totalTokens: number | null;
+  costUsd: number | null;
+};
+
 export abstract class ProxyAdapter {
   abstract readonly apiPath: ProxyApiPath;
   abstract readonly apiKind: TrafficLogApiKind;
@@ -12,4 +20,5 @@ export abstract class ProxyAdapter {
   }
 
   abstract isComplete(response: string): boolean;
+  abstract usageMetadata(response: string): UsageMetadata;
 }

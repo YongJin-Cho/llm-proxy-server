@@ -13,6 +13,7 @@
 - Expanded verification covers `/api/v1/responses`, `/api/v1/chat/completions`, `/api/v1/messages`, provider path mapping, `api_kind`, normalized usage, provider-reported `cost_usd`, redaction, unknown model rejection, and existing Responses regression.
 - Streaming completion/error demo passed in `TODO.md` T-007 using API-specific sentinel fixtures and transparent SSE response checks.
 - T-010 refactoring preserves the same verification evidence while isolating API-specific behavior in `src/application/proxy-adapters/`.
+- T-011 moves usage/cost parsing into each API adapter. Verification fixtures now use Responses `input_tokens`, Chat Completions `prompt_tokens`/`completion_tokens`, and Messages `input_tokens`/`output_tokens`. No separate text/tool-call columns were added under Option A.
 
 ## Inventory & Results
 
