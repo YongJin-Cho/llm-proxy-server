@@ -8,11 +8,11 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 9 | 1 | 0 | 0 |
+| 10 | 1 | 0 | 0 |
 
 **Sprint goal:** turn 기반 traffic 저장·탐색 UI의 승인 요구사항과 Spec, 후속 구현 backlog를 확정한다.
-**Current focus:** T-009
-**Recommended next:** T-009 — Spec review 및 승인 gate
+**Current focus:** T-010
+**Recommended next:** T-010 — 승인 Spec을 후속 구현 backlog로 encode 및 Sprint Boundary
 
 ## Tasks
 
@@ -64,16 +64,17 @@
   - Artifact: `spec/llm-proxy-turn-traffic.md`
   - Depends: T-007
 
-- [ ] **T-009** — Spec review 및 승인 gate
+- [x] **T-009** — Spec review 및 승인 gate
   - Phase: gate
   - Artifact: `spec/llm-proxy-turn-traffic.md`, `spec-review/llm-proxy-turn-traffic.md`
   - Depends: T-008
+  - Notes: Spec review 3 pass, 0 fail, 2 non-blocking needs-clarification. 사용자 go-ahead로 Spec을 구현·검증 SSOT로 승인했다.
 
 - [ ] **T-010** — 승인 Spec을 후속 구현 backlog로 encode 및 Sprint Boundary
   - Phase: backlog / boundary
   - Artifact: `scrum/product-backlog.md`, `scrum/TODO-09.md`
   - Depends: T-009
-  - Notes: PB-019를 구현 stories로 분해하고 Spec→backlog sprint를 종료한다.
+  - Notes: PB-019를 종료하고 PB-020~PB-024 구현 stories를 append했다. Sprint completion 승인 후 Boundary에서 sprint-09를 종료한다.
 
 ## Completed sprints
 
@@ -92,3 +93,4 @@
 ## Notes
 
 - 2026-03-10: Sprint 09 계획 승인 후 live execution board를 seed했다.
+- 2026-03-10: T-009 Spec review 및 승인 gate를 완료하고 PB-019를 PB-020~PB-024 구현 stories로 분해했다. T-010은 Sprint completion 및 Boundary 승인 대기다.

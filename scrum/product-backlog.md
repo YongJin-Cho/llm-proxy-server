@@ -131,12 +131,47 @@
   - Depends: PB-013, PB-014, PB-015, PB-016, PB-017
   - Notes: Sprint 08에서 세 API·기존 Responses 회귀, streaming, migration, redaction, usage/cost 및 실행 문서를 검증했다.
 
-- [ ] **PB-019** — Turn 기반 traffic 저장·탐색 UI 요구사항 확정
+- [x] **PB-019** — Turn 기반 traffic 저장·탐색 UI 요구사항 확정
   - Story: 하나의 사용자 요청에서 발생한 복수 LLM traffic을 하나의 turn으로 그룹핑해 저장하고, 왼쪽 sidebar tree에서 turn과 하위 traffic을 탐색하며 선택한 항목의 내용을 메인 뷰에서 확인할 수 있도록 구현 가능한 요구사항·설계·검증 기준과 후속 구현 backlog를 확정한다.
-  - Spec: `spec/llm-proxy-turn-traffic.md` — 예정
+  - Spec: `spec/llm-proxy-turn-traffic.md` §Requirements, §Constraints
   - Sprint: sprint-09
   - Depends: PB-004, PB-005, PB-009, PB-010
-  - Notes: 이번 Spec→backlog 스프린트의 Scope. 제품 코드 구현은 승인 Spec 이후 별도 Backlog→Implementation sprint에서 수행한다.
+  - Notes: Spec review 3 pass, 0 fail로 승인되었다. 제품 코드 구현은 후속 Backlog→Implementation sprint에서 수행한다.
+
+- [ ] **PB-020** — Turn grouping domain·persistence lifecycle 구현
+  - Story: API semantic adapter 결과를 사용해 stable turn/traffic identifier, turn reference, 관찰 순서 sequence, 진행·완료 상태와 미완료 turn pool을 SQLite writer/query 경계 안에 저장하고 조회한다.
+  - Spec: `spec/llm-proxy-turn-traffic.md` §Requirements R-001–R-003, §Constraints C-001–C-006
+  - Sprint: —
+  - Depends: PB-004, PB-009, PB-013, PB-016
+  - Notes: stable identity/ordering의 세부 wire·persistence contract는 구현 story의 acceptance criteria와 fixture에서 고정한다.
+
+- [ ] **PB-021** — Tool identity matching과 fallback isolation
+  - Story: 유일하게 매칭되는 tool ID는 기존 미완료 turn에 연결하고, 누락·미매칭·모호 identity는 각각 고정 fallback reason과 새 standalone turn으로 격리하며 request forwarding과 기존 turn 보존을 검증한다.
+  - Spec: `spec/llm-proxy-turn-traffic.md` §Requirements R-001–R-003; §Constraints C-007
+  - Sprint: —
+  - Depends: PB-020
+  - Notes: fallback enum은 `missing_tool_identity`, `unmatched_tool_identity`, `ambiguous_tool_identity`다.
+
+- [ ] **PB-022** — Turn tree query API와 legacy projection
+  - Story: `GET /api/v1/turns`가 turn pagination, deterministic ordering, child traffic summary, fallback metadata와 legacy synthetic node를 제공하고 traffic 본문은 기존 detail API로 지연 조회한다.
+  - Spec: `spec/llm-proxy-turn-traffic.md` §Requirements R-004–R-005; §Constraints C-003–C-005
+  - Sprint: —
+  - Depends: PB-020, PB-021
+  - Notes: pagination parameter·response metadata·필수 node field·tie-breaker를 구현 전 acceptance contract로 고정한다.
+
+- [ ] **PB-023** — Sidebar tree와 turn/traffic selection view
+  - Story: UI가 turn/traffic tree를 표시하고 stable URL state로 각각을 선택하며, turn summary와 기존 traffic detail을 렌더링하고 loading·empty·error 및 독립적인 detail fetch failure를 처리한다.
+  - Spec: `spec/llm-proxy-turn-traffic.md` §Requirements R-006–R-007
+  - Sprint: —
+  - Depends: PB-022, PB-005, PB-010
+  - Notes: URL query/route shape와 tree node rendering contract를 구현 story에서 고정한다.
+
+- [ ] **PB-024** — Turn grouping 통합 검증과 실행 문서
+  - Story: 동시 미완료 turn, out-of-order tool message, fallback isolation, completion, legacy projection, tree query, URL selection과 기존 API 회귀를 `npm run build`·`npm run verify`로 자동 검증하고 실행 문서를 갱신한다.
+  - Spec: `spec/llm-proxy-turn-traffic.md` §Requirements R-008; `spec/llm-proxy-server.md` 공통 SSE 검증 계약
+  - Sprint: —
+  - Depends: PB-020, PB-021, PB-022, PB-023
+  - Notes: 제품 코드 구현과 검증은 후속 Backlog→Implementation sprint 범위다.
 
 ## Notes
 
@@ -150,3 +185,4 @@
 - 2026-03-10: sprint-06 Boundary 완료. PB-010을 종료하고 현재 제품 backlog의 모든 story를 완료했다.
 - 2026-03-10: sprint-07 Boundary 완료. PB-012를 종료하고 PB-013~PB-018을 Backlog→Implementation 후보로 유지했다.
 - 2026-03-10: sprint-08 Boundary 완료. PB-013~PB-018을 종료했으며 구현 backlog의 모든 story가 완료되었다.
+- 2026-03-10: Sprint 09 Spec 승인 후 PB-019를 종료하고 승인 Spec의 구현 backlog PB-020~PB-024를 append했다.

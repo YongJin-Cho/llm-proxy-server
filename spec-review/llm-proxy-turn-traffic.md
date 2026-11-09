@@ -56,3 +56,4 @@
 
 - 2026-03-10: Spec review 최초 결과를 기록했다. `C-007`의 fallback policy가 미정의되어 당시 Spec은 SSOT 승인 불가 상태였다.
 - 2026-03-10: `adr/ambiguous-missing-tool-id-fallback.md` 승인 결과를 AC-023, ASR-022, R-001/R-002/C-007에 반영하고 review를 재실행했다. 결과는 3 pass, 0 fail, 2 needs-clarification이며 SSOT 승인 가능 상태다.
+- 2026-03-10: 사용자 go-ahead("ok. 다음 진행해줘")로 Spec을 구현·검증 SSOT로 승인하고 후속 backlog encode를 시작했다.
