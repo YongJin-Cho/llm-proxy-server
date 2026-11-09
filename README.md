@@ -1,8 +1,13 @@
 # LLM Proxy Server
 
-단일 프로세스로 실행되는 localhost LLM Proxy MVP입니다.
+단일 프로세스로 실행되는 localhost LLM Proxy입니다. Fastify API/server와 React monitoring UI가 하나의 프로세스에서 동작합니다.
 
 ## 실행
+
+### 설정 파일과 환경변수
+
+현재 실행 설정은 환경변수로 로드됩니다. 기본값을 사용하면 `HOST=127.0.0.1`, `PORT=3000`, `SQLITE_PATH=./data/traffic.db`, `MAX_BODY_BYTES=65536`입니다. Provider URL은 `PROVIDER_URL`, secret은 평문 설정 파일이 아닌 `PROVIDER_API_KEY` 환경변수로 제공합니다.
+
 
 ```bash
 npm install

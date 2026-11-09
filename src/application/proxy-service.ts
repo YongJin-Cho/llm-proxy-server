@@ -1,0 +1,36 @@
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import { randomUUID } from 'node:crypto';
+import type { AppConfig } from '../configuration.js';
+import { bounded, maskedHeaders } from '../domain/policy.js';
+import type { TrafficLogWriter } from '../domain/traffic-log.js';
+
+function json(res: ServerResponse, status: number, body: unknown) { res.writeHead(status, { 'content-type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(body)); }
+async function readBody(req: IncomingMessage, max: number) { const chunks: Buffer[] = []; let size = 0; for await (const chunk of req) { size += Buffer.byteLength(chunk); if (size > max) throw new Error('request body exceeds MAX_BODY_BYTES'); chunks.push(Buffer.from(chunk)); } return Buffer.concat(chunks).toString('utf8'); }
+
+export class ProxyService {
+  constructor(private readonly config: AppConfig, private readonly writer: TrafficLogWriter) {}
+  async handle(req: IncomingMessage, res: ServerResponse, parsedBody?: unknown) {
+    const started = Date.now(); const id = randomUUID(); const startedAt = new Date().toISOString(); let inserted = false;
+    try {
+      const raw = parsedBody === undefined ? await readBody(req, this.config.maxBodyBytes) : JSON.stringify(parsedBody);
+      const input = raw ? JSON.parse(raw) : {}; const streaming = input.stream === true;
+      this.writer.insert({ id, startedAt, model: typeof input.model === 'string' ? input.model : null, streaming: streaming ? 1 : 0, requestJson: bounded(JSON.stringify({ headers: maskedHeaders(req.headers), body: input }), this.config.maxBodyBytes) }); inserted = true;
+      const headers: Record<string, string> = { 'content-type': 'application/json' }; if (this.config.providerApiKey) headers.authorization = `Bearer ${this.config.providerApiKey}`;
+      const upstream = await fetch(this.config.providerUrl, { method: 'POST', headers, body: raw });
+      if (streaming && upstream.body) return await this.stream(upstream, res, id, started);
+      const response = await upstream.text(); this.writer.finish({ id, finishedAt: new Date().toISOString(), status: upstream.ok ? 'completed' : 'failed', httpStatus: upstream.status, latencyMs: Date.now() - started, responseJson: bounded(response, this.config.maxBodyBytes), error: upstream.ok ? null : bounded(response, this.config.maxBodyBytes) });
+      res.writeHead(upstream.status, { 'content-type': upstream.headers.get('content-type') ?? 'application/json' }); res.end(response);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'proxy request failed';
+      if (inserted) this.writer.finish({ id, finishedAt: new Date().toISOString(), status: 'failed', httpStatus: 502, latencyMs: Date.now() - started, responseJson: null, error: bounded(message, this.config.maxBodyBytes) });
+      json(res, message.includes('body exceeds') ? 413 : 502, { error: { message, type: 'proxy_error' } });
+    }
+  }
+  private async stream(upstream: Response, res: ServerResponse, id: string, started: number) {
+    res.writeHead(upstream.status, { 'content-type': upstream.headers.get('content-type') ?? 'text/event-stream' }); const reader = upstream.body!.getReader(); const chunks: Buffer[] = []; let disconnected = false; res.once('close', () => { disconnected = true; });
+    try { while (true) { const part = await reader.read(); if (part.done) break; const buffer = Buffer.from(part.value); chunks.push(buffer); if (!disconnected) res.write(buffer); } } finally { reader.releaseLock(); }
+    const response = Buffer.concat(chunks).toString('utf8'); const completed = upstream.ok && (response.includes('response.completed') || response.includes('data: [DONE]')) && !disconnected;
+    this.writer.finish({ id, finishedAt: new Date().toISOString(), status: completed ? 'completed' : 'failed', httpStatus: upstream.status, latencyMs: Date.now() - started, responseJson: bounded(response, this.config.maxBodyBytes), error: completed ? null : bounded(disconnected ? 'client disconnected before stream completion' : response || 'stream ended before completion', this.config.maxBodyBytes) });
+    if (!disconnected) res.end();
+  }
+}

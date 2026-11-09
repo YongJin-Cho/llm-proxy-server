@@ -8,11 +8,11 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 1 | 7 | 0 | 0 |
+| 6 | 2 | 0 | 0 |
 
 **Sprint goal:** React source를 `src/ui/`로 정리하고 module extraction, AGENTS.md, 실행 문서와 자동화 검증을 완성한다.
-**Current focus:** T-002 — server module extraction
-**Recommended next:** T-002 — server module extraction
+**Current focus:** T-007 — Sprint completion review
+**Recommended next:** T-007 — Sprint completion review
 
 ## Tasks
 
@@ -22,31 +22,35 @@
   - Depends: —
   - Notes: `AGENTS.md` 생성, React source를 `src/ui/`로 이동, `ui/` 중복 source 제거, Vite 경로 갱신 및 `npm run build` 통과.
 
-- [ ] **T-002** — server module extraction
+- [x] **T-002** — server module extraction
   - Phase: ⑦ Implementation
   - Artifact: `src/`
   - Depends: T-001
-  - Notes: bootstrap, configuration, routes/adapters, proxy service, persistence writer/reader, UI delivery를 분리한다.
+  - Notes: configuration/domain/persistence/application/api/delivery 모듈 생성 및 server bootstrap 교체. `npm run build` 통과.
 
-- [ ] **T-003** — writer/reader port와 SQLite adapter 연결
+- [x] **T-003** — writer/reader port와 SQLite adapter 연결
   - Phase: ⑦ Implementation
   - Artifact: `src/domain/`, `src/persistence/`, `src/application/`
   - Depends: T-002
+  - Notes: `TrafficLogWriter`/`TrafficLogReader` port와 `SqliteTrafficLogStore` adapter 연결. `npm run verify`에서 persistence, masking, query 검증 통과.
 
-- [ ] **T-004** — 실행 문서와 검증 보강
+- [x] **T-004** — 실행 문서와 검증 보강
   - Phase: ⑦ Implementation / ⑧ Verification
   - Artifact: `README.md`, `scripts/verify.mjs`, `verification/llm-proxy-server.md`
   - Depends: T-003
+  - Notes: 설정·secret·SQLite·host/port·build/start 절차와 verification evidence를 기록했다.
 
-- [ ] **T-005** — build·verify 및 PB-005/PB-006/PB-007 검증
+- [x] **T-005** — build·verify 및 PB-005/PB-006/PB-007 검증
   - Phase: ⑧ Verification
   - Artifact: `verification/llm-proxy-server.md`
   - Depends: T-004
+  - Notes: `npm run build`, `npm run verify` 통과; C-008/R-016 partial을 해소했다.
 
-- [ ] **T-006** — Demo checklist 확인
+- [x] **T-006** — Demo checklist 확인
   - Phase: gate
   - Artifact: `scrum/sprint-04.md`
   - Depends: T-005
+  - Notes: source placement, module map, bootstrap, ports/adapter, 회귀 검증, 실행 문서를 확인했다.
 
 - [ ] **T-007** — Sprint completion review
   - Phase: gate
