@@ -13,7 +13,7 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 | AC-005 | 프록시 및 모니터링 UI 접근 통제 | Quality bar (architectural) | designed | adr/access-control.md | ASR-005 |
 | AC-006 | 모니터링 UI의 조회 범위와 운영 기능 | Deliverable form | designed | adr/monitoring-ui-scope.md | ASR-006 |
 | AC-007 | 배포 단위와 실행 구성 | Deliverable form | designed | adr/deployment-configuration.md | ASR-007 |
-| AC-008 | API framework 선택과 서버 구조 | Structure & organization | identified | — | — |
+| AC-008 | API framework 선택과 서버 구조 | Structure & organization | reviewing | adr/api-framework-and-server-structure.md | — |
 | AC-009 | UI framework 선택과 확장 구조 | Deliverable form | identified | — | — |
 | AC-010 | Provider 설정과 model routing 계약 | Integration & dependencies | identified | — | — |
 | AC-011 | API adapter 확장 경계 | Structure & organization | identified | — | — |
@@ -114,11 +114,12 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 ### AC-008 — API framework 선택과 서버 구조
 
 - **Category:** Structure & organization
-- **Status:** identified
+- **Status:** reviewing
 - **Statement:** 직접 Node HTTP 라우팅을 유지할지 Fastify·Hono 등 framework를 도입할지, 선택한 경우 bootstrap·middleware·routing·plugin/module 경계를 어떻게 나눌 것인가?
 - **Why it matters:** framework 선택과 서버 구조는 route 확장성, TypeScript·테스트성, streaming/SSE 제어, 의존성 비용 및 기존 MVP migration 난이도를 결정한다.
 - **Depends on:** AC-001, AC-002
-- **Related ADRs:** 없음
+- **Related ADRs:**
+  - `adr/api-framework-and-server-structure.md` — proposed
 - **Resolution path:** adr
 - **Resolution:**
 

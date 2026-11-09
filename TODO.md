@@ -8,11 +8,11 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 3 | 10 | 0 | 0 |
+| 4 | 9 | 0 | 0 |
 
 **Sprint goal:** API·UI·provider·저장소 확장을 위한 설계 결정을 승인된 Spec과 제품 백로그에 반영한다.
-**Current focus:** T-004 — AC 목록 승인
-**Recommended next:** T-004 — AC 목록 승인 (추가된 AC-008~AC-013과 dependency order 검토 후 go-ahead 필요)
+**Current focus:** T-005 — 첫 번째 unsettled AC 검토
+**Recommended next:** T-005 — 첫 번째 unsettled AC 검토 (AC-008 API framework ADR의 옵션과 trade-off 중 하나를 선택해야 함)
 
 ## Tasks
 
@@ -34,16 +34,17 @@
   - Depends: T-002
   - Notes: AC-008~AC-013을 append하고 dependency order를 설정.
 
-- [ ] **T-004** — AC 목록 승인
+- [x] **T-004** — AC 목록 승인
   - Phase: gate
   - Artifact: `spec/AC.md`
   - Depends: T-003
-  - Notes: 기존 AC-001~AC-007과 delta AC-008~AC-013의 전체 목록 승인 필요.
+  - Notes: 2026-03-10 사용자 “ok”로 전체 AC 목록과 dependency order 승인.
 
 - [ ] **T-005** — 첫 번째 unsettled AC 검토
   - Phase: ③ AC review
   - Artifact: `spec/AC.md`, `adr/`
   - Depends: T-004
+  - Notes: AC-008을 reviewing으로 전환하고 `adr/api-framework-and-server-structure.md`를 proposed로 작성함. 사용자 선택 대기.
   - Notes: dependency order에 따라 한 번에 하나의 blocking AC만 검토한다.
 
 - [ ] **T-006** — AC resolution gate
