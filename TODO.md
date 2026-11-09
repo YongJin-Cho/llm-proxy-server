@@ -8,11 +8,11 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 2 | 10 | 0 | 0 |
+| 3 | 10 | 0 | 0 |
 
 **Sprint goal:** API·UI·provider·저장소 확장을 위한 설계 결정을 승인된 Spec과 제품 백로그에 반영한다.
-**Current focus:** T-002 — PRD 승인
-**Recommended next:** T-002 — PRD 승인 (PRD delta 초안 검토 후 go-ahead 필요)
+**Current focus:** T-004 — AC 목록 승인
+**Recommended next:** T-004 — AC 목록 승인 (추가된 AC-008~AC-013과 dependency order 검토 후 go-ahead 필요)
 
 ## Tasks
 
@@ -22,20 +22,23 @@
   - Depends: —
   - Notes: sprint-02의 모듈화·framework·provider routing·DB boundary·확장 UI 설계를 제품 범위에 반영한다.
 
-- [ ] **T-002** — PRD 승인
+- [x] **T-002** — PRD 승인
   - Phase: gate
   - Artifact: `spec/PRD.md`
   - Depends: T-001
+  - Notes: 2026-03-10 사용자 “ok”로 PRD delta 승인.
 
-- [ ] **T-003** — delta AC 식별
+- [x] **T-003** — delta AC 식별
   - Phase: ② AC identification
   - Artifact: `spec/AC.md`
   - Depends: T-002
+  - Notes: AC-008~AC-013을 append하고 dependency order를 설정.
 
 - [ ] **T-004** — AC 목록 승인
   - Phase: gate
   - Artifact: `spec/AC.md`
   - Depends: T-003
+  - Notes: 기존 AC-001~AC-007과 delta AC-008~AC-013의 전체 목록 승인 필요.
 
 - [ ] **T-005** — 첫 번째 unsettled AC 검토
   - Phase: ③ AC review
