@@ -37,7 +37,19 @@ const streamResponse = (req, res, payload) => {
     'data: [DONE]',
     '',
   ].join('\n\n'));
-  else res.end('data: {"type":"response.completed","usage":{"input_tokens":2,"output_tokens":1}}\n\ndata: [DONE]\n\n');
+  else if (req.url === '/responses') res.end([
+    'data: {"type":"response.created","response":{"id":"resp-stream-1","object":"response","model":"provider/response-model","output":[]}}',
+    'data: {"type":"response.output_item.added","output_index":0,"item":{"type":"message","role":"assistant","content":[]}}',
+    'data: {"type":"response.output_text.delta","output_index":0,"delta":"Hello "}',
+    'data: {"type":"response.output_text.delta","output_index":0,"delta":"Responses"}',
+    'data: {"type":"response.output_item.added","output_index":1,"item":{"type":"function_call","id":"fc-1","call_id":"call-resp-1","name":"lookup","arguments":""}}',
+    'data: {"type":"response.function_call_arguments.delta","output_index":1,"delta":"{\\"q\\": "}',
+    'data: {"type":"response.function_call_arguments.delta","output_index":1,"delta":"\\"test\\"}"}',
+    'data: {"type":"response.completed","response":{"id":"resp-stream-1","object":"response","model":"provider/response-model","output":[],"usage":{"input_tokens":2,"output_tokens":1}}}',
+    'data: [DONE]',
+    '',
+  ].join('\n\n'));
+  else res.end('data: {"type":"message_stop","usage":{"input_tokens":2,"output_tokens":1}}\n\ndata: [DONE]\n\n');
 };
 const providerA = createServer((req, res) => {
   let body = '';
@@ -157,6 +169,14 @@ try {
   assert.equal(streamedChatResponse.choices[0].message.tool_calls[0].function.arguments, '{"q": "test"}');
   assert.equal(streamedChatResponse.choices[0].finish_reason, 'tool_calls');
   assert.equal(streamedChatResponse.usage.prompt_tokens, 5);
+  const streamedResponsesLog = listed.find((entry) => entry.api_kind === 'responses' && entry.streaming === 1);
+  assert.ok(streamedResponsesLog);
+  const streamedResponsesResponse = JSON.parse(streamedResponsesLog.response_json);
+  assert.equal(streamedResponsesResponse.output[0].content[0].text, 'Hello Responses');
+  assert.equal(streamedResponsesResponse.output[1].call_id, 'call-resp-1');
+  assert.equal(streamedResponsesResponse.output[1].name, 'lookup');
+  assert.equal(streamedResponsesResponse.output[1].arguments, '{"q": "test"}');
+  assert.equal(streamedResponsesResponse.usage.input_tokens, 2);
   assert.equal(listed.filter((entry) => entry.api_kind === 'responses').length, 3);
   const chatLog = listed.find((entry) => entry.api_kind === 'chat_completions' && entry.streaming === 0);
   const messagesLog = listed.find((entry) => entry.api_kind === 'messages' && entry.streaming === 0);
