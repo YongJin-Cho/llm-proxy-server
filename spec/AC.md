@@ -24,18 +24,19 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 | AC-016 | API별 streaming 종료·오류 계약 | Constraints (structural) | designed | adr/api-streaming-completion-and-error-contract.md | ASR-018 |
 | AC-017 | 다중 API traffic log metadata 정규화 | Structure & organization | designed | adr/traffic-log-api-metadata.md | ASR-019 |
 | AC-018 | Token usage·cost metadata 추출과 저장 | Integration & dependencies | designed | adr/usage-and-cost-metadata.md | ASR-020 |
-| AC-019 | Turn grouping metadata와 저장 lifecycle | Structure & organization | identified | — | — |
+| AC-019 | Turn grouping metadata와 저장 lifecycle | Structure & organization | reviewing | adr/turn-grouping-storage-lifecycle.md (proposed) | — |
 | AC-020 | Turn/traffic 조회 API와 tree projection | Integration & dependencies | identified | — | — |
 | AC-021 | Sidebar 선택 상태와 메인 뷰 계약 | Deliverable form | identified | — | — |
 | AC-022 | Non-migration legacy traffic 호환 표시 | Constraints (structural) | identified | — | — |
 | AC-023 | Turn grouping 순서·동시성·완료 판정 | Quality bar (architectural) | identified | — | — |
+| AC-024 | SSE 최종 응답 통합 저장 | Structure & organization | identified | — | — |
 
 ## Dependency Order (recommended review path)
 
 1. AC-001 → AC-002 → AC-003 → AC-004 → AC-005 → AC-006 → AC-007
 2. AC-008 → AC-009 → AC-010 → AC-011 → AC-012 → AC-013
 3. AC-014 → AC-015 → AC-016 → AC-017 → AC-018
-4. AC-019 → AC-023 → AC-020 → AC-022 → AC-021
+4. AC-019 → AC-023 → AC-024 → AC-020 → AC-022 → AC-021
 
 ## AC Detail
 
@@ -306,6 +307,17 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - **Depends on:** AC-019
 - **Related ADRs:
   - 없음
+- **Resolution path:** adr
+
+### AC-024 — SSE 최종 응답 통합 저장
+
+- **Category:** Structure & organization
+- **Status:** identified
+- **Statement:** SSE streaming traffic을 client에는 원본 event 흐름으로 전달하면서, 저장 시에는 개별 `data` event를 나열하지 않고 API별 규칙에 따라 최종 응답 하나로 통합하려면 어떤 누적·병합·완료 시점 계약을 사용할 것인가?
+- **Why it matters:** event stream을 그대로 저장하면 기존 traffic 상세가 최종 응답으로 재사용되지 않고 저장량과 조회 복잡도가 증가하며, API별 content/tool call/usage 결과가 누락되거나 중복될 수 있다.
+- **Depends on:** AC-002, AC-016, AC-019
+- **Related ADRs:**
+  - `adr/streaming-response-handling.md` — approved
 - **Resolution path:** adr
 
 ## Notes

@@ -119,6 +119,7 @@ Codex와 유사한 LLM 클라이언트와 OpenAI Model Provider 사이에서 요
 - turn과 traffic의 저장 관계 및 조회 모델
 - harness가 전달하는 turn/grouping metadata의 수용 경계
 - turn 하위 traffic 순서와 lifecycle 표시
+- SSE streaming traffic의 개별 data event를 최종 통합 응답 하나로 저장
 - 기존 traffic 데이터를 migration하지 않는 호환 표시 정책
 - turn/traffic tree sidebar와 선택 상태
 - 선택한 turn/traffic의 메인 뷰 내용 표시
@@ -127,6 +128,7 @@ Codex와 유사한 LLM 클라이언트와 OpenAI Model Provider 사이에서 요
 ### Delta Out of Scope
 - tool call 자체의 실행 로직 변경
 - 실시간 streaming transcript UI
+- streaming 중간 data event의 개별 영구 저장
 - 사용자·조직별 인증 및 권한
 - 고급 분석·차트·알림·과금
 - 기존과 무관한 log retention 정책
@@ -134,6 +136,7 @@ Codex와 유사한 LLM 클라이언트와 OpenAI Model Provider 사이에서 요
 
 ### Delta Constraints
 - 기존 `/api/v1` namespace와 traffic log 조회 호환성을 고려한다.
+- SSE는 client에 투명 전달하되, 저장 응답은 정상 종료 시 provider API 계약에 맞는 최종 통합 응답 하나여야 한다.
 - API application path의 log writer와 UI query path의 read boundary를 유지한다.
 - secret redaction과 bounded request/response body 정책을 유지한다.
 - 구현·검증의 SSOT는 이 delta에 대한 승인 Spec이다.
@@ -142,4 +145,5 @@ Codex와 유사한 LLM 클라이언트와 OpenAI Model Provider 사이에서 요
 ### Delta Success Criteria
 - 승인 Spec이 turn grouping, non-migration 호환 정책, tree navigation, main-view selection을 독립적으로 구현·검증할 수 있는 requirement와 constraint를 제공한다.
 - 사용자는 turn을 선택했을 때 해당 turn의 요약과 하위 traffic 관계를, traffic을 선택했을 때 기존 traffic 상세를 확인할 수 있다.
+- SSE traffic의 저장된 응답에는 개별 `data` event 목록이 아니라 최종 통합 응답이 기록된다.
 - turn metadata가 없는 기존 traffic도 정의된 호환 정책에 따라 조회 가능하다.

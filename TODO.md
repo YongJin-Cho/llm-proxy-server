@@ -29,7 +29,7 @@
   - Depends: T-001
 
 - [x] **T-003** — Blocking AC 식별 및 dependency order 작성
-  - Notes: AC-019~AC-023을 identified로 추가하고 dependency order를 설정했다.
+  - Notes: AC-019~AC-024를 identified로 추가하고 dependency order를 설정했다. SSE는 client에 투명 전달하되 저장 시 최종 통합 응답 하나로 기록하는 AC-024를 추가했다.
   - Phase: AC identification
   - Artifact: `spec/AC.md`
   - Depends: T-002
