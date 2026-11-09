@@ -82,6 +82,13 @@
   - Depends: —
   - Notes: Spec→backlog 스프린트에서 DoD 충족 후 Boundary에서 종료.
 
+- [ ] **PB-012** — Chat Completions와 Claude Messages API 지원 요구사항 및 구현 backlog 확정
+  - Story: 기존 Responses 프록시와 로그·provider routing 구조를 보존하면서 OpenAI Chat Completions API와 Claude Messages API를 지원하기 위해, 승인된 계약·설정·보안·streaming·오류·회귀 검증 기준과 구현 가능한 하위 backlog가 확정된다.
+  - Spec: `spec/llm-proxy-server.md` §Requirements/§Constraints — delta 예정
+  - Sprint: sprint-07
+  - Depends: PB-002, PB-003, PB-007, PB-008, PB-009, PB-011
+  - Notes: 현재는 Spec→backlog 스프린트 Scope. 실제 제품 코드 구현은 후속 Backlog→Implementation sprint에서 수행한다.
+
 ## Notes
 
 - 2026-03-10: Spec 승인 후 PB-002–PB-006을 초기 구현 백로그로 추가했다.
