@@ -189,6 +189,7 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 
 - 2026-03-10: 기존 ASR-001~ASR-009 승인.
 - 2026-03-10: 사용자 go-ahead(“ok”)로 ASR-010~ASR-015 및 전체 ASR registry 승인. 다음 단계에서 `spec/llm-proxy-server.md`를 갱신한다.
+- 2026-03-10: 사용자 go-ahead(“ok”)로 ASR-016~ASR-020 및 전체 Sprint 07 ASR delta 승인. `spec/llm-proxy-server.md`에 반영한다.
 
 ## Notes
 

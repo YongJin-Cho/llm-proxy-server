@@ -27,6 +27,12 @@ LLM 클라이언트와 OpenAI Model Provider 사이에서 요청을 중계하고
 - R-014: API adapter와 persistence 변경은 기존 MVP 동작을 보존하는 순서로 migration해야 한다: 기존 동작 회귀 테스트 고정 → domain/configuration/persistence 분리 → Fastify bootstrap·adapter 도입 → provider routing 연결 → writer/reader와 SQLite adapter 연결 → React build/static delivery 연결 → schema/data compatibility 검증. ← ASR-015
 - R-015: 자동화 검증은 정상·실패 proxy, SSE 정상·중단, provider/model routing, SQLite write/read, redaction·body size limit, logs API, UI list/detail을 재현해야 하며 `npm run build`와 `npm run verify`를 검증 진입점으로 유지해야 한다. ← ASR-009; ASR-015
 - R-016: 단일 프로세스 실행 문서는 기본 `config.json` 경로와 schema, API key 환경변수, SQLite 경로, host/port, frontend build, server build/start 절차를 설명해야 한다. `.env`, `PROVIDER_URL`, `PROVIDER_API_KEY` 사용법은 설명하거나 지원하지 않는다. ← ASR-007; ASR-015
+- R-017: 프록시는 Responses, OpenAI Chat Completions, Claude Messages에 대해 API별 public route와 provider endpoint 계약을 유지하고, 각 요청·응답 payload를 가능한 한 해당 provider 계약 그대로 전달해야 한다. Proxy는 API 간 canonical payload 변환을 수행하지 않으며 provider 오류는 client가 식별 가능한 오류와 로그 상태로 전달해야 한다. ← ASR-016; AC-014; adr/multi-api-contract-adapter-boundary.md
+- R-018: Claude Messages를 사용하는 provider는 기본 upstream 인증으로 `Authorization: Bearer <api-key>`를 사용해야 한다. 공식 Anthropic endpoint처럼 native 인증이 명시적으로 설정된 provider는 `x-api-key`와 설정된 `anthropic-version`을 사용해야 하며, 기존 `apiKeyEnv` 환경변수 secret loading과 redaction 정책을 유지해야 한다. ← ASR-017; AC-015; adr/claude-provider-authentication-headers.md
+- R-019: streaming adapter는 API kind별 정상 종료를 감지하면서 provider의 원본 SSE bytes를 client에 투명하게 전달해야 한다. Responses는 `response.completed` 또는 `[DONE]`, Chat Completions는 `[DONE]`, Claude Messages는 `message_stop`을 정상 종료 기준으로 사용해야 한다. sentinel/event 이전 종료, upstream 오류, client disconnect는 `failed`로 기록하고 부분 결과를 보존해야 한다. ← ASR-018; AC-016; adr/api-streaming-completion-and-error-contract.md
+- R-020: traffic log domain model과 SQLite table은 first-class `api_kind` 값을 저장해야 하며 최소 `responses`, `chat_completions`, `messages`를 구분해야 한다. 기존 Responses row와 legacy 호출 경로는 migration compatibility를 위해 `responses` 기본값을 사용해야 하고, API별 raw request/response body는 기존 bounded JSON/text 정책으로 보존해야 한다. ← ASR-019; AC-017; adr/traffic-log-api-metadata.md
+- R-021: traffic log는 API별 usage 응답을 `input_tokens`, `cached_input_tokens`, `output_tokens`로 정규화해 저장해야 하며 `total_tokens`는 `input_tokens + output_tokens`로 계산해야 한다. usage가 없거나 일부 값이 누락되면 해당 값을 `NULL`로 저장하고, cached input tokens는 total에 별도로 가산하지 않아야 한다. ← ASR-020; AC-018; adr/usage-and-cost-metadata.md
+- R-022: `cost_usd`는 provider 응답이 명시한 USD 비용만 저장해야 하며 provider가 비용을 제공하지 않거나 통화가 불명확하면 `NULL`이어야 한다. Proxy는 provider/model별 pricing table로 비용을 추정하거나 실제 비용처럼 표시해서는 안 된다. Cost source는 기존 bounded raw response/redaction 정책으로 추적 가능해야 한다. ← ASR-020; AC-018; adr/usage-and-cost-metadata.md
 
 ## Constraints
 
@@ -39,6 +45,9 @@ LLM 클라이언트와 OpenAI Model Provider 사이에서 요청을 중계하고
 - C-007: API key는 기본 `config.json`에 평문으로 저장하지 않고 provider별 `apiKeyEnv`가 지정한 process environment에서 로드해야 하며, `.env`, `PROVIDER_URL`, `PROVIDER_API_KEY`는 사용하지 않는다. 설정 오류·traffic log·UI에 API key를 평문으로 기록·표시해서는 안 된다. 외부 secret/config service와 실행 중 자동 secret rotation은 초기 범위가 아니다. ← ASR-012; adr/provider-routing-configuration.md
 - C-008: 승인된 API framework는 Fastify이며, 승인된 UI framework는 React다. Fastify static delivery는 React build output을 제공해야 하고 UI bundle에는 DB driver를 포함하지 않아야 한다. ← ASR-010; ASR-011; adr/api-framework-and-server-structure.md; adr/ui-framework-and-monitoring-structure.md
 - C-009: schema migration 및 module migration은 기존 MVP 회귀 검증을 통과해야 하며 필수 설정 누락이나 migration 실패 시 server가 listen해서는 안 된다. ← ASR-015
+- C-010: API adapter는 route/payload 변환과 Provider 요청·응답 변환만 소유해야 하며 provider client 선택이나 log persistence를 직접 소유해서는 안 된다. Responses·Chat Completions·Messages는 독립 adapter/plugin으로 등록 가능해야 한다. ← ASR-016; ASR-013
+- C-011: `api_kind` migration은 기존 traffic log 데이터를 삭제하지 않고 legacy row를 `responses`로 해석해야 한다. Streaming completion detector는 API kind별 계약을 사용해야 하며 detector가 정상 종료를 확인하기 전 connection close를 completed로 판정해서는 안 된다. ← ASR-018; ASR-019
+- C-012: `cost_usd`에는 provider가 USD로 명시한 값만 허용한다. Proxy-owned pricing table, proxy 추정 비용, 불명확한 통화의 비용 저장은 초기 범위에서 금지한다. ← ASR-020
 
 ## Out of Scope
 
@@ -46,7 +55,7 @@ LLM 클라이언트와 OpenAI Model Provider 사이에서 요청을 중계하고
 - 모델 학습·호스팅·추론 엔진
 - 외부 OIDC/JWT, 사용자별 인증·권한·RBAC
 - 외부 네트워크 노출, reverse proxy 인증, horizontal scaling, container deployment
-- 실시간 streaming log UI, automatic refresh, chart, 전문 검색, 알림, 과금
+- 실시간 streaming log UI, automatic refresh, chart, 전문 검색, 알림, proxy-owned pricing table 기반 비용 추정·과금
 - automatic TTL deletion, stream reprocessing, encrypted storage, external secret/config service, runtime secret rotation
 - sprint-02 범위에서의 제품 코드 구현
 
@@ -71,3 +80,8 @@ LLM 클라이언트와 OpenAI Model Provider 사이에서 요청을 중계하고
 - `adr/access-control.md`
 - `adr/monitoring-ui-scope.md`
 - `adr/deployment-configuration.md`
+- `adr/multi-api-contract-adapter-boundary.md`
+- `adr/claude-provider-authentication-headers.md`
+- `adr/api-streaming-completion-and-error-contract.md`
+- `adr/traffic-log-api-metadata.md`
+- `adr/usage-and-cost-metadata.md`

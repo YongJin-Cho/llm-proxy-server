@@ -8,11 +8,11 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 2 | 6 | 0 | 0 |
+| 4 | 4 | 0 | 0 |
 
 **Sprint goal:** OpenAI Chat Completions API와 Claude Messages API를 기존 Responses 프록시에 추가하기 위한 사용자 승인 PRD·AC·설계 결정·ASR·Spec을 확정하고 구현 가능한 product backlog를 만든다.
-**Current focus:** T-004 — AC별 ADR/Direct Input 설계 결정 및 승인
-**Recommended next:** T-005 — ASR delta 통합 및 승인 (AC-018 승인 완료, G3/G4 통과)
+**Current focus:** T-006 — Spec delta 작성
+**Recommended next:** T-006 — Spec delta 작성
 
 ## Tasks
 
@@ -39,21 +39,23 @@
   - Depends: T-003
   - Notes: AC-014~AC-018 설계 결정과 ADR 승인을 완료했다. AC-018은 Option A(provider-reported USD cost only)로 결정했다.
 
-- [ ] **T-005** — ASR delta 통합 및 승인
+- [x] **T-005** — ASR delta 통합 및 승인
   - Phase: ④ ASR consolidation
   - Artifact: `spec/ASR.md`
   - Depends: T-004
-  - Notes: ASR-016~ASR-020 초안을 통합했다. 현재 사용자 ASR 승인 gate.
+  - Notes: 2026-03-10 사용자 go-ahead("ok")로 ASR-016~ASR-020 및 전체 ASR delta를 승인했다.
 
-- [ ] **T-006** — Spec delta 작성
+- [x] **T-006** — Spec delta 작성
   - Phase: ⑤ Spec writing
   - Artifact: `spec/llm-proxy-server.md`
   - Depends: T-005
+  - Notes: 승인된 ASR-016~ASR-020을 R-017~R-022 및 C-010~C-012로 반영했다.
 
 - [ ] **T-007** — Spec review 및 승인
   - Phase: ⑥ Spec review
   - Artifact: `spec-review/llm-proxy-server.md`
   - Depends: T-006
+  - Notes: 다음 단계는 Spec consistency review와 사용자 승인 gate다.
 
 - [ ] **T-008** — PB-012 세분화 및 Sprint Boundary → sprint-08
   - Phase: backlog encode / cross-cutting
