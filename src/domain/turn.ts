@@ -1,5 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import type { TurnSemantic } from '../application/proxy-adapters/proxy-adapter.js';
+
+export type TurnSemantic = {
+  hasToolContinuation(request: unknown): boolean;
+  requestToolResultIds(request: unknown): string[];
+  responseToolCallIds(response: unknown): string[];
+};
 
 export type TurnStatus = 'in_progress' | 'completed';
 export type TurnFallbackReason = 'missing_tool_identity' | 'unmatched_tool_identity' | 'ambiguous_tool_identity';

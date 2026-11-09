@@ -6,7 +6,7 @@ LLM 클라이언트와 Provider 사이의 요청을 중계하고 SQLite traffic 
 
 ```text
 llm-proxy-server/
-├── src/             # server bootstrap, domain, application, API, persistence, delivery, UI source
+├── src/             # server bootstrap, domain, application, API, persistence, and UI source
 ├── ui/              # Vite entry document
 ├── scripts/         # integration verification
 ├── spec/            # requirements and feature specs
@@ -29,9 +29,8 @@ llm-proxy-server/
 
 - `config.json`: host, port, database path, body limit, provider endpoint, model routing, provider auth mode runtime 설정
 - `src/server.ts`: Fastify bootstrap, configuration loading, dependency assembly, listen/shutdown lifecycle
-- `src/delivery/ui.ts`: legacy UI static-serving helper retained for the non-Fastify delivery path; current `src/server.ts` uses `@fastify/static`
 - `src/configuration.ts`: config.json loading, validation, apiKeyEnv secret resolution, and provider auth mode validation
-- `src/domain/`: traffic log types, turn grouping lifecycle, writer/reader ports, redaction and size policies
+- `src/domain/`: traffic log types, turn grouping lifecycle and semantic contract, writer/reader ports, redaction and size policies
 - `src/application/proxy-service.ts`: common routing, auth, provider I/O, logging, and SSE orchestration; depends on `TrafficLogWriter`
 - `src/application/proxy-adapters/`: API-specific route path, traffic-log kind, provider endpoint mapping, streaming completion detectors, and usage/cost parsing; `ProxyAdapter` is the shared base for Responses, Chat Completions, and Messages
 - `src/application/log-query-service.ts`: UI/API log and turn-tree query use cases; depends on `TrafficLogReader`
@@ -46,12 +45,12 @@ llm-proxy-server/
 
 The current Traffic page is split into `pages/TrafficPage.tsx`, `components/Filters.tsx`, `components/LogTable.tsx`, `components/LogDetail.tsx`, `components/TurnTree.tsx`, and `data-query/log-api.ts`. `ui/index.html` is the Vite entry document and loads `src/ui/main.tsx`; it is not a second UI implementation. Add future analysis/report/chart features as separate page or feature modules; do not place their data fetching or state into `TrafficPage` or `main.tsx`.
 
-Application code depends on domain ports; the SQLite adapter is the concrete persistence implementation. The proxy application service depends on `TrafficLogWriter`, `TurnStore`, and the generic `ProxyAdapter` contract; turn grouping lifecycle and tool identity extraction live in `src/domain/turn.ts`, while API-specific request/response interpretation remains isolated in `src/application/proxy-adapters/`. Traffic rows carry turn ID, observation sequence, and fallback metadata; the turn table carries lifecycle state and traffic count. `TrafficLogQueryService` depends only on `TrafficLogReader`. Route handlers contain no SQL statements or SQLite imports.
+Application code depends on domain ports; the SQLite adapter is the concrete persistence implementation. The proxy application service depends on `TrafficLogWriter`, `TurnStore`, and the generic `ProxyAdapter` contract; turn grouping lifecycle and the `TurnSemantic` contract live in `src/domain/turn.ts`, while API-specific semantic implementations and SSE aggregation remain isolated in `src/application/proxy-adapters/`. Traffic rows carry turn ID, observation sequence, and fallback metadata; the turn table carries lifecycle state and traffic count. `TrafficLogQueryService` depends only on `TrafficLogReader`. Route handlers contain no SQL statements or SQLite imports.
 
 ### How to implement
 
 1. Keep API namespace under `/api/v1`, preserve raw hijacked response handling for SSE, and keep turn tree payloads body-free so traffic detail remains lazy.
-2. Keep source TypeScript/TSX/CSS under `src/`; `ui/` contains only Vite's entry HTML.
+2. Keep application TypeScript/TSX/CSS under `src/`; root `ui/` contains only Vite's entry HTML and is required by `vite.config.ts` as the build input.
 3. Runtime settings belong in root `config.json`; only secret values may come from environment variables named by `apiKeyEnv`. Provider auth defaults to Bearer; native Anthropic mode requires `anthropicVersion` and sends `x-api-key` plus `anthropic-version`.
 4. Run `npm run build` after structural changes and `npm run verify` for proxy, SSE, persistence, redaction, or UI changes.
 5. Keep UI imports directed inward: pages may import data-query and components; components must remain API-agnostic; `main.tsx` only bootstraps the selected page.
@@ -65,5 +64,5 @@ Application code depends on domain ports; the SQLite adapter is the concrete per
 - `TurnGroupingService` creates a new turn for the first traffic, keeps open turns indexed by unresolved tool identity, and stores global observation sequence on each traffic row.
 - `SqliteTrafficLogStore.listTurns` projects stored turns plus metadata-free legacy traffic into deterministic, paginated tree nodes; request/response bodies remain available only through the existing log detail API.
 - `TrafficPage` stores turn and traffic selection in `turn`/`traffic` URL query parameters and listens for browser history changes; tree loading errors are surfaced without removing the existing flat log path.
-- `@fastify/static` serves `dist/ui`; the Vite output currently contains the `ui/index.html` entry path, so the SPA fallback uses `ui/index.html`.
+- `@fastify/static` serves `dist/ui`; the Vite input is root `ui/index.html`, which loads `src/ui/main.tsx`, and the SPA fallback uses the generated `ui/index.html` path.
 - `better-sqlite3` may require the repository's npm install-script approval/rebuild step in restricted npm environments.

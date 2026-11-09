@@ -1,13 +1,9 @@
 import type { ProviderConfig } from '../../configuration.js';
 import type { TrafficLogApiKind } from '../../domain/traffic-log.js';
+import type { TurnSemantic } from '../../domain/turn.js';
+export type { TurnSemantic } from '../../domain/turn.js';
 
 export type ProxyApiPath = '/responses' | '/chat/completions' | '/messages';
-
-export type TurnSemantic = {
-  hasToolContinuation(request: unknown): boolean;
-  requestToolResultIds(request: unknown): string[];
-  responseToolCallIds(response: unknown): string[];
-};
 
 export type UsageMetadata = {
   inputTokens: number | null;
