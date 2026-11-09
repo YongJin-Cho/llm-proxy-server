@@ -40,8 +40,9 @@
   - Spec: `spec/llm-proxy-server.md` §Requirements, §Constraints
   - Sprint: sprint-00
   - Depends: —
-  - Notes: Spec→backlog 스프린트에서 완료.
+  - Notes: Spec→backlog 스프린트에서 DoD 충족 후 Boundary에서 종료.
 
 ## Notes
 
 - 2026-03-10: Spec 승인 후 PB-002–PB-006을 초기 구현 백로그로 추가했다.
+- 2026-03-10: sprint-00 Boundary에서 PB-001을 종료하고 sprint-01 실행을 시작했다.
