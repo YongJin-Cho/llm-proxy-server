@@ -31,4 +31,4 @@
 - [ ] `npm run build`와 `npm run verify`가 통과한다.
 
 ## Approval
-- Drafted 2026-03-10. Sprint plan approval pending.
+- 2026-03-10: 사용자 go-ahead("ok")로 Sprint 10 계획을 승인하고 Backlog→Implementation 실행을 시작했다.

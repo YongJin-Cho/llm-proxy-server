@@ -1,6 +1,11 @@
 import { ProxyAdapter, type UsageMetadata } from './proxy-adapter.js';
 
 export class ResponsesAdapter extends ProxyAdapter {
+  readonly turnSemantic = {
+    hasToolContinuation: (request: unknown) => Array.isArray((request as { input?: unknown[] })?.input) && (request as { input: Array<{ type?: string }> }).input.some((item) => item.type === 'function_call_output'),
+    requestToolResultIds: (request: unknown) => stringValues(Array.isArray((request as { input?: unknown })?.input) ? ((request as { input: Array<{ call_id?: unknown }> }).input.map((item) => item.call_id)) : []),
+    responseToolCallIds: (response: unknown) => stringValues((response as { output?: Array<{ type?: string; call_id?: unknown }> })?.output?.filter((item) => item.type === 'function_call').map((item) => item.call_id)),
+  };
   readonly apiPath = '/responses' as const;
   readonly apiKind = 'responses' as const;
 
@@ -27,6 +32,8 @@ export class ResponsesAdapter extends ProxyAdapter {
     }
   }
 }
+
+function stringValues(values: unknown[] | undefined): string[] { return (values ?? []).filter((value): value is string => typeof value === 'string' && value.length > 0); }
 
 function emptyUsage(): UsageMetadata {
   return { inputTokens: null, cachedInputTokens: null, outputTokens: null, totalTokens: null, costUsd: null };

@@ -30,12 +30,12 @@ llm-proxy-server/
 - `config.json`: host, port, database path, body limit, provider endpoint, model routing, provider auth mode runtime 설정
 - `src/server.ts`: Fastify bootstrap, configuration loading, dependency assembly, listen/shutdown lifecycle
 - `src/configuration.ts`: config.json loading, validation, apiKeyEnv secret resolution, and provider auth mode validation
-- `src/domain/`: traffic log types, writer/reader ports, redaction and size policies
+- `src/domain/`: traffic log types, turn grouping lifecycle, writer/reader ports, redaction and size policies
 - `src/application/proxy-service.ts`: common routing, auth, provider I/O, logging, and SSE orchestration; depends on `TrafficLogWriter`
 - `src/application/proxy-adapters/`: API-specific route path, traffic-log kind, provider endpoint mapping, streaming completion detectors, and usage/cost parsing; `ProxyAdapter` is the shared base for Responses, Chat Completions, and Messages
 - `src/application/log-query-service.ts`: UI/API log query use case; depends on `TrafficLogReader`
 - `src/api/routes.ts`: HTTP route and payload adapter; depends on application services, not SQLite
-- `src/persistence/sqlite-traffic-log.ts`: SQLite schema and writer/reader adapter
+- `src/persistence/sqlite-traffic-log.ts`: SQLite schema, traffic turn metadata, turn store, and writer/reader adapter
 - `src/ui/data-query/`: browser-side HTTP query functions only; API URL, query parameters, and response/error mapping live here
 - `src/ui/pages/`: page-level state and use-case composition; pages coordinate data-query and presentational components
 - `src/ui/components/`: reusable presentation and user-input components; components do not call the API directly
@@ -45,7 +45,7 @@ llm-proxy-server/
 
 The current Traffic page is split into `pages/TrafficPage.tsx`, `components/Filters.tsx`, `components/LogTable.tsx`, `components/LogDetail.tsx`, and `data-query/log-api.ts`. Add future analysis/report/chart features as separate page or feature modules; do not place their data fetching or state into `TrafficPage` or `main.tsx`.
 
-Application code depends on domain ports; the SQLite adapter is the concrete persistence implementation. The proxy application service depends only on `TrafficLogWriter` and the generic `ProxyAdapter` contract; API-specific request/response usage interpretation is isolated in `src/application/proxy-adapters/`. Text/tool-call extraction is not persisted as separate columns in the current scope. `TrafficLogQueryService` depends only on `TrafficLogReader`. Route handlers contain no SQL statements or SQLite imports.
+Application code depends on domain ports; the SQLite adapter is the concrete persistence implementation. The proxy application service depends on `TrafficLogWriter`, `TurnStore`, and the generic `ProxyAdapter` contract; turn grouping lifecycle and tool identity extraction live in `src/domain/turn.ts`, while API-specific request/response interpretation remains isolated in `src/application/proxy-adapters/`. Traffic rows carry turn ID, observation sequence, and fallback metadata; the turn table carries lifecycle state and traffic count. `TrafficLogQueryService` depends only on `TrafficLogReader`. Route handlers contain no SQL statements or SQLite imports.
 
 ### How to implement
 
@@ -57,9 +57,10 @@ Application code depends on domain ports; the SQLite adapter is the concrete per
 
 ## Verification guide
 
-`npm run build` validates the Vite UI build and TypeScript server compilation. `npm run verify` creates a temporary config.json and secret environment values, starts mock Providers and a temporary proxy/SQLite instance, validates the UI entrypoint, routing, persistence, masking, model rejection, and detail lookup. Verification records map evidence to `spec/llm-proxy-server.md` requirement IDs.
+`npm run build` validates the Vite UI build and TypeScript server compilation. `npm run verify` creates a temporary config.json and secret environment values, starts mock Providers and a temporary proxy/SQLite instance, validates the UI entrypoint, routing, persistence, masking, model rejection, and detail lookup. Turn-specific fixtures are added to the same verification entrypoint before Sprint 10 completion; verification records map evidence to `spec/llm-proxy-server.md` and `spec/llm-proxy-turn-traffic.md` requirement IDs.
 
 ## Notes
 
+- `TurnGroupingService` creates a new turn for the first traffic, keeps open turns indexed by unresolved tool identity, and stores global observation sequence on each traffic row; tree projection is intentionally deferred to PB-022.
 - `@fastify/static` serves `dist/ui`; the Vite output currently contains the `ui/index.html` entry path, so the SPA fallback uses `ui/index.html`.
 - `better-sqlite3` may require the repository's npm install-script approval/rebuild step in restricted npm environments.

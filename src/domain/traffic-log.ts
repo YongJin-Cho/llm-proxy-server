@@ -19,6 +19,9 @@ export type TrafficLog = {
   output_tokens?: number | null;
   total_tokens?: number | null;
   cost_usd?: number | null;
+  turn_id?: string | null;
+  turn_sequence?: number | null;
+  fallback_reason?: string | null;
   };
 
 export type TrafficLogWrite = {

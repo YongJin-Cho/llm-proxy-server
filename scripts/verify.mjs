@@ -128,6 +128,9 @@ try {
   const listed = JSON.parse(list.body).data;
   assert.equal(listed.length, 7);
   assert.equal(listed.filter((entry) => entry.status === 'completed').length, 7);
+  const streamedLog = listed.find((entry) => entry.streaming === 1);
+  assert.ok(streamedLog);
+  assert.doesNotMatch(streamedLog.response_json, /data:\s/);
   assert.equal(listed.filter((entry) => entry.api_kind === 'responses').length, 3);
   const chatLog = listed.find((entry) => entry.api_kind === 'chat_completions' && entry.streaming === 0);
   const messagesLog = listed.find((entry) => entry.api_kind === 'messages' && entry.streaming === 0);

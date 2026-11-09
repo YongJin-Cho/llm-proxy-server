@@ -1,6 +1,11 @@
 import { ProxyAdapter, type UsageMetadata } from './proxy-adapter.js';
 
 export class ChatCompletionsAdapter extends ProxyAdapter {
+  readonly turnSemantic = {
+    hasToolContinuation: (request: unknown) => Array.isArray((request as { messages?: unknown[] })?.messages) && (request as { messages: Array<{ role?: string }> }).messages.some((item) => item.role === 'tool'),
+    requestToolResultIds: (request: unknown) => stringValues((request as { messages?: Array<{ tool_call_id?: unknown }> })?.messages?.map((item) => item.tool_call_id)),
+    responseToolCallIds: (response: unknown) => stringValues((response as { choices?: Array<{ message?: { tool_calls?: Array<{ id?: unknown }> } }> })?.choices?.flatMap((choice) => choice.message?.tool_calls?.map((call) => call.id) ?? [])),
+  };
   readonly apiPath = '/chat/completions' as const;
   readonly apiKind = 'chat_completions' as const;
 
@@ -29,6 +34,8 @@ export class ChatCompletionsAdapter extends ProxyAdapter {
     }
   }
 }
+
+function stringValues(values: unknown[] | undefined): string[] { return (values ?? []).filter((value): value is string => typeof value === 'string' && value.length > 0); }
 
 function emptyUsage(): UsageMetadata {
   return { inputTokens: null, cachedInputTokens: null, outputTokens: null, totalTokens: null, costUsd: null };

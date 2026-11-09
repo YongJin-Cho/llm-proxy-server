@@ -141,16 +141,16 @@
 - [ ] **PB-020** — Turn grouping domain·persistence lifecycle 구현
   - Story: API semantic adapter 결과를 사용해 stable turn/traffic identifier, turn reference, 관찰 순서 sequence, 진행·완료 상태와 미완료 turn pool을 SQLite writer/query 경계 안에 저장하고 조회한다.
   - Spec: `spec/llm-proxy-turn-traffic.md` §Requirements R-001–R-003, §Constraints C-001–C-006
-  - Sprint: —
+  - Sprint: sprint-10
   - Depends: PB-004, PB-009, PB-013, PB-016
-  - Notes: stable identity/ordering의 세부 wire·persistence contract는 구현 story의 acceptance criteria와 fixture에서 고정한다.
+  - Notes: Sprint 10에 커밋했다. stable identity/ordering의 세부 wire·persistence contract는 구현 acceptance criteria와 fixture에서 고정한다.
 
-- [ ] **PB-021** — Tool identity matching과 fallback isolation
+  - [ ] **PB-021** — Tool identity matching과 fallback isolation
   - Story: 유일하게 매칭되는 tool ID는 기존 미완료 turn에 연결하고, 누락·미매칭·모호 identity는 각각 고정 fallback reason과 새 standalone turn으로 격리하며 request forwarding과 기존 turn 보존을 검증한다.
   - Spec: `spec/llm-proxy-turn-traffic.md` §Requirements R-001–R-003; §Constraints C-007
-  - Sprint: —
+  - Sprint: sprint-10
   - Depends: PB-020
-  - Notes: fallback enum은 `missing_tool_identity`, `unmatched_tool_identity`, `ambiguous_tool_identity`다.
+  - Notes: Sprint 10에 커밋했다. fallback enum은 `missing_tool_identity`, `unmatched_tool_identity`, `ambiguous_tool_identity`다.
 
 - [ ] **PB-022** — Turn tree query API와 legacy projection
   - Story: `GET /api/v1/turns`가 turn pagination, deterministic ordering, child traffic summary, fallback metadata와 legacy synthetic node를 제공하고 traffic 본문은 기존 detail API로 지연 조회한다.

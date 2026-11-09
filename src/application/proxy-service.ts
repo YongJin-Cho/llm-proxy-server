@@ -3,6 +3,8 @@ import { randomUUID } from 'node:crypto';
 import type { AppConfig, ProviderConfig } from '../configuration.js';
 import { bounded, maskedHeaders } from '../domain/policy.js';
 import type { TrafficLogWriter } from '../domain/traffic-log.js';
+import { TurnGroupingService } from '../domain/turn.js';
+import type { TurnStore } from '../domain/turn.js';
 import { ChatCompletionsAdapter } from './proxy-adapters/chat-completions-adapter.js';
 import { MessagesAdapter } from './proxy-adapters/messages-adapter.js';
 import { ProxyAdapter, type ProxyApiPath } from './proxy-adapters/proxy-adapter.js';
@@ -27,7 +29,10 @@ async function readBody(req: IncomingMessage, max: number) {
 export class ProxyService {
   private readonly adapters: ReadonlyMap<ProxyApiPath, ProxyAdapter>;
 
-  constructor(private readonly config: AppConfig, private readonly writer: TrafficLogWriter) {
+  private readonly turns: TurnGroupingService;
+
+  constructor(private readonly config: AppConfig, private readonly writer: TrafficLogWriter & TurnStore) {
+    this.turns = new TurnGroupingService(writer);
     const adapters = [new ResponsesAdapter(), new ChatCompletionsAdapter(), new MessagesAdapter()];
     this.adapters = new Map(adapters.map((adapter) => [adapter.apiPath, adapter]));
   }
@@ -43,6 +48,7 @@ export class ProxyService {
     const id = randomUUID();
     const startedAt = new Date().toISOString();
     let inserted = false;
+    let turnId: string | undefined;
 
     try {
       const raw = parsedBody === undefined ? await readBody(req, this.config.maxBodyBytes) : JSON.stringify(parsedBody);
@@ -62,6 +68,8 @@ export class ProxyService {
         requestJson: bounded(JSON.stringify({ headers: maskedHeaders(req.headers), body: input }), this.config.maxBodyBytes),
       });
       inserted = true;
+      const turn = this.turns.startTraffic({ trafficId: id, semantic: adapter.turnSemantic, request: input, now: startedAt });
+      turnId = turn.turnId;
 
       const headers: Record<string, string> = { 'content-type': 'application/json' };
       if (route.provider.authMode === 'anthropic') {
@@ -75,7 +83,7 @@ export class ProxyService {
         headers,
         body: upstreamBody,
       });
-      if (streaming && upstream.body) return await this.stream(upstream, res, id, started, adapter);
+      if (streaming && upstream.body) return await this.stream(upstream, res, id, started, adapter, turnId);
 
       const response = await upstream.text();
       this.writer.finish({
@@ -84,11 +92,12 @@ export class ProxyService {
         status: upstream.ok ? 'completed' : 'failed',
         httpStatus: upstream.status,
         latencyMs: Date.now() - started,
-        responseJson: bounded(response, this.config.maxBodyBytes),
+        responseJson: bounded(adapter.aggregateResponse(response), this.config.maxBodyBytes),
         error: upstream.ok ? null : bounded(response, this.config.maxBodyBytes),
         ...adapter.usageMetadata(response),
-      });
-      res.writeHead(upstream.status, { 'content-type': upstream.headers.get('content-type') ?? 'application/json' });
+        });
+        if (turnId) this.turns.finishTraffic({ turnId, semantic: adapter.turnSemantic, response: safeJson(adapter.aggregateResponse(response)), finishedAt: new Date().toISOString(), succeeded: upstream.ok });
+        res.writeHead(upstream.status, { 'content-type': upstream.headers.get('content-type') ?? 'application/json' });
       res.end(response);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'proxy request failed';
@@ -110,7 +119,7 @@ export class ProxyService {
     return { provider, providerModel: route.providerModel };
   }
 
-  private async stream(upstream: Response, res: ServerResponse, id: string, started: number, adapter: ProxyAdapter) {
+  private async stream(upstream: Response, res: ServerResponse, id: string, started: number, adapter: ProxyAdapter, turnId?: string) {
     res.writeHead(upstream.status, { 'content-type': upstream.headers.get('content-type') ?? 'text/event-stream' });
     const reader = upstream.body!.getReader();
     const chunks: Buffer[] = [];
@@ -129,7 +138,13 @@ export class ProxyService {
     }
     const response = Buffer.concat(chunks).toString('utf8');
     const completed = upstream.ok && adapter.isComplete(response) && !disconnected;
-    this.writer.finish({ id, finishedAt: new Date().toISOString(), status: completed ? 'completed' : 'failed', httpStatus: upstream.status, latencyMs: Date.now() - started, responseJson: bounded(response, this.config.maxBodyBytes), error: completed ? null : bounded(disconnected ? 'client disconnected before stream completion' : response || 'stream ended before completion', this.config.maxBodyBytes), ...adapter.usageMetadata(response) });
+    this.writer.finish({ id, finishedAt: new Date().toISOString(), status: completed ? 'completed' : 'failed', httpStatus: upstream.status, latencyMs: Date.now() - started, responseJson: bounded(adapter.aggregateResponse(response), this.config.maxBodyBytes), error: completed ? null : bounded(disconnected ? 'client disconnected before stream completion' : response || 'stream ended before completion', this.config.maxBodyBytes), ...adapter.usageMetadata(response) });
+    if (turnId) this.turns.finishTraffic({ turnId, semantic: adapter.turnSemantic, response: safeJson(adapter.aggregateResponse(response)), finishedAt: new Date().toISOString(), succeeded: upstream.ok });
     if (!disconnected) res.end();
-  }
-}
+    }
+    }
+
+    function safeJson(value: string): unknown {
+    try { return JSON.parse(value); } catch { return {};
+    }
+    }
