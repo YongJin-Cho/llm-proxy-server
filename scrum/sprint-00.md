@@ -23,6 +23,10 @@ LLM Proxy Server와 트래픽 모니터링 UI의 제품 요구사항, 핵심 설
 4. 승인된 Spec을 기준으로 구현 가능한 PB-* 스토리가 백로그에 추가·정리되어 있다.
 5. Demo Checklist의 각 항목에 대해 문서와 게이트 상태를 확인할 수 있다.
 
+## Approval
+
+- 2026-03-10: 사용자 go-ahead(“계속해줘”)로 Sprint 00 계획 승인.
+
 ## Demo Checklist
 
 - PRD가 목표, 범위, 성공 기준을 명시한다.
