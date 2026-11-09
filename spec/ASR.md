@@ -27,7 +27,7 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 | ASR-019 | 다중 API traffic log metadata 정규화 | AC-017 | AC-017 | adr/traffic-log-api-metadata.md |
 | ASR-020 | Token usage·cost metadata 추출과 저장 | AC-018 | AC-018 | adr/usage-and-cost-metadata.md |
 | ASR-021 | Proxy semantic turn grouping | AC-019 | AC-019 | adr/turn-grouping-storage-lifecycle.md |
-| ASR-022 | Turn 동시성·순서·완료 판정 | AC-023 | AC-023 | adr/turn-order-concurrency-completion.md |
+| ASR-022 | Turn 동시성·순서·완료 판정 | AC-023 | AC-023 | adr/turn-order-concurrency-completion.md; adr/ambiguous-missing-tool-id-fallback.md |
 | ASR-023 | SSE 최종·partial aggregate 저장 | AC-024 | AC-024 | adr/sse-final-response-aggregation.md; adr/partial-stream-aggregate-failure.md |
 | ASR-024 | 표준 semantic·stream adapter contract | AC-019, AC-024 | AC-019, AC-024 | adr/standard-semantic-stream-adapter-interface.md |
 | ASR-025 | Turn tree aggregate query API | AC-020 | AC-020 | adr/turn-traffic-query-tree-projection.md |
@@ -203,11 +203,11 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 
 ### ASR-022 — Turn 동시성·순서·완료 판정
 - **Source:** AC-023 — Turn grouping 순서·동시성·완료 판정
-- **Statement:** Proxy는 여러 미완료 turn을 동시에 유지하고 각 turn의 미해결 tool call ID를 역색인해야 한다. incoming request의 tool message ID가 일치하는 turn에 traffic을 연결하고, 복수 tool message의 도착 순서는 tool call 순서와 무관하게 ID 기준으로 처리한다. response에 tool call이 없으면 turn을 완료하고 이후 traffic에 연결하지 않는다. traffic sequence는 proxy가 관찰한 저장 순서를 사용한다.
-- **Decision summary:** 미완료 turn pool과 tool-call ID 역색인을 사용한다.
+- **Statement:** Proxy는 여러 미완료 turn을 동시에 유지하고 각 turn의 미해결 tool call ID를 역색인해야 한다. incoming request의 tool message ID가 하나의 미완료 turn에 유일하게 매칭되면 해당 turn에 traffic을 연결하고, 복수 tool message의 도착 순서는 tool call 순서와 무관하게 ID 기준으로 처리한다. identity가 없거나 미매칭되거나 여러 미완료 turn에 모호하게 매칭되면 기존 turn에 연결하지 않고 새 standalone turn의 첫 traffic으로 저장하며 `missing_tool_identity`, `unmatched_tool_identity`, `ambiguous_tool_identity` 중 하나의 fallback reason을 기록해야 한다. 이 경우에도 request를 upstream으로 전달하고 traffic을 저장한다. response에 tool call이 없으면 turn을 완료하고 이후 traffic에 연결하지 않는다. traffic sequence는 proxy가 관찰한 저장 순서를 사용한다.
+- **Decision summary:** 미완료 turn pool과 tool-call ID 역색인을 사용하며, 매칭 불가 traffic은 fallback reason과 함께 standalone turn으로 격리한다.
 - **Depends on:** ASR-021
 - **Related AC:** AC-023
-- **Related ADRs:** `adr/turn-order-concurrency-completion.md` — approved
+- **Related ADRs:** `adr/turn-order-concurrency-completion.md` — approved; `adr/ambiguous-missing-tool-id-fallback.md` — approved
 
 ### ASR-023 — SSE 최종·partial aggregate 저장
 - **Source:** AC-024 — SSE 최종 응답 통합 저장

@@ -55,7 +55,7 @@ approved
 
 ## Downstream Concerns
 - [ ] **ADR candidate — Grouping state durability:** proxy 재시작 후 미완료 turn을 저장 데이터에서 복구할지 결정해야 한다.
-- [ ] **ADR candidate — Ambiguous/missing tool IDs:** tool message ID가 없거나 여러 turn과 매칭될 때의 fallback을 결정해야 한다.
+- [x] **covered — Ambiguous/missing tool IDs:** `adr/ambiguous-missing-tool-id-fallback.md`에서 Option B를 승인했다. identity 누락·미매칭·모호 매칭 request는 기존 turn에 연결하지 않고 fallback reason을 기록한 새 standalone turn으로 격리하며, 요청은 계속 전달·저장한다.
 - [x] **deferred assumption — cross-process ordering:** 단일 proxy 프로세스 내 traffic ordering만 이번 범위에 포함한다.
 
 ## Related
@@ -65,3 +65,4 @@ approved
 ## Notes
 - 2026-03-10: AC-023 review를 위해 proposed ADR을 작성했다.
 - 2026-03-10: 사용자 go-ahead("ok")로 Option B를 승인했다. 미완료 turn pool과 tool-call ID 역색인을 사용한다.
+- 2026-03-10: downstream concern `adr/ambiguous-missing-tool-id-fallback.md`가 승인되었다. 매칭 불가 traffic은 standalone turn으로 격리한다.

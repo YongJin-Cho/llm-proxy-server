@@ -314,8 +314,9 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - **Depends on:** AC-019
 - **Related ADRs:**
   - `adr/turn-order-concurrency-completion.md` — approved
-- **Resolution path:** adr
-- **Resolution:** Proxy는 여러 미완료 turn을 동시에 유지하고 각 turn의 미해결 tool call ID를 역색인한다. incoming request의 tool message ID가 일치하는 turn에 traffic을 연결하며, 복수 tool message의 도착 순서는 tool call 순서와 무관하게 ID 기준으로 처리한다. response에 tool call이 없으면 turn을 완료하고 이후 traffic에 연결하지 않는다. traffic sequence는 proxy가 관찰한 저장 순서를 사용한다.
+  - `adr/ambiguous-missing-tool-id-fallback.md` — approved
+  - **Resolution path:** adr
+  - **Resolution:** Proxy는 여러 미완료 turn을 동시에 유지하고 각 turn의 미해결 tool call ID를 역색인한다. incoming request의 tool message ID가 하나의 미완료 turn에 유일하게 일치하면 해당 turn에 traffic을 연결하며, 복수 tool message의 도착 순서는 tool call 순서와 무관하게 ID 기준으로 처리한다. identity가 없거나 어떤 turn에도 매칭되지 않거나 여러 미완료 turn에 모호하게 매칭되면 기존 turn에 연결하지 않고 새 standalone turn의 첫 traffic으로 저장하며 `missing_tool_identity`, `unmatched_tool_identity`, `ambiguous_tool_identity` 중 하나의 fallback reason을 기록한다. 이 경우에도 request는 upstream으로 전달하고 traffic을 저장한다. response에 tool call이 없으면 해당 turn을 완료하고 이후 traffic에 연결하지 않는다. traffic sequence는 proxy가 관찰한 저장 순서를 사용한다.
 
 
 ### AC-024 — SSE 최종 응답 통합 저장
@@ -340,3 +341,4 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - 2026-03-10: SSE streaming 저장 응답을 최종 통합 응답 하나로 제한하기 위해 AC-024를 추가 식별했다.
 - 2026-03-10: 사용자 결정으로 AC-019를 designed 처리했다. client/harness 변경 없이 proxy semantic grouping을 사용하며, 복수 tool call/tool message는 ID 기준으로 매칭하고 순서는 보장하지 않는다.
 - 2026-03-10: 사용자 go-ahead("ok")로 AC-023의 Option B를 승인했다. 미완료 turn pool, tool-call ID 역색인, 관찰 순서 기반 traffic sequence를 사용한다.
+- 2026-03-10: 사용자 go-ahead("ok")로 후속 ADR `ambiguous-missing-tool-id-fallback.md`를 승인했다. 매칭 불가 traffic은 fallback reason과 함께 새 standalone turn으로 격리한다.

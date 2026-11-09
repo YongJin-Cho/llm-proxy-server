@@ -4,7 +4,7 @@
 Tool message의 identity가 없거나 하나의 요청이 여러 미완료 turn과 매칭될 때, proxy는 해당 traffic을 어떤 turn에 연결하고 어떻게 보존해야 하는가?
 
 ## Status
-proposed
+approved
 
 ## Context
 - Parent 결정은 여러 미완료 turn을 유지하고 tool-call ID 역색인으로 incoming request를 연결하도록 정했다.
@@ -14,6 +14,7 @@ proposed
 - proxy는 client/harness를 수정할 수 없고, upstream traffic을 가능한 한 전달·기록해야 한다.
 
 ## Decision
+**Option B — 매칭 불가 traffic을 새 standalone turn으로 격리.** identity가 없거나 매칭되지 않거나 여러 미완료 turn에 모호하게 매칭되는 request는 기존 turn을 변경하지 않고 새 turn의 첫 traffic으로 저장한다. 요청은 계속 upstream으로 전달·저장하며 fallback reason을 기록한다.
 
 ## Options
 ### Option A — 최근 미완료 turn에 결정적으로 연결
@@ -56,7 +57,7 @@ proposed
 - tool identity 자체가 없는 API의 정상적인 요청도 이 규칙에 따라 standalone turn으로 시작하며, proxy는 payload 추측으로 과거 turn을 연결하지 않는다.
 
 ## Downstream Concerns
-- [ ] **ADR candidate — Fallback metadata wire shape:** fallback reason을 traffic metadata 또는 turn 상태 필드 중 어디에 어떤 고정 enum과 response shape으로 노출할지 결정해야 한다.
+- [x] **directly resolved — Fallback metadata wire shape:** fallback reason은 첫 traffic metadata에 고정 enum `missing_tool_identity`, `unmatched_tool_identity`, `ambiguous_tool_identity` 중 하나로 저장한다. Tree API에서 해당 metadata를 노출하는 상세 wire shape는 query API 명세 보완 시 함께 고정한다.
 - [x] **directly resolved — 기존 turn 선택 heuristic:** identity가 없거나 모호하면 최근 turn을 추측하지 않고 standalone turn으로 격리한다.
 - [x] **directly resolved — 요청 처리:** fallback 상황에서도 request를 거부하지 않고 upstream forwarding과 traffic 저장을 계속한다.
 - [x] **covered — 정상 ID 매칭:** 하나의 미완료 turn에 유일하게 매칭되는 tool ID는 parent ADR의 ID 역색인 규칙을 따른다.
@@ -68,7 +69,8 @@ proposed
 - `spec/AC.md` — AC-023
 - `spec/ASR.md` — ASR-022
 - `spec/llm-proxy-turn-traffic.md` — C-007, R-001, R-002
-- Follow-up (pending user decision): `adr/fallback-metadata-wire-shape.md`
+- `adr/fallback-metadata-wire-shape.md`는 별도 ADR 없이 query API wire contract 명세 보완 시 직접 해결한다.
 
 ## Notes
 - 2026-03-10: Parent ADR의 downstream concern을 분리해 proposed ADR로 작성했다. Option B를 추천한다.
+- 2026-03-10: 사용자 go-ahead("ok")로 Option B를 승인했다. 매칭 불가 traffic은 standalone turn으로 격리하고 요청은 계속 전달·저장한다.
