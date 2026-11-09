@@ -28,8 +28,7 @@ const waitForStartup = (process, stderr) => new Promise((resolve, reject) => {
 const providerRequests = [];
 const streamResponse = (req, res, payload) => {
   res.writeHead(200, { 'content-type': 'text/event-stream' });
-  if (req.url === '/messages') res.end('event: message_stop\ndata: {}\n\n');
-  else if (req.url === '/chat/completions') res.end([
+  if (req.url === '/chat/completions') res.end([
     'data: {"id":"chat-stream-1","object":"chat.completion.chunk","model":"provider/chat-model","choices":[{"index":0,"delta":{"role":"assistant","content":"Hello "},"finish_reason":null}]}',
     'data: {"choices":[{"index":0,"delta":{"content":"world"},"finish_reason":null}]}',
     'data: {"choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"id":"call-1","type":"function","function":{"name":"lookup","arguments":"{\\"q\\": "}}]},"finish_reason":null}]}',
@@ -49,7 +48,20 @@ const streamResponse = (req, res, payload) => {
     'data: [DONE]',
     '',
   ].join('\n\n'));
-  else res.end('data: {"type":"message_stop","usage":{"input_tokens":2,"output_tokens":1}}\n\ndata: [DONE]\n\n');
+  else res.end([
+    'event: message_start\ndata: {"type":"message_start","message":{"id":"msg-stream-1","type":"message","role":"assistant","model":"provider/messages-model","content":[],"usage":{"input_tokens":4}}}',
+    'event: content_block_start\ndata: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}',
+    'event: content_block_delta\ndata: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Hello "}}',
+    'event: content_block_delta\ndata: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Messages"}}',
+    'event: content_block_stop\ndata: {"type":"content_block_stop","index":0}',
+    'event: content_block_start\ndata: {"type":"content_block_start","index":1,"content_block":{"type":"tool_use","id":"toolu-1","name":"lookup","input":{}}}',
+    'event: content_block_delta\ndata: {"type":"content_block_delta","index":1,"delta":{"type":"input_json_delta","partial_json":"{\\"q\\": "}}',
+    'event: content_block_delta\ndata: {"type":"content_block_delta","index":1,"delta":{"type":"input_json_delta","partial_json":"\\"test\\"}"}}',
+    'event: content_block_stop\ndata: {"type":"content_block_stop","index":1}',
+    'event: message_delta\ndata: {"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"output_tokens":2}}',
+    'event: message_stop\ndata: {"type":"message_stop"}',
+    '',
+  ].join('\n\n'));
 };
 const providerA = createServer((req, res) => {
   let body = '';
@@ -177,6 +189,18 @@ try {
   assert.equal(streamedResponsesResponse.output[1].name, 'lookup');
   assert.equal(streamedResponsesResponse.output[1].arguments, '{"q": "test"}');
   assert.equal(streamedResponsesResponse.usage.input_tokens, 2);
+  const streamedMessagesLog = listed.find((entry) => entry.api_kind === 'messages' && entry.streaming === 1);
+  assert.ok(streamedMessagesLog);
+  const streamedMessagesResponse = JSON.parse(streamedMessagesLog.response_json);
+  assert.equal(streamedMessagesResponse.content[0].type, 'text');
+  assert.equal(streamedMessagesResponse.content[0].text, 'Hello Messages');
+  assert.equal(streamedMessagesResponse.content[1].type, 'tool_use');
+  assert.equal(streamedMessagesResponse.content[1].id, 'toolu-1');
+  assert.equal(streamedMessagesResponse.content[1].name, 'lookup');
+  assert.deepEqual(streamedMessagesResponse.content[1].input, { q: 'test' });
+  assert.equal(streamedMessagesResponse.stop_reason, 'tool_use');
+  assert.equal(streamedMessagesResponse.usage.input_tokens, 4);
+  assert.equal(streamedMessagesResponse.usage.output_tokens, 2);
   assert.equal(listed.filter((entry) => entry.api_kind === 'responses').length, 3);
   const chatLog = listed.find((entry) => entry.api_kind === 'chat_completions' && entry.streaming === 0);
   const messagesLog = listed.find((entry) => entry.api_kind === 'messages' && entry.streaming === 0);
