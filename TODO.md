@@ -8,11 +8,11 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 4 | 4 | 0 | 0 |
+| 5 | 3 | 0 | 0 |
 
 **Sprint goal:** OpenAI Chat Completions API와 Claude Messages API를 기존 Responses 프록시에 추가하기 위한 사용자 승인 PRD·AC·설계 결정·ASR·Spec을 확정하고 구현 가능한 product backlog를 만든다.
-**Current focus:** T-006 — Spec delta 작성
-**Recommended next:** T-006 — Spec delta 작성
+**Current focus:** T-008 — PB-012 세분화 및 Sprint Boundary → sprint-08
+**Recommended next:** T-008 — PB-012 세분화 및 Sprint Boundary → sprint-08
 
 ## Tasks
 
@@ -51,17 +51,17 @@
   - Depends: T-005
   - Notes: 승인된 ASR-016~ASR-020을 R-017~R-022 및 C-010~C-012로 반영했다.
 
-- [ ] **T-007** — Spec review 및 승인
+- [x] **T-007** — Spec review 및 승인
   - Phase: ⑥ Spec review
   - Artifact: `spec-review/llm-proxy-server.md`
   - Depends: T-006
-  - Notes: 다음 단계는 Spec consistency review와 사용자 승인 gate다.
+  - Notes: 2026-03-10 Spec consistency review 통과 및 사용자 go-ahead("ok")로 Spec을 SSOT로 승인했다.
 
-- [ ] **T-008** — PB-012 세분화 및 Sprint Boundary → sprint-08
+- [x] **T-008** — PB-012 세분화 및 Sprint Boundary → sprint-08
   - Phase: backlog encode / cross-cutting
-  - Artifact: `scrum/product-backlog.md`, `scrum/TODO-07.md`
+  - Artifact: `scrum/product-backlog.md`
   - Depends: T-007
-  - Notes: 제품 코드 구현은 다음 Backlog→Implementation sprint로 이월한다.
+  - Notes: PB-012를 PB-013~PB-018 구현 story로 분해했다. Sprint Boundary 실행 승인을 기다린다.
 
 ## Completed sprints
 

@@ -195,4 +195,4 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 
 - 2026-03-10: 모든 blocking AC와 승인된 ADR을 PRD의 제품 요구사항과 함께 통합했다.
 - 2026-03-10: sprint-02 delta의 AC-008~AC-013 결과를 ASR-010~ASR-015로 append했다.
-- 2026-03-10: Sprint 07의 승인된 AC-014~AC-018과 관련 ADR 결과를 ASR-016~ASR-020으로 통합했다. ASR approval gate 대기 중.
+- 2026-03-10: Sprint 07의 승인된 AC-014~AC-018과 관련 ADR 결과를 ASR-016~ASR-020으로 통합했고 사용자 승인을 받았다.
