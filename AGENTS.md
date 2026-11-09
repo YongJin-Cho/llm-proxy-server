@@ -27,11 +27,12 @@ llm-proxy-server/
 
 ### Module design and structure
 
-- `config.json`: host, port, database path, body limit, provider endpoint, model routing runtime 설정
+- `config.json`: host, port, database path, body limit, provider endpoint, model routing, provider auth mode runtime 설정
 - `src/server.ts`: Fastify bootstrap, configuration loading, dependency assembly, listen/shutdown lifecycle
-- `src/configuration.ts`: config.json loading, validation, and apiKeyEnv secret resolution
+- `src/configuration.ts`: config.json loading, validation, apiKeyEnv secret resolution, and provider auth mode validation
 - `src/domain/`: traffic log types, writer/reader ports, redaction and size policies
-- `src/application/proxy-service.ts`: provider request/response and SSE orchestration; depends on `TrafficLogWriter`
+- `src/application/proxy-service.ts`: common routing, auth, provider I/O, logging, and SSE orchestration; depends on `TrafficLogWriter`
+- `src/application/proxy-adapters/`: API-specific route path, traffic-log kind, provider endpoint mapping, and streaming completion detectors; `ProxyAdapter` is the shared base for Responses, Chat Completions, and Messages
 - `src/application/log-query-service.ts`: UI/API log query use case; depends on `TrafficLogReader`
 - `src/api/routes.ts`: HTTP route and payload adapter; depends on application services, not SQLite
 - `src/persistence/sqlite-traffic-log.ts`: SQLite schema and writer/reader adapter
@@ -44,13 +45,13 @@ llm-proxy-server/
 
 The current Traffic page is split into `pages/TrafficPage.tsx`, `components/Filters.tsx`, `components/LogTable.tsx`, `components/LogDetail.tsx`, and `data-query/log-api.ts`. Add future analysis/report/chart features as separate page or feature modules; do not place their data fetching or state into `TrafficPage` or `main.tsx`.
 
-Application code depends on domain ports; the SQLite adapter is the concrete persistence implementation. The proxy application service depends only on `TrafficLogWriter`, while `TrafficLogQueryService` depends only on `TrafficLogReader`. Route handlers contain no SQL statements or SQLite imports.
+Application code depends on domain ports; the SQLite adapter is the concrete persistence implementation. The proxy application service depends only on `TrafficLogWriter`, while API-specific differences are isolated in `src/application/proxy-adapters/`. `TrafficLogQueryService` depends only on `TrafficLogReader`. Route handlers contain no SQL statements or SQLite imports.
 
 ### How to implement
 
 1. Keep API namespace under `/api/v1` and preserve raw hijacked response handling for SSE.
 2. Keep source TypeScript/TSX/CSS under `src/`; `ui/` contains only Vite's entry HTML.
-3. Runtime settings belong in root `config.json`; only secret values may come from environment variables named by `apiKeyEnv`.
+3. Runtime settings belong in root `config.json`; only secret values may come from environment variables named by `apiKeyEnv`. Provider auth defaults to Bearer; native Anthropic mode requires `anthropicVersion` and sends `x-api-key` plus `anthropic-version`.
 4. Run `npm run build` after structural changes and `npm run verify` for proxy, SSE, persistence, redaction, or UI changes.
 5. Keep UI imports directed inward: pages may import data-query and components; components must remain API-agnostic; `main.tsx` only bootstraps the selected page.
 

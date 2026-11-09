@@ -1,10 +1,14 @@
 import { dirname, resolve } from 'node:path';
 import { mkdirSync, readFileSync } from 'node:fs';
 
+export type ProviderAuthMode = 'bearer' | 'anthropic';
+
 export type ProviderConfig = {
   baseUrl: string;
   apiKey: string;
   apiKeyEnv: string;
+  authMode: ProviderAuthMode;
+  anthropicVersion?: string;
 };
 
 export type ModelRoute = {
@@ -66,12 +70,16 @@ export function loadConfig(env = process.env): AppConfig {
   const providers: Record<string, ProviderConfig> = {};
   for (const [name, raw] of Object.entries(file.providers)) {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error(`providers.${name} must be an object`);
-    const definition = raw as { baseUrl?: unknown; apiKeyEnv?: unknown };
+    const definition = raw as { baseUrl?: unknown; apiKeyEnv?: unknown; authMode?: unknown; anthropicVersion?: unknown };
     const baseUrl = requiredString(definition.baseUrl, `providers.${name}.baseUrl`);
     const apiKeyEnv = requiredString(definition.apiKeyEnv, `providers.${name}.apiKeyEnv`);
+    const authMode = definition.authMode === undefined ? 'bearer' : requiredString(definition.authMode, `providers.${name}.authMode`);
+    if (authMode !== 'bearer' && authMode !== 'anthropic') throw new Error(`providers.${name}.authMode must be bearer or anthropic`);
+    const anthropicVersion = definition.anthropicVersion === undefined ? undefined : requiredString(definition.anthropicVersion, `providers.${name}.anthropicVersion`);
+    if (authMode === 'anthropic' && !anthropicVersion) throw new Error(`providers.${name}.anthropicVersion is required for anthropic auth mode`);
     const apiKey = env[apiKeyEnv];
     if (apiKey === undefined || apiKey === '') throw new Error(`missing provider secret environment variable: ${apiKeyEnv}`);
-    providers[name] = { baseUrl, apiKey, apiKeyEnv };
+    providers[name] = { baseUrl, apiKey, apiKeyEnv, authMode, anthropicVersion };
   }
   if (Object.keys(providers).length === 0) throw new Error('providers must contain at least one provider');
 

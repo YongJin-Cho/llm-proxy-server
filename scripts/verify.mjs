@@ -26,22 +26,32 @@ const waitForStartup = (process, stderr) => new Promise((resolve, reject) => {
 });
 
 const providerRequests = [];
+const streamResponse = (req, res, payload) => {
+  res.writeHead(200, { 'content-type': 'text/event-stream' });
+  if (req.url === '/messages') res.end('event: message_stop\ndata: {}\n\n');
+  else if (req.url === '/chat/completions') res.end('data: {"choices":[]}\n\ndata: [DONE]\n\n');
+  else res.end('data: {"type":"response.completed","usage":{"input_tokens":2,"output_tokens":1}}\n\ndata: [DONE]\n\n');
+};
 const providerA = createServer((req, res) => {
   let body = '';
   req.on('data', (chunk) => { body += chunk; });
   req.on('end', () => {
-    providerRequests.push({ provider: 'a', headers: req.headers, body: JSON.parse(body) });
+    const payload = JSON.parse(body);
+    providerRequests.push({ provider: 'a', path: req.url, headers: req.headers, body: payload });
+    if (payload.stream === true) return streamResponse(req, res, payload);
     res.writeHead(200, { 'content-type': 'application/json' });
-    res.end(JSON.stringify({ id: 'response-a', model: JSON.parse(body).model, output: [] }));
+    res.end(JSON.stringify({ id: 'response-a', model: payload.model, output: [], usage: { input_tokens: 3, output_tokens: 2 }, cost_usd: 0.01 }));
   });
 });
 const providerB = createServer((req, res) => {
   let body = '';
   req.on('data', (chunk) => { body += chunk; });
   req.on('end', () => {
-    providerRequests.push({ provider: 'b', headers: req.headers, body: JSON.parse(body) });
+    const payload = JSON.parse(body);
+    providerRequests.push({ provider: 'b', path: req.url, headers: req.headers, body: payload });
+    if (payload.stream === true) return streamResponse(req, res, payload);
     res.writeHead(200, { 'content-type': 'application/json' });
-    res.end(JSON.stringify({ id: 'response-b', model: JSON.parse(body).model, output: [] }));
+    res.end(JSON.stringify({ id: 'response-b', model: payload.model, output: [], usage: { prompt_tokens: 4, completion_tokens: 1 } }));
   });
 });
 const providerAPort = await listen(providerA);
@@ -57,7 +67,7 @@ await writeFile(configPath, JSON.stringify({
   maxBodyBytes: 4096,
   providers: {
     alpha: { baseUrl: `http://127.0.0.1:${providerAPort}`, apiKeyEnv: 'ALPHA_KEY' },
-    beta: { baseUrl: `http://127.0.0.1:${providerBPort}`, apiKeyEnv: 'BETA_KEY' },
+    beta: { baseUrl: `http://127.0.0.1:${providerBPort}`, apiKeyEnv: 'BETA_KEY', authMode: 'anthropic', anthropicVersion: '2023-06-01' },
   },
   models: {
     'client-alpha': { provider: 'alpha', providerModel: 'provider/alpha-model' },
@@ -90,24 +100,40 @@ try {
   const beta = await request(`${base}/api/v1/responses`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: 'client-beta', input: 'hello' }) });
   assert.equal(beta.status, 200);
   assert.equal(JSON.parse(beta.body).id, 'response-b');
-  assert.deepEqual(providerRequests.map((entry) => [entry.provider, entry.body.model]), [['a', 'provider/alpha-model'], ['b', 'provider/beta-model']]);
+  const chat = await request(`${base}/api/v1/chat/completions`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: 'client-alpha', messages: [{ role: 'user', content: 'hello' }] }) });
+  assert.equal(chat.status, 200);
+  const messages = await request(`${base}/api/v1/messages`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: 'client-beta', max_tokens: 10, messages: [{ role: 'user', content: 'hello' }] }) });
+  assert.equal(messages.status, 200);
+  assert.deepEqual(providerRequests.map((entry) => [entry.provider, entry.path, entry.body.model]), [['a', '/responses', 'provider/alpha-model'], ['b', '/responses', 'provider/beta-model'], ['a', '/chat/completions', 'provider/alpha-model'], ['b', '/messages', 'provider/beta-model']]);
   assert.equal(providerRequests[0].headers.authorization, 'Bearer alpha-secret');
-  assert.equal(providerRequests[1].headers.authorization, 'Bearer beta-secret');
+  assert.equal(providerRequests[1].headers['x-api-key'], 'beta-secret');
+  assert.equal(providerRequests[1].headers['anthropic-version'], '2023-06-01');
+
+  for (const [path, model] of [['/responses', 'client-alpha'], ['/chat/completions', 'client-alpha'], ['/messages', 'client-beta']]) {
+    const streamed = await request(`${base}/api/v1${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model, stream: true, messages: [] }) });
+    assert.equal(streamed.status, 200);
+    assert.match(streamed.body, path === '/messages' ? /message_stop/ : /\[DONE\]/);
+  }
+  assert.equal(providerRequests.filter((entry) => entry.body.stream === true).length, 3);
 
   const unknown = await request(`${base}/api/v1/responses`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: 'unknown-model', input: 'hello' }) });
   assert.equal(unknown.status, 400);
-  assert.equal(providerRequests.length, 2);
+  assert.equal(providerRequests.length, 7);
   assert.doesNotMatch(unknown.body, /alpha-secret|beta-secret/);
 
   const list = await request(`${base}/api/v1/logs?status=completed&limit=10&offset=0`);
   assert.equal(list.status, 200);
   const listed = JSON.parse(list.body).data;
-  assert.equal(listed.length, 2);
-  const alphaLog = listed.find((entry) => entry.model === 'client-alpha');
+  assert.equal(listed.length, 7);
+  assert.equal(listed.filter((entry) => entry.status === 'completed').length, 7);
+  assert.equal(listed.filter((entry) => entry.api_kind === 'responses').length, 3);
+  assert.equal(listed.find((entry) => entry.api_kind === 'chat_completions').input_tokens, 3);
+  assert.equal(listed.find((entry) => entry.api_kind === 'chat_completions').cost_usd, 0.01);
+  assert.equal(listed.find((entry) => entry.api_kind === 'messages').total_tokens, 5);
+  const alphaLog = listed.find((entry) => entry.model === 'client-alpha' && entry.request_json.includes('REDACTED'));
   assert.ok(alphaLog);
-  assert.match(alphaLog.request_json, /REDACTED/);
   assert.doesNotMatch(alphaLog.request_json, /client-secret/);
-  console.log('Routing verification passed: UI entrypoint, two providers, provider model mapping, unknown model rejection, secret handling, and read/write boundaries.');
+  console.log('Verification passed: UI entrypoint, three API routes, provider path mapping, usage/cost normalization, api_kind persistence, model rejection, secret handling, and read/write boundaries.');
 } finally {
   proxy.kill('SIGTERM');
   providerA.close();

@@ -56,7 +56,7 @@ approved
 - 하나의 canonical public response 형식으로 세 API를 통합하지 않는다.
 
 ## Downstream Concerns
-- [ ] **ADR candidate — Provider endpoint 및 API capability 설정:** provider별 base URL만으로 route를 유추할지, API kind별 endpoint/capability를 설정에 명시할지 결정한다.
+- [x] **directly resolved — Provider endpoint 및 API capability 설정:** public route path를 API kind로 사용해 provider `baseUrl` 뒤에 `/responses`, `/chat/completions`, `/messages`를 붙인다. API별 endpoint/capability 설정은 도입하지 않는다. Provider별 비표준 endpoint가 필요해지는 경우 재검토한다.
 - [x] **directly resolved — API별 public error 변환:** provider 오류의 status, content type, body를 가능한 한 pass-through한다. proxy 자체 오류(라우팅·설정·네트워크)는 기존 proxy error 계약으로 반환한다.
 - [x] **covered — Adapter 등록 구조:** AC-011의 승인된 Resolution에 따라 독립 adapter/plugin으로 등록한다.
 - [x] **deferred assumption — SDK 도입:** 공식 SDK 의존성 도입 여부는 구현 단계에서 필요할 때 별도 검토한다.
@@ -68,3 +68,4 @@ approved
 ## Notes
 - 2026-03-10: AC-014 검토를 위해 세 가지 public contract·adapter 경계를 비교하는 proposed ADR을 작성했다.
 - 2026-03-10: 사용자 선택으로 Option A를 승인했다. Provider contract pass-through를 사용하고 provider 미지원·endpoint 실패는 provider 오류로 반환한다.
+- 2026-03-10: 사용자 Direct Input으로 public route path를 provider `baseUrl`에 매핑하는 규칙을 확정했다. API별 endpoint/capability 설정은 도입하지 않는다.

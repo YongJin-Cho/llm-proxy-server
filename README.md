@@ -6,7 +6,7 @@
 
 ### config.json과 secret 환경변수
 
-모든 runtime 설정은 프로젝트 루트의 `config.json`에서 로드합니다. 기본 파일은 host, port, SQLite 경로, body size limit, provider endpoint, model routing을 정의합니다. API key 값 자체는 파일에 저장하지 않으며, provider의 `apiKeyEnv`가 지정한 process environment 변수에서만 읽습니다.
+모든 runtime 설정은 프로젝트 루트의 `config.json`에서 로드합니다. 기본 파일은 host, port, SQLite 경로, body size limit, provider endpoint, model routing, provider auth mode를 정의합니다. API key 값 자체는 파일에 저장하지 않으며, provider의 `apiKeyEnv`가 지정한 process environment 변수에서만 읽습니다.
 
 ```bash
 npm install
@@ -26,7 +26,8 @@ npm start
   "providers": {
     "openrouter": {
       "baseUrl": "https://openrouter.ai/api/v1",
-      "apiKeyEnv": "OPENROUTER_API_KEY"
+      "apiKeyEnv": "OPENROUTER_API_KEY",
+      "authMode": "bearer"
     }
   },
   "models": {
@@ -42,7 +43,9 @@ npm start
 
 ## API
 
-- `POST /api/v1/responses`: Provider로 요청 전달
+- `POST /api/v1/responses`: Provider의 `baseUrl/responses`로 요청 전달
+- `POST /api/v1/chat/completions`: Provider의 `baseUrl/chat/completions`로 요청 전달
+- `POST /api/v1/messages`: Provider의 `baseUrl/messages`로 요청 전달
 - `GET /api/v1/logs`: 최신순 로그 목록 (`status`, `model`, `from`, `to`, `limit`, `offset` 지원)
 - `GET /api/v1/logs/:id`: 로그 상세 조회
 
@@ -55,7 +58,7 @@ npm run build
 npm run verify
 ```
 
-`verify`는 임시 `config.json`과 process environment secret을 사용해 UI entrypoint, 두 mock Provider routing, provider model mapping, unknown model rejection, secret redaction, SQLite read/write boundary를 재현합니다.
+`verify`는 임시 `config.json`과 process environment secret을 사용해 UI entrypoint, 세 API route와 provider path mapping, usage/cost normalization, `api_kind` persistence, provider model mapping, unknown model rejection, secret redaction, SQLite read/write boundary를 재현합니다.
 
 ## UI 구조
 

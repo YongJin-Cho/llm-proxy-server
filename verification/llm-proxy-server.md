@@ -1,16 +1,27 @@
 # Verification: LLM Proxy Server
 
 **Spec:** `spec/llm-proxy-server.md`
-**Scope:** Sprint 05 configuration contract migration, provider routing, writer/read boundary; Sprint 06 UI responsibility extraction and regression
+**Scope:** Sprint 08 multi-API routes, provider auth mode, api_kind/usage/cost persistence, and regression; prior Sprint 05–06 behavior remains covered
 **Verified:** 2026-03-10
 **Commands:** `npm run build`; `npm run verify`
-**Summary:** Sprint 05 implementation slice passed all recorded checks. Sprint 06 UI extraction preserves the existing traffic screen contract; the current build and integration verification pass.
+**Summary:** Sprint 08 implementation slice currently passes build and expanded non-streaming integration verification. Streaming demo and final Sprint completion evidence remain open on the live board.
+
+## Sprint 08 Evidence
+
+- `npm run build`: pass.
+- `npm run verify`: pass.
+- Expanded verification covers `/api/v1/responses`, `/api/v1/chat/completions`, `/api/v1/messages`, provider path mapping, `api_kind`, normalized usage, provider-reported `cost_usd`, redaction, unknown model rejection, and existing Responses regression.
+- Streaming completion/error demo passed in `TODO.md` T-007 using API-specific sentinel fixtures and transparent SSE response checks.
+- T-010 refactoring preserves the same verification evidence while isolating API-specific behavior in `src/application/proxy-adapters/`.
 
 ## Inventory & Results
 
 | Spec item | Status | Evidence / Notes |
 |---|---|---|
 | R-001 | pass | `src/server.ts` owns Fastify bootstrap/lifecycle; `config.json` supplies host/port; APIs and static UI run in one process. |
+| R-017–R-018 | pass | `src/api/routes.ts` registers three public routes; route suffix maps to provider baseUrl; auth mode verification covers Bearer and Anthropic native headers. |
+| R-019 | pass | `src/application/proxy-service.ts` applies API-specific completion detectors; verify covers Responses/[DONE], Chat Completions/[DONE], and Messages/message_stop with transparent SSE body. |
+| R-020–R-022 | pass | SQLite migration adds `api_kind` and nullable normalized usage/cost columns; verify covers legacy-compatible defaults, API kind, usage normalization, provider USD cost, and absent cost as NULL. |
 | R-002–R-005 | pass | `src/application/proxy-service.ts` forwards Responses requests through resolved provider/model routes and preserves provider/network error and SSE failure handling. |
 | R-006–R-008 | pass | `src/domain/traffic-log.ts` defines shared model and writer/reader ports; proxy depends on writer, query service on reader, and `src/persistence/sqlite-traffic-log.ts` owns schema and adapter. |
 | R-009 | pass | `src/api/routes.ts` adapts HTTP routes; provider routing remains in the application service and persistence is reached through ports. |

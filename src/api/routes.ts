@@ -4,7 +4,12 @@ import { TrafficLogQueryService } from '../application/log-query-service.js';
 import { ProxyService } from '../application/proxy-service.js';
 
 export function registerRoutes(app: FastifyInstance, config: AppConfig, query: TrafficLogQueryService, proxy: ProxyService) {
-  app.post('/api/v1/responses', async (request, reply) => { reply.hijack(); await proxy.handle(request.raw, reply.raw, request.body); });
+  const registerProxyRoute = (path: '/responses' | '/chat/completions' | '/messages') => {
+    app.post(`/api/v1${path}`, async (request, reply) => { reply.hijack(); await proxy.handle(request.raw, reply.raw, request.body, path); });
+  };
+  registerProxyRoute('/responses');
+  registerProxyRoute('/chat/completions');
+  registerProxyRoute('/messages');
   app.get('/api/v1/logs', async (request, reply) => {
     const url = new URL(request.raw.url ?? '/', `http://${request.headers.host ?? config.host}`); const n = (name: string) => url.searchParams.get(name) || undefined;
     const limit = Math.min(Math.max(Number(n('limit') ?? 20), 1), 100); const offset = Math.max(Number(n('offset') ?? 0), 0);
