@@ -37,4 +37,4 @@
 - [ ] 기존 Responses 회귀 테스트와 실행 문서가 통과한다.
 
 ## Approval
-- Pending: Sprint plan approval required before seeding `TODO.md` and starting implementation.
+- 2026-03-10: 사용자 go-ahead("ok")로 Sprint 08 계획을 승인하고 구현을 시작했다.
