@@ -1,6 +1,8 @@
-import { createServer, IncomingMessage, ServerResponse } from 'node:http';
-import { mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { IncomingMessage, ServerResponse } from 'node:http';
+import Fastify from 'fastify';
+import fastifyStatic from '@fastify/static';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { dirname, extname, join } from 'node:path';
 import Database from 'better-sqlite3';
 import { randomUUID } from 'node:crypto';
 
@@ -68,11 +70,23 @@ function listLogs(url: URL) {
     .all({ ...params, limit, offset });
   return { data: rows, limit, offset };
 }
-async function proxy(req: IncomingMessage, res: ServerResponse) {
+function serveUi(pathname: string, res: ServerResponse) {
+  const uiRoot = join(process.cwd(), 'dist', 'ui');
+  const requested = pathname === '/' ? 'index.html' : pathname.replace(/^\//, '');
+  const file = join(uiRoot, requested);
+  const target = existsSync(file) ? file : join(uiRoot, 'index.html');
+  if (!existsSync(target)) return false;
+  const types: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
+  res.writeHead(200, { 'content-type': types[extname(target)] ?? 'application/octet-stream' });
+  res.end(readFileSync(target));
+  return true;
+}
+
+async function proxy(req: IncomingMessage, res: ServerResponse, parsedBody?: unknown) {
   const started = Date.now(); const id = randomUUID(); const startedAt = new Date().toISOString();
   let raw = '';
   try {
-    raw = await readBody(req);
+    raw = parsedBody === undefined ? await readBody(req) : JSON.stringify(parsedBody);
     const input = raw ? JSON.parse(raw) : {};
     const streaming = input.stream === true;
     insertLog.run({ id, startedAt, model: typeof input.model === 'string' ? input.model : null, streaming: streaming ? 1 : 0, requestJson: bounded(JSON.stringify({ headers: maskedHeaders(req), body: input })) });
@@ -123,19 +137,34 @@ async function proxy(req: IncomingMessage, res: ServerResponse) {
   }
 }
 
-const server = createServer(async (req, res) => {
-  const url = new URL(req.url ?? '/', `http://${req.headers.host ?? config.host}`);
-  if (req.method === 'POST' && url.pathname === '/api/v1/responses') return proxy(req, res);
-  if (req.method === 'GET' && url.pathname === '/api/v1/logs') return json(res, 200, listLogs(url));
-  if (req.method === 'GET' && url.pathname.startsWith('/api/v1/logs/')) {
-    const row = db.prepare('SELECT * FROM traffic_logs WHERE id = ?').get(url.pathname.split('/').pop());
-    return row ? json(res, 200, row) : json(res, 404, { error: { message: 'log not found' } });
-  }
-  if (url.pathname === '/') return json(res, 200, { name: 'llm-proxy-server', api: '/api/v1/responses' });
-  json(res, 404, { error: { message: 'not found' } });
+const app = Fastify({ logger: false });
+const uiRoot = join(process.cwd(), 'dist', 'ui');
+
+app.register(fastifyStatic, { root: uiRoot, wildcard: false });
+
+app.post('/api/v1/responses', async (request, reply) => {
+  reply.hijack();
+  await proxy(request.raw as IncomingMessage, reply.raw as ServerResponse, request.body);
 });
-server.listen(config.port, config.host, () => {
-  const address = server.address();
-  const port = typeof address === 'object' && address ? address.port : config.port;
-  console.log(`LLM proxy listening on http://${config.host}:${port}`);
+app.get('/api/v1/logs', async (request, reply) => {
+  const url = new URL(request.raw.url ?? '/', `http://${request.headers.host ?? config.host}`);
+  reply.send(listLogs(url));
+});
+app.get('/api/v1/logs/:id', async (request, reply) => {
+  const row = db.prepare('SELECT * FROM traffic_logs WHERE id = ?').get((request.params as { id: string }).id);
+  if (row) return reply.send(row);
+  return reply.code(404).send({ error: { message: 'log not found' } });
+});
+app.setNotFoundHandler(async (request, reply) => {
+  if (request.method === 'GET' && (request.url === '/' || !request.url.startsWith('/api/'))) {
+    return reply.sendFile('ui/index.html');
+  }
+  return reply.code(404).send({ error: { message: 'not found' } });
+});
+
+app.listen({ port: config.port, host: config.host }).then(() => {
+  console.log(`LLM proxy listening on http://${config.host}:${config.port}`);
+}).catch((error) => {
+  app.log.error(error);
+  process.exit(1);
 });

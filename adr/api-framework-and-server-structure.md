@@ -4,7 +4,7 @@
 LLM Proxy Server의 API framework와 서버 모듈 구조를 어떻게 선택할 것인가?
 
 ## Status
-proposed
+approved
 
 ## Context
 - 현재 구현은 `src/server.ts` 하나가 configuration, SQLite 초기화, 로그 기록, provider 호출, SSE 전달, route dispatch를 모두 담당한다.
@@ -13,6 +13,7 @@ proposed
 - 기존 동작에는 `/api/v1/responses`의 일반 응답과 SSE streaming, `/api/v1/logs` 조회가 포함된다.
 
 ## Decision
+**Option B — Fastify 도입.** Fastify instance를 bootstrap에서 만들고 route plugin 단위로 API adapter와 관리 API를 등록한다. TypeScript 친화적 route schema·plugin 구조와 테스트 지원을 활용하되, 기존 SSE 전달 방식과 migration 회귀를 검증한다.
 
 ## Options
 ### Option A — Node HTTP 직접 유지
@@ -63,3 +64,4 @@ proposed
 
 ## Notes
 - 2026-03-10: AC-008 검토를 위해 Node HTTP, Fastify, Hono 옵션을 비교하는 proposed ADR을 작성했다.
+- 2026-03-10: Status → approved. Option B(Fastify)를 선택하고 plugin·schema·테스트 확장성과 SSE 회귀 검증을 채택했다.

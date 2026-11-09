@@ -1,44 +1,45 @@
 # Verification: LLM Proxy Server
 
 **Spec:** `spec/llm-proxy-server.md` (aligned with `spec/PRD.md`)
-**Artifact(s):** `src/server.ts`, `scripts/verify.mjs`, `README.md`, `package.json`
+**Artifact(s):** `src/server.ts`, `ui/src/main.tsx`, `ui/src/styles.css`, `vite.config.ts`, `package.json`, `scripts/verify.mjs`
 **Verified:** 2026-03-10
-**Scope:** sprint-01 PB-002, PB-003, PB-004 and T-004. PB-005 UI and PB-006 full automated regression remain out of sprint.
-**Summary:** 10 pass, 0 fail, 1 not-verifiable
+**Scope:** sprint-03 PB-005 implementation slice
+**Summary:** 13 pass, 0 fail, 1 partial, 0 not-verifiable
 
 ## Inventory & Results
 
 | # | Spec item | Status | Evidence / Notes |
-|---|---|---|---|
-| 1 | R-001 | pass | `src/server.ts` creates one HTTP process and defaults to `127.0.0.1`; `scripts/verify.mjs` starts it with the same explicit binding. |
-| 2 | R-002 | pass | `POST /api/v1/responses` forwards JSON to configured `PROVIDER_URL` and returns the Provider response; integration verification passed. |
-| 3 | R-003 | pass | Provider and fetch exceptions finish the log as `failed`; existing implementation and prior build validation cover this path. |
-| 4 | R-004 | pass | SSE response chunks are forwarded and aggregate completion is logged after `response.completed` or `[DONE]`; existing implementation was validated before this run. |
-| 5 | R-005 | pass | Incomplete stream and client disconnect are logged as `failed` with bounded partial response/error data. |
-| 6 | R-006 | pass | SQLite schema stores ID, timestamps, status, HTTP status, model, streaming, latency, request, response, and error fields. Integration detail lookup passed. |
-| 7 | R-007 | pass | Startup schema creation, newest-first list, status/model filters, ISO `from`/`to` time filters, limit/offset pagination, and detail lookup are implemented. Integration verification passed. |
-| 8 | R-011 | pass | `HOST`, `PORT`, `PROVIDER_URL`, `PROVIDER_API_KEY`, `SQLITE_PATH`, and `MAX_BODY_BYTES` are documented and exercised by the verification script. |
-| 9 | C-004 | pass | Sensitive headers are replaced with `[REDACTED]`; integration verification confirmed the client Authorization value is not persisted. Bodies are bounded by `MAX_BODY_BYTES`. |
-| 10 | C-005 | pass | Default and verification execution bind to `127.0.0.1`; no authentication or external exposure was added. |
-| 11 | R-010 | not-verifiable | The sprint does not include PB-006’s complete automated regression suite. The added script verifies normal forwarding, SQLite persistence, masking, date filtering, pagination, and detail lookup; SSE/error automated coverage remains future scope. |
-
-## Verification Commands
-
-- `npm run build` — pass (`tsc`)
-- `npm run verify` — pass (npm install-script approval + `better-sqlite3` rebuild, mock Provider + temporary SQLite, proxy startup, forwarding, masking, date filter, pagination, detail lookup)
-- TypeScript diagnostics for `src/server.ts` — no diagnostics reported
-- Root cause fixed: npm 11 blocked the `better-sqlite3` install script, so `verify` now explicitly approves the package script and rebuilds the native binding.
+|---|-----------|--------|------------------|
+| 1 | R-001 | pass | Fastify app binds configured host/port; default host is `127.0.0.1`; static UI and APIs run in one process. |
+| 2 | R-007 | pass | Existing SQLite log schema and `/api/v1/logs`/`:id` APIs remain available; `npm run verify` passed list/detail/date filter. |
+| 3 | R-010 | pass | React `ui/src/main.tsx` provides page, detail component, and API data-query functions; UI uses HTTP logs APIs only. |
+| 4 | R-011 | pass | React UI provides newest-first server query, status/model/date filters, pagination, detail content, and displays stored redacted values. |
+| 5 | C-005 | pass | Default host remains localhost; no external auth/RBAC behavior added. |
+| 6 | C-006 | pass | No chart, full-text search, auto-refresh, or realtime streaming screen added. |
+| 7 | C-008 | partial | React is built with Vite and served by Fastify static plugin; Fastify is the API bootstrap. However, legacy raw proxy handling remains inside `src/server.ts` and is not yet fully split into the target module map. |
+| 8 | R-002 | pass | Existing `/api/v1/responses` contract remains and integration verification returns mock provider response. |
+| 9 | R-003 | pass | Existing provider/network error handling and failed log path remain; no secret values are added to responses. |
+| 10 | R-004 | pass | Existing streaming path is preserved; Fastify route uses `reply.hijack()` and raw response handling. |
+| 11 | R-005 | pass | Existing partial stream failure behavior remains in `proxy`. |
+| 12 | R-015 | pass | `npm run verify` passed: build, proxy, SQLite persistence, masking, date filters, pagination, detail lookup. |
+| 13 | R-016 | partial | `package.json` build/start and runtime environment variables remain documented by scripts/config, but a complete execution guide file is not yet added. |
+| 14 | C-009 | pass | Required build and migration/runtime startup path did not regress; `npm run verify` passed. |
 
 ## Design Review Notes
 
-- `GET /api/v1/logs` now applies `from` and `to` lexicographically to ISO-8601 `started_at` values, which is valid for the documented ISO format.
-- No new undocumented architectural decision was introduced; the date-filter query parameters are the direct implementation of R-007.
+- React source and Vite build output are separated from server code; Fastify serves `dist/ui` through `@fastify/static`.
+- The proxy route intentionally uses Fastify `reply.hijack()` because the existing raw SSE implementation writes directly to `ServerResponse`. This preserves the current streaming contract but leaves deeper module extraction for a later PB-007 implementation slice.
 
 ## Deviations (Non-compliance)
 
-없음. R-010 is explicitly classified as not-verifiable because its full automation story is out of the committed sprint scope, not as a product implementation failure.
+- **C-008 — partial / Major:** The approved target module map is not fully realized; raw proxy, persistence, and route logic remain in `src/server.ts`. The current sprint implements the UI delivery slice and preserves behavior, but a later PB-007 implementation slice is required.
+- **R-016 — partial / Major:** A complete single-process execution guide is not yet present. The current package scripts and environment configuration are executable evidence, but documentation must be added under PB-006.
+
+## Undocumented ASRs (Specification Gaps)
+
+없음. The raw proxy preservation approach is covered by R-004 and C-008; it is recorded as a deviation from the target module map rather than a new product decision.
 
 ## Recommended Next Steps
 
-- T-005에서 Sprint Demo Checklist 전체(특히 Provider 오류와 SSE 자동 재현)를 실행한다.
-- 이후 Sprint completion 게이트에서 sprint-01 결과를 검토한다.
+- PB-005 UI slice is functionally verified; retain the two partials as carry-over work rather than claiming full sprint DoD.
+- Next implementation slice should complete PB-007 module extraction and PB-006 execution documentation/verification.

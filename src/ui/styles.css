@@ -1,0 +1,8 @@
+:root { font-family: Inter, system-ui, sans-serif; color: #172033; background: #f3f5f8; }
+body { margin: 0; } main { max-width: 1180px; margin: 0 auto; padding: 32px 20px; } h1 { margin: 0 0 24px; }
+.toolbar, .card { background: white; border: 1px solid #dfe4ec; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; } label { display: grid; gap: 4px; font-size: 12px; color: #596579; }
+input, select, button { border: 1px solid #c7cfdb; border-radius: 6px; padding: 8px 10px; background: white; color: inherit; } button { cursor: pointer; background: #172033; color: white; }
+button:disabled { cursor: default; opacity: .45; } table { width: 100%; border-collapse: collapse; } th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #edf0f4; } th { font-size: 12px; color: #596579; }
+.link { border: 0; background: transparent; color: #245cc5; padding: 0; } .status { font-weight: 600; } .status.completed { color: #18794e; } .status.failed { color: #bb2d3b; } .status.pending { color: #9a6700; }
+pre { white-space: pre-wrap; overflow: auto; background: #f7f8fa; padding: 12px; border-radius: 6px; } .pagination { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; } .error { color: #bb2d3b; }
