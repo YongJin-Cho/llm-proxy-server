@@ -12,7 +12,7 @@
 
 **Sprint goal:** LLM Proxy Server와 트래픽 모니터링 UI의 승인된 요구사항과 설계를 초기 제품 백로그로 변환한다.
 **Current focus:** T-009
-**Recommended next:** T-009 — Sprint Boundary → sprint-01 계획 승인 필요
+**Recommended next:** T-009 — Sprint Boundary → sprint-01 계획 승인 기록 후 sprint-00 완료 검토
 
 ## Tasks
 
@@ -37,7 +37,7 @@
   - Artifact: `spec/AC.md`
   - Depends: T-003
 
-- [x] **T-005** — AC별 설계 결정 및 ADR/Direct Input 기록
+- [ ] **T-005** — AC별 설계 결정 및 ADR/Direct Input 기록
   - Phase: ③ AC review
   - Artifact: `spec/AC.md`, `adr/`
   - Depends: T-004
@@ -62,7 +62,7 @@
   - Phase: cross-cutting
   - Artifact: `scrum/TODO-00.md`
   - Depends: T-002, T-003, T-004, T-005, T-006, T-007, T-008
-  - Notes: 완료 검토와 별도 Boundary 승인을 거쳐 아카이브한다.
+  - Notes: sprint-01 계획 승인 기록 완료. 완료 검토와 별도 Boundary 승인을 거쳐 아카이브한다.
 
 ## Completed sprints
 
@@ -73,5 +73,5 @@
 
 - sprint-00 계획은 사용자 go-ahead로 승인되었다.
 - Spec 리뷰와 사용자 승인을 완료했다.
-- `scrum/sprint-01.md`에 다음 구현 스프린트 계획 초안을 작성했으며, sprint-00 Boundary 승인을 기다린다.
+- `scrum/sprint-01.md`의 구현 스프린트 계획을 사용자 승인 상태로 기록했다. sprint-00 완료 검토와 Boundary 승인을 기다린다.
 - 제품 구현은 이 Spec→backlog sprint의 범위가 아니다.

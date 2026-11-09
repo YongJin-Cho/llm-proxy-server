@@ -17,6 +17,10 @@
 
 **Out of sprint:** PB-005 트래픽 모니터링 웹 UI, PB-006 자동화된 핵심 동작 검증과 실행 문서, Chat Completions, Claude Messages API, 외부 인증, 외부 네트워크 노출, 고급 분석·알림·자동 보존 삭제
 
+## Approval
+
+- 2026-03-10: 사용자 go-ahead(“좋아”)로 Sprint 01 계획 승인.
+
 ## Definition of Done
 
 1. 서버가 단일 프로세스로 `127.0.0.1`에 실행된다.
