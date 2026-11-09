@@ -19,11 +19,16 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 | AC-011 | API adapter 확장 경계 | Structure & organization | designed | — | ASR-013 |
 | AC-012 | API log writer와 UI read 경계 | Structure & organization | designed | adr/api-log-write-ui-read-boundary.md | ASR-014 |
 | AC-013 | 구조 변경의 migration·회귀·실행 기준 | Quality bar (architectural) | designed | — | ASR-015 |
+| AC-014 | 다중 API public contract와 payload 변환 경계 | Integration & dependencies | reviewing | adr/multi-api-contract-adapter-boundary.md | — |
+| AC-015 | Claude provider 인증·header 설정 계약 | Integration & dependencies | identified | — | — |
+| AC-016 | API별 streaming 종료·오류 계약 | Constraints (structural) | identified | — | — |
+| AC-017 | 다중 API traffic log metadata 정규화 | Structure & organization | identified | — | — |
 
 ## Dependency Order (recommended review path)
 
 1. AC-001 → AC-002 → AC-003 → AC-004 → AC-005 → AC-006 → AC-007
 2. AC-008 → AC-009 → AC-010 → AC-011 → AC-012 → AC-013
+3. AC-014 → AC-015 → AC-016 → AC-017
 
 ## AC Detail
 
@@ -180,6 +185,54 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - **Related ADRs:** 없음
 - **Resolution path:** direct-input
 - **Resolution:** migration은 기존 동작 회귀 테스트 고정, domain/configuration/persistence 분리, Fastify bootstrap·adapter 도입, provider routing 연결, writer/reader와 SQLite adapter 연결, React build/static delivery 연결, schema/data compatibility 검증 순서로 진행한다. 자동화 검증은 정상·실패 proxy, SSE 정상·중단, provider/model routing, SQLite write/read, redaction·size limit, 로그 API, UI list/detail을 포함한다. `npm run build`와 `npm run verify`를 단일 검증 진입점으로 유지하고, 설정·SQLite 경로·host/port·build/start 절차를 문서화한다. schema migration 실패나 필수 설정 누락 시 listen 전에 종료한다. 실제 구현은 다음 implementation sprint에서 수행한다.
+
+### AC-014 — 다중 API public contract와 payload 변환 경계
+
+- **Category:** Integration & dependencies
+- **Status:** reviewing
+- **Statement:** Responses, OpenAI Chat Completions, Claude Messages를 어떤 public route와 provider endpoint 계약으로 노출하며, 요청·응답 payload를 투명 전달할지 API별 adapter에서 변환할지 결정해야 하는가?
+- **Why it matters:** API 계약을 잘못 정하면 기존 클라이언트 호환성이 깨지고, API별 차이가 공통 application service와 로그 저장 계층으로 새어 향후 provider/API 추가 비용이 커진다.
+- **Depends on:** AC-011
+- **Related ADRs:**
+  - 없음
+- **Resolution path:** adr
+- **Resolution:**
+
+### AC-015 — Claude provider 인증·header 설정 계약
+
+- **Category:** Integration & dependencies
+- **Status:** identified
+- **Statement:** Claude Messages provider에 API key, `anthropic-version` 등 API별 필수 header를 어떤 provider configuration schema와 secret loading 방식으로 표현하고 전달할 것인가?
+- **Why it matters:** OpenAI Bearer 인증과 Claude 인증 방식은 다르며, 설정을 잘못 추상화하면 인증 실패·secret 노출·provider별 예외 코드 확산이 발생한다.
+- **Depends on:** AC-010
+- **Related ADRs:**
+  - 없음
+- **Resolution path:** adr
+- **Resolution:**
+
+### AC-016 — API별 streaming 종료·오류 계약
+
+- **Category:** Constraints (structural)
+- **Status:** identified
+- **Statement:** Chat Completions와 Claude Messages의 SSE event, 정상 종료 sentinel, upstream 오류, client disconnect를 어떻게 전달하고 완료/실패 로그로 판정할 것인가?
+- **Why it matters:** 현재 Responses 전용 종료 판정은 API별 event schema와 맞지 않을 수 있으며, 잘못된 판정은 부분 응답을 completed로 저장하거나 정상 stream을 failed로 기록할 수 있다.
+- **Depends on:** AC-014
+- **Related ADRs:**
+  - 없음
+- **Resolution path:** adr
+- **Resolution:**
+
+### AC-017 — 다중 API traffic log metadata 정규화
+
+- **Category:** Structure & organization
+- **Status:** identified
+- **Statement:** 서로 다른 API 계약의 요청·응답·streaming traffic을 기존 SQLite log model에 어떤 API kind, provider, model, status 및 raw content metadata로 기록할 것인가?
+- **Why it matters:** API 종류를 잃으면 운영자가 traffic을 구분할 수 없고, API별 raw payload를 보존하지 않으면 디버깅·회귀 검증이 어려워진다.
+- **Depends on:** AC-014, AC-016
+- **Related ADRs:**
+  - 없음
+- **Resolution path:** direct-input
+- **Resolution:**
 
 ## Notes
 

@@ -8,31 +8,36 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 0 | 8 | 0 | 0 |
+| 2 | 6 | 0 | 0 |
 
 **Sprint goal:** OpenAI Chat Completions API와 Claude Messages API를 기존 Responses 프록시에 추가하기 위한 사용자 승인 PRD·AC·설계 결정·ASR·Spec을 확정하고 구현 가능한 product backlog를 만든다.
-**Current focus:** T-001 — PRD delta 작성 및 검토
-**Recommended next:** T-001 — PRD delta 작성 및 검토
+**Current focus:** T-004 — AC별 ADR/Direct Input 설계 결정 및 승인
+**Recommended next:** T-004 — AC-014 ADR 검토 및 승인
 
 ## Tasks
 
-- [ ] **T-001** — PRD delta 작성 및 검토
+- [x] **T-001** — PRD delta 작성 및 검토
   - Phase: ① PRD
   - Artifact: `spec/PRD.md`
   - Depends: —
   - Notes: 기존 승인 PRD를 보존하고 두 API 지원 범위를 추가한다.
 
-- [ ] **T-002** — PRD 승인 gate
+- [x] **T-002** — PRD 승인 gate
   - Phase: ① PRD gate
   - Artifact: `spec/PRD.md`
   - Depends: T-001
+  - Notes: 2026-03-10 사용자 go-ahead("ok")로 PRD delta 승인.
 
-- [ ] **T-003** — 신규 blocking AC 식별 및 dependency order 확정
+- [x] **T-003** — 신규 blocking AC 식별 및 dependency order 확정
   - Phase: ② AC identification
   - Artifact: `spec/AC.md`
   - Depends: T-002
 
 - [ ] **T-004** — AC별 ADR/Direct Input 설계 결정 및 승인
+  - Phase: ③ AC review
+  - Artifact: `adr/multi-api-contract-adapter-boundary.md`, `spec/AC.md`
+  - Depends: T-003
+  - Notes: 현재 AC-014 ADR 승인 대기
   - Phase: ③ AC review
   - Artifact: `adr/`, `spec/AC.md`
   - Depends: T-003
