@@ -59,6 +59,10 @@ function listLogs(url: URL) {
   for (const field of ['status', 'model'] as const) {
     const value = url.searchParams.get(field); if (value) { clauses.push(`${field} = @${field}`); params[field] = value; }
   }
+  const from = url.searchParams.get('from');
+  const to = url.searchParams.get('to');
+  if (from) { clauses.push('started_at >= @from'); params.from = from; }
+  if (to) { clauses.push('started_at <= @to'); params.to = to; }
   const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
   const rows = db.prepare(`SELECT * FROM traffic_logs ${where} ORDER BY started_at DESC LIMIT @limit OFFSET @offset`)
     .all({ ...params, limit, offset });
@@ -130,4 +134,8 @@ const server = createServer(async (req, res) => {
   if (url.pathname === '/') return json(res, 200, { name: 'llm-proxy-server', api: '/api/v1/responses' });
   json(res, 404, { error: { message: 'not found' } });
 });
-server.listen(config.port, config.host, () => console.log(`LLM proxy listening on http://${config.host}:${config.port}`));
+server.listen(config.port, config.host, () => {
+  const address = server.address();
+  const port = typeof address === 'object' && address ? address.port : config.port;
+  console.log(`LLM proxy listening on http://${config.host}:${port}`);
+});

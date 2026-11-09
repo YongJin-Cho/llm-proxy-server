@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "tsx src/server.ts"
+    "dev": "tsx src/server.ts",
+    "verify": "npm install-scripts approve better-sqlite3 && npm rebuild better-sqlite3 && npm run build && node scripts/verify.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^11.8.1"
@@ -16,5 +17,8 @@
     "@types/node": "^22.13.10",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
+  },
+  "allowScripts": {
+    "better-sqlite3@11.10.0": true
   }
 }
