@@ -61,12 +61,12 @@
   - Depends: PB-004, PB-007
   - Notes: sprint-02 Spec→backlog DoD 충족. sprint-05에서 writer/query access boundary를 실제 코드와 자동 검증에 반영했다.
 
-  - [ ] **PB-010** — 확장 가능한 모니터링 UI 구조
+  - [x] **PB-010** — 확장 가능한 모니터링 UI 구조
   - Story: 승인된 UI framework와 page/component/data-query 구조를 사용해 log list/detail 및 content viewer를 제공할 기반을 만들고, 향후 분석·report·chart feature를 기존 화면과 독립적으로 추가할 수 있게 한다.
   - Spec: `spec/llm-proxy-server.md` §Requirements R-010–R-011; §Constraints C-006, C-008
   - Sprint: sprint-06
   - Depends: PB-007, PB-009
-  - Notes: sprint-02 Spec→backlog DoD 충족. sprint-06에서 확장 가능한 page/component/data-query 구조를 실제 검증한다.
+  - Notes: sprint-02 Spec→backlog DoD 충족. sprint-06에서 확장 가능한 page/component/data-query 구조를 실제 구현·검증했고 Boundary에서 종료했다.
 
   - [x] **PB-011** — 구조 변경 마이그레이션·검증·실행 문서
   - Story: 기존 MVP 동작을 보존하는 모듈 분리·DB migration 순서, provider routing 및 UI/API 회귀 검증, 단일 프로세스 실행·설정 문서를 정의한다.
@@ -91,3 +91,4 @@
 - 2026-03-10: sprint-03 Boundary 완료. PB-005 UI 기능은 구현했으며 C-008 module extraction과 R-016 실행 문서는 sprint-04 Scope로 carry-over했다.
 - 2026-03-10: sprint-04 Boundary 완료. PB-005~PB-007을 종료하고 sprint-05에 PB-008, PB-009, PB-011을 커밋 후보로 계획했다.
 - 2026-03-10: sprint-05 Boundary 완료. PB-008, PB-009, PB-011을 종료하고 PB-010을 sprint-06 Scope로 계획했다.
+- 2026-03-10: sprint-06 Boundary 완료. PB-010을 종료하고 현재 제품 backlog의 모든 story를 완료했다.
