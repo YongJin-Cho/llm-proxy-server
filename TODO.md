@@ -8,11 +8,11 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 1 | 9 | 0 | 0 |
+| 3 | 7 | 0 | 0 |
 
 **Sprint goal:** turn 기반 traffic 저장·탐색 UI의 승인 요구사항과 Spec, 후속 구현 backlog를 확정한다.
-**Current focus:** T-002
-**Recommended next:** T-002 — PRD 승인 gate
+**Current focus:** T-004
+**Recommended next:** T-004 — AC 목록 승인 gate
 
 ## Tasks
 
@@ -22,12 +22,14 @@
   - Depends: —
   - Notes: 기존 PRD를 보존하고 이번 기능 delta를 append한다.
 
-- [ ] **T-002** — PRD 승인 gate
+- [x] **T-002** — PRD 승인 gate
+  - Notes: 사용자 지시로 PRD를 승인했다. 기존 traffic migration은 범위에서 제외했다.
   - Phase: gate
   - Artifact: `spec/PRD.md`
   - Depends: T-001
 
-- [ ] **T-003** — Blocking AC 식별 및 dependency order 작성
+- [x] **T-003** — Blocking AC 식별 및 dependency order 작성
+  - Notes: AC-019~AC-023을 identified로 추가하고 dependency order를 설정했다.
   - Phase: AC identification
   - Artifact: `spec/AC.md`
   - Depends: T-002

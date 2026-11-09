@@ -52,6 +52,7 @@ Codex와 유사한 LLM 클라이언트와 OpenAI Model Provider 사이에서 요
 - 2026-03-10: 사용자 go-ahead(“ok”)로 PRD 승인.
 - 2026-03-10: Chat Completions·Claude Messages 지원 delta는 Sprint 07에서 별도 요구사항으로 확정하기로 했다.
 - 2026-03-10: 사용자 go-ahead("ok")로 Delta PRD를 승인했다. AC 식별 단계로 진행한다.
+- 2026-03-10: 사용자 지시에 따라 기존 traffic migration을 범위에서 제외하고, non-migration 호환 표시 정책을 AC로 분리했다.
 
 ## Delta: Chat Completions·Claude Messages API 지원
 
@@ -118,7 +119,7 @@ Codex와 유사한 LLM 클라이언트와 OpenAI Model Provider 사이에서 요
 - turn과 traffic의 저장 관계 및 조회 모델
 - harness가 전달하는 turn/grouping metadata의 수용 경계
 - turn 하위 traffic 순서와 lifecycle 표시
-- 기존 traffic 데이터의 migration/호환 표시 정책
+- 기존 traffic 데이터를 migration하지 않는 호환 표시 정책
 - turn/traffic tree sidebar와 선택 상태
 - 선택한 turn/traffic의 메인 뷰 내용 표시
 - 관련 API, UI loading, empty/error 상태 및 회귀 검증 기준
@@ -136,9 +137,9 @@ Codex와 유사한 LLM 클라이언트와 OpenAI Model Provider 사이에서 요
 - API application path의 log writer와 UI query path의 read boundary를 유지한다.
 - secret redaction과 bounded request/response body 정책을 유지한다.
 - 구현·검증의 SSOT는 이 delta에 대한 승인 Spec이다.
-- turn metadata가 없는 legacy traffic에 대한 동작은 명시적으로 정의한다.
+- 기존 traffic schema/data는 migration하지 않으며, turn metadata가 없는 traffic의 표시 동작을 명시적으로 정의한다.
 
 ### Delta Success Criteria
-- 승인 Spec이 turn grouping, migration, tree navigation, main-view selection을 독립적으로 구현·검증할 수 있는 requirement와 constraint를 제공한다.
+- 승인 Spec이 turn grouping, non-migration 호환 정책, tree navigation, main-view selection을 독립적으로 구현·검증할 수 있는 requirement와 constraint를 제공한다.
 - 사용자는 turn을 선택했을 때 해당 turn의 요약과 하위 traffic 관계를, traffic을 선택했을 때 기존 traffic 상세를 확인할 수 있다.
 - turn metadata가 없는 기존 traffic도 정의된 호환 정책에 따라 조회 가능하다.

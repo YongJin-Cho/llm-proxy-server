@@ -24,12 +24,18 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 | AC-016 | API별 streaming 종료·오류 계약 | Constraints (structural) | designed | adr/api-streaming-completion-and-error-contract.md | ASR-018 |
 | AC-017 | 다중 API traffic log metadata 정규화 | Structure & organization | designed | adr/traffic-log-api-metadata.md | ASR-019 |
 | AC-018 | Token usage·cost metadata 추출과 저장 | Integration & dependencies | designed | adr/usage-and-cost-metadata.md | ASR-020 |
+| AC-019 | Turn grouping metadata와 저장 lifecycle | Structure & organization | identified | — | — |
+| AC-020 | Turn/traffic 조회 API와 tree projection | Integration & dependencies | identified | — | — |
+| AC-021 | Sidebar 선택 상태와 메인 뷰 계약 | Deliverable form | identified | — | — |
+| AC-022 | Non-migration legacy traffic 호환 표시 | Constraints (structural) | identified | — | — |
+| AC-023 | Turn grouping 순서·동시성·완료 판정 | Quality bar (architectural) | identified | — | — |
 
 ## Dependency Order (recommended review path)
 
 1. AC-001 → AC-002 → AC-003 → AC-004 → AC-005 → AC-006 → AC-007
 2. AC-008 → AC-009 → AC-010 → AC-011 → AC-012 → AC-013
 3. AC-014 → AC-015 → AC-016 → AC-017 → AC-018
+4. AC-019 → AC-023 → AC-020 → AC-022 → AC-021
 
 ## AC Detail
 
@@ -246,6 +252,61 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
   - `adr/usage-and-cost-metadata.md` — approved
   - **Resolution path:** adr
   - **Resolution:** Option A — provider-reported cost only. API별 usage를 `input_tokens`, `cached_input_tokens`, `output_tokens`로 정규화하고 `total_tokens = input_tokens + output_tokens`로 계산한다. `cost_usd`는 provider가 명시한 USD 비용만 저장하며, 비용이 없거나 통화가 불명확하면 `NULL`로 둔다. Proxy-owned pricing table은 도입하지 않는다.
+
+### AC-019 — Turn grouping metadata와 저장 lifecycle
+
+- **Category:** Structure & organization
+- **Status:** identified
+- **Statement:** harness가 전달하는 turn 식별자와 traffic의 부모 관계를 어떤 domain model, writer contract, SQLite schema로 저장하며 turn은 언제 생성·갱신·완료되는가?
+- **Why it matters:** turn 경계와 저장 lifecycle이 불명확하면 하나의 사용자 요청이 여러 turn으로 분리되거나 서로 다른 요청이 잘못 묶인다.
+- **Depends on:** AC-003, AC-012
+- **Related ADRs:**
+  - 없음
+- **Resolution path:** adr
+
+### AC-020 — Turn/traffic 조회 API와 tree projection
+
+- **Category:** Integration & dependencies
+- **Status:** identified
+- **Statement:** UI가 sidebar tree를 구성할 수 있도록 turn과 traffic을 어떤 조회 API 응답 모델, 정렬, pagination 및 계층 projection으로 제공할 것인가?
+- **Why it matters:** flat traffic API를 그대로 재사용할지 별도 tree endpoint를 둘지에 따라 query 복잡도, 성능, UI 결합도가 달라진다.
+- **Depends on:** AC-019
+- **Related ADRs:**
+  - 없음
+- **Resolution path:** adr
+
+### AC-021 — Sidebar 선택 상태와 메인 뷰 계약
+
+- **Category:** Deliverable form
+- **Status:** identified
+- **Statement:** sidebar에서 turn 또는 traffic을 선택했을 때 URL/state를 어떻게 표현하고 메인 뷰에 각각 어떤 요약·상세 내용을 표시할 것인가?
+- **Why it matters:** 선택 상태와 표시 계약이 없으면 새로고침·뒤로가기·직접 링크 동작이 흔들리고 turn 선택과 traffic 선택의 UX가 일관되지 않는다.
+- **Depends on:** AC-020
+- **Related ADRs:**
+  - 없음
+- **Resolution path:** adr
+
+### AC-022 — Non-migration legacy traffic 호환 표시
+
+- **Category:** Constraints (structural)
+- **Status:** identified
+- **Statement:** 기존 schema/data를 migration하지 않고 turn metadata가 없는 traffic을 tree에서 어떻게 표현하며 기존 flat 목록·상세 조회와 어떤 호환성을 유지할 것인가?
+- **Why it matters:** migration을 하지 않기로 한 결정이 기존 데이터의 유실·중복 표시·조회 불능으로 이어지지 않도록 명시적 fallback이 필요하다.
+- **Depends on:** AC-019, AC-020
+- **Related ADRs:
+  - 없음
+- **Resolution path:** direct-input
+
+### AC-023 — Turn grouping 순서·동시성·완료 판정
+
+- **Category:** Quality bar (architectural)
+- **Status:** identified
+- **Statement:** 같은 turn 안의 traffic 순서를 어떤 기준으로 보장하고, tool call에 대한 harness 재요청이 진행 중인 turn을 어떻게 조회·표시하며, 최종 답변 traffic 이후 turn 완료를 어떻게 판정·검증할 것인가?
+- **Why it matters:** 순서·진행 상태·완료 판정이 불안정하면 tree가 실제 LLM interaction 흐름을 잘못 보여준다.
+- **Depends on:** AC-019
+- **Related ADRs:
+  - 없음
+- **Resolution path:** adr
 
 ## Notes
 
