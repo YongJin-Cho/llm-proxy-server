@@ -101,3 +101,44 @@ Codex와 유사한 LLM 클라이언트와 OpenAI Model Provider 사이에서 요
 - 운영자가 웹 UI에서 저장 로그를 목록으로 확인하고 개별 트래픽 상세를 볼 수 있다.
 - 민감한 인증 정보가 로그와 UI에 평문으로 노출되지 않는다.
 - 자동화된 검증 절차로 핵심 프록시, 저장, UI 조회 동작을 재현할 수 있다.
+
+## Delta: Turn 기반 traffic 그룹핑·탐색 UI
+
+### Delta Summary
+하나의 사용자 요청이 tool call과 harness 처리에 따라 여러 LLM traffic으로 이어질 수 있으므로, 관련 traffic을 하나의 turn으로 그룹핑해 저장한다. 운영자는 왼쪽 sidebar tree에서 turn과 하위 traffic을 탐색하고, 선택한 turn 또는 traffic의 내용을 메인 뷰에서 확인한다.
+
+### Delta Goals
+- 하나의 turn에 속한 복수 traffic을 안정적으로 저장하고 조회한다.
+- turn/traffic 계층을 sidebar tree로 표시해 관련 traffic의 흐름을 이해할 수 있게 한다.
+- sidebar에서 선택한 turn 또는 traffic을 메인 뷰에 표시한다.
+- 기존 traffic 데이터와 기존 로그 조회 동작을 가능한 범위에서 보존한다.
+- 승인 Spec에서 구현·검증 가능한 후속 backlog를 도출한다.
+
+### Delta In Scope
+- turn과 traffic의 저장 관계 및 조회 모델
+- harness가 전달하는 turn/grouping metadata의 수용 경계
+- turn 하위 traffic 순서와 lifecycle 표시
+- 기존 traffic 데이터의 migration/호환 표시 정책
+- turn/traffic tree sidebar와 선택 상태
+- 선택한 turn/traffic의 메인 뷰 내용 표시
+- 관련 API, UI loading, empty/error 상태 및 회귀 검증 기준
+
+### Delta Out of Scope
+- tool call 자체의 실행 로직 변경
+- 실시간 streaming transcript UI
+- 사용자·조직별 인증 및 권한
+- 고급 분석·차트·알림·과금
+- 기존과 무관한 log retention 정책
+- 이 요구사항 확정 단계에서의 제품 코드 구현
+
+### Delta Constraints
+- 기존 `/api/v1` namespace와 traffic log 조회 호환성을 고려한다.
+- API application path의 log writer와 UI query path의 read boundary를 유지한다.
+- secret redaction과 bounded request/response body 정책을 유지한다.
+- 구현·검증의 SSOT는 이 delta에 대한 승인 Spec이다.
+- turn metadata가 없는 legacy traffic에 대한 동작은 명시적으로 정의한다.
+
+### Delta Success Criteria
+- 승인 Spec이 turn grouping, migration, tree navigation, main-view selection을 독립적으로 구현·검증할 수 있는 requirement와 constraint를 제공한다.
+- 사용자는 turn을 선택했을 때 해당 turn의 요약과 하위 traffic 관계를, traffic을 선택했을 때 기존 traffic 상세를 확인할 수 있다.
+- turn metadata가 없는 기존 traffic도 정의된 호환 정책에 따라 조회 가능하다.

@@ -29,4 +29,4 @@
 - [ ] 승인 Spec의 요구사항과 후속 구현 backlog story가 서로 추적된다.
 
 ## Approval
-- 승인 대기: 사용자의 Sprint 09 계획 go-ahead 필요.
+- 2026-03-10: 사용자 go-ahead("ok")로 Sprint 09 계획을 승인하고 Spec→backlog 실행을 시작했다.
