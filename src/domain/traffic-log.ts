@@ -50,6 +50,19 @@ export type TrafficLogFinish = {
 
 export type TrafficLogFilters = { status?: string; model?: string; from?: string; to?: string; limit: number; offset: number };
 
+export type TurnTrafficSummary = Pick<TrafficLog, 'id' | 'api_kind' | 'started_at' | 'finished_at' | 'status' | 'http_status' | 'model' | 'streaming' | 'latency_ms' | 'turn_sequence' | 'fallback_reason'>;
+export type TurnTreeNode = {
+  id: string;
+  kind: 'turn' | 'legacy';
+  started_at: string;
+  finished_at: string | null;
+  status: TrafficLogStatus;
+  traffic_count: number;
+  fallback_reasons: string[];
+  traffic: TurnTrafficSummary[];
+};
+export type TurnTreePage = { data: TurnTreeNode[]; page: number; limit: number; total: number; has_next: boolean };
+
 export interface TrafficLogWriter {
   insert(entry: TrafficLogWrite): void;
   finish(entry: TrafficLogFinish): void;
@@ -57,4 +70,5 @@ export interface TrafficLogWriter {
 export interface TrafficLogReader {
   list(filters: TrafficLogFilters): { data: TrafficLog[]; limit: number; offset: number };
   get(id: string): TrafficLog | undefined;
+  listTurns(page: number, limit: number): TurnTreePage;
 }

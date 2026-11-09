@@ -123,6 +123,15 @@ try {
   assert.equal(providerRequests.length, 7);
   assert.doesNotMatch(unknown.body, /alpha-secret|beta-secret/);
 
+  const turns = await request(`${base}/api/v1/turns?page=1&limit=2`);
+  assert.equal(turns.status, 200);
+  const turnPage = JSON.parse(turns.body);
+  assert.equal(turnPage.page, 1);
+  assert.equal(turnPage.limit, 2);
+  assert.equal(typeof turnPage.total, 'number');
+  assert.equal(Array.isArray(turnPage.data), true);
+  assert.equal(turnPage.data.every((node) => node.traffic.every((traffic) => !('request_json' in traffic) && !('response_json' in traffic))), true);
+
   const list = await request(`${base}/api/v1/logs?status=completed&limit=10&offset=0`);
   assert.equal(list.status, 200);
   const listed = JSON.parse(list.body).data;

@@ -1,11 +1,14 @@
 import Database from 'better-sqlite3';
-import type { TrafficLog, TrafficLogFilters, TrafficLogFinish, TrafficLogReader, TrafficLogWrite, TrafficLogWriter } from '../domain/traffic-log.js';
+import type { TrafficLog, TrafficLogFilters, TrafficLogFinish, TrafficLogReader, TrafficLogWrite, TrafficLogWriter, TurnTreePage, TurnTreeNode, TurnTrafficSummary } from '../domain/traffic-log.js';
 
 export class SqliteTrafficLogStore implements TrafficLogWriter, TrafficLogReader {
   private readonly db: Database.Database;
   constructor(path: string) {
     this.db = new Database(path);
     this.db.pragma('journal_mode = WAL');
+    this.db.exec(`CREATE TABLE IF NOT EXISTS turns (
+      id TEXT PRIMARY KEY, started_at TEXT NOT NULL, finished_at TEXT, status TEXT NOT NULL, traffic_count INTEGER NOT NULL DEFAULT 0
+    )`);
     this.db.exec(`CREATE TABLE IF NOT EXISTS traffic_logs (
       id TEXT PRIMARY KEY, api_kind TEXT NOT NULL DEFAULT 'responses', started_at TEXT NOT NULL, finished_at TEXT,
       status TEXT NOT NULL, http_status INTEGER, model TEXT, streaming INTEGER NOT NULL,
@@ -40,10 +43,26 @@ export class SqliteTrafficLogStore implements TrafficLogWriter, TrafficLogReader
     return { data, limit: filters.limit, offset: filters.offset };
   }
   get(id: string) { return this.db.prepare('SELECT * FROM traffic_logs WHERE id = ?').get(id) as TrafficLog | undefined; }
+  listTurns(page: number, limit: number): TurnTreePage {
+    const safePage = Math.max(1, page);
+    const safeLimit = Math.min(Math.max(1, limit), 100);
+    const totalRow = this.db.prepare('SELECT COUNT(*) AS count FROM (SELECT id FROM turns UNION ALL SELECT id FROM traffic_logs WHERE turn_id IS NULL)').get() as { count: number };
+    const rows = this.db.prepare(`SELECT id, 'turn' AS kind, started_at, finished_at, status, traffic_count
+      FROM turns
+      UNION ALL
+      SELECT id, 'legacy' AS kind, started_at, finished_at, status, 1 AS traffic_count
+      FROM traffic_logs WHERE turn_id IS NULL
+      ORDER BY started_at DESC, id DESC LIMIT @limit OFFSET @offset`).all({ limit: safeLimit, offset: (safePage - 1) * safeLimit }) as Array<{ id: string; kind: 'turn' | 'legacy'; started_at: string; finished_at: string | null; status: TrafficLog['status']; traffic_count: number }>;
+    const data = rows.map((row) => {
+      const traffic = (row.kind === 'turn'
+        ? this.db.prepare(`SELECT id, api_kind, started_at, finished_at, status, http_status, model, streaming, latency_ms, turn_sequence, fallback_reason FROM traffic_logs WHERE turn_id = ? ORDER BY turn_sequence ASC, id ASC`).all(row.id)
+        : this.db.prepare(`SELECT id, api_kind, started_at, finished_at, status, http_status, model, streaming, latency_ms, turn_sequence, fallback_reason FROM traffic_logs WHERE id = ?`).all(row.id)) as TurnTrafficSummary[];
+      const fallbackReasons = [...new Set(traffic.map((item) => item.fallback_reason).filter((reason): reason is string => Boolean(reason)))];
+      return { ...row, fallback_reasons: fallbackReasons, traffic } satisfies TurnTreeNode;
+    });
+    return { data, page: safePage, limit: safeLimit, total: totalRow.count, has_next: safePage * safeLimit < totalRow.count };
+  }
   createTurn(turn: { id: string; startedAt: string; status: 'in_progress' | 'completed' }) {
-    this.db.prepare(`CREATE TABLE IF NOT EXISTS turns (
-      id TEXT PRIMARY KEY, started_at TEXT NOT NULL, finished_at TEXT, status TEXT NOT NULL, traffic_count INTEGER NOT NULL DEFAULT 0
-    )`).run();
     this.db.prepare('INSERT INTO turns (id, started_at, status) VALUES (@id, @startedAt, @status)').run(turn);
   }
   updateTurn(turn: { id: string; status: 'in_progress' | 'completed'; finishedAt: string | null }) {

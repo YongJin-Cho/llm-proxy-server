@@ -10,6 +10,12 @@ export function registerRoutes(app: FastifyInstance, config: AppConfig, query: T
   registerProxyRoute('/responses');
   registerProxyRoute('/chat/completions');
   registerProxyRoute('/messages');
+  app.get('/api/v1/turns', async (request, reply) => {
+    const url = new URL(request.raw.url ?? '/', `http://${request.headers.host ?? config.host}`);
+    const page = Math.max(Number(url.searchParams.get('page') ?? 1), 1);
+    const limit = Math.min(Math.max(Number(url.searchParams.get('limit') ?? 20), 1), 100);
+    return reply.send(query.listTurns(page, limit));
+  });
   app.get('/api/v1/logs', async (request, reply) => {
     const url = new URL(request.raw.url ?? '/', `http://${request.headers.host ?? config.host}`); const n = (name: string) => url.searchParams.get(name) || undefined;
     const limit = Math.min(Math.max(Number(n('limit') ?? 20), 1), 100); const offset = Math.max(Number(n('offset') ?? 0), 0);

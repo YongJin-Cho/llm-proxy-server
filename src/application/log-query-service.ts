@@ -10,4 +10,8 @@ export class TrafficLogQueryService {
   get(id: string) {
     return this.reader.get(id);
   }
+
+  listTurns(page: number, limit: number) {
+    return this.reader.listTurns(page, limit);
+  }
 }

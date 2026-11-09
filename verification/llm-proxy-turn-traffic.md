@@ -4,20 +4,21 @@
 **Scope:** Sprint 10 PB-020/PB-021 backend lifecycle, tool identity matching/fallback isolation, and SSE aggregate regression
 **Verified:** 2026-03-10
 **Commands:** `npm run build`; `npm run verify`
-**Summary:** turn domain fixture, existing multi-API integration, SSE aggregate persistence assertion, and lifecycle/fallback checks pass.
+**Summary:** turn domain fixture, tree query integration, existing multi-API integration, SSE aggregate persistence assertion, and lifecycle/fallback checks pass.
 
 ## Evidence
 
 - `npm run build`: pass.
 - `npm run verify`: pass.
 - `scripts/verify-turn.mjs`: pass for unique tool identity matching, simultaneous open-turn handling, out-of-order-safe ID matching, `missing_tool_identity`, `unmatched_tool_identity`, `ambiguous_tool_identity`, fallback isolation, observation sequence, and failed lifecycle retention.
-- `scripts/verify.mjs`: pass for existing proxy/API regression and streaming response persistence. Streaming traffic is asserted to store aggregate JSON rather than a raw `data:` event sequence.
+- `scripts/verify.mjs`: pass for existing proxy/API regression, `GET /api/v1/turns` pagination/wire projection, body-free child summaries, and streaming response persistence. Streaming traffic is asserted to store aggregate JSON rather than a raw `data:` event sequence.
 
 ## Requirement mapping
 
 | Spec | Status | Evidence |
 |---|---|---|
 | R-001–R-003 | pass | `src/domain/turn.ts`, adapter `turnSemantic`, SQLite turn metadata, and `verify-turn.mjs` |
+| R-004–R-005 | pass | `GET /api/v1/turns`, SQLite `listTurns`, deterministic ordering, pagination metadata, child summaries, and legacy projection assertions in `verify.mjs` |
 | C-001–C-002 | pass | Proxy/harness contract unchanged; semantic differences remain in API adapters |
 | C-006 | pass | Turn state is process-local in `TurnGroupingService`; no restart recovery or cross-process state was added |
 | C-007 | pass | Fixed fallback reasons and standalone turn isolation are asserted by `verify-turn.mjs` |

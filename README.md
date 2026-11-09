@@ -48,6 +48,7 @@ npm start
 - `POST /api/v1/messages`: Provider의 `baseUrl/messages`로 요청 전달
 - `GET /api/v1/logs`: 최신순 로그 목록 (`status`, `model`, `from`, `to`, `limit`, `offset` 지원)
 - `GET /api/v1/logs/:id`: 로그 상세 조회
+- `GET /api/v1/turns?page=1&limit=20`: turn tree와 본문 없는 child traffic summary 조회
 
 Authorization, API 키, Cookie 계열 헤더는 `[REDACTED]`로 저장됩니다. 요청·응답 본문은 `config.json`의 `maxBodyBytes`를 넘지 않도록 제한됩니다.
 
@@ -58,15 +59,15 @@ npm run build
 npm run verify
 ```
 
-`verify`는 임시 `config.json`과 process environment secret을 사용해 UI entrypoint, 세 API route와 provider path mapping, usage/cost normalization, `api_kind` persistence, provider model mapping, unknown model rejection, secret redaction, SQLite read/write boundary를 재현합니다.
+`verify`는 임시 `config.json`과 process environment secret을 사용해 UI entrypoint, 세 API route와 provider path mapping, usage/cost normalization, `api_kind` persistence, turn grouping/fallback fixture, `/api/v1/turns` pagination·legacy projection·body-free child summary, provider model mapping, unknown model rejection, secret redaction, SQLite read/write boundary를 재현합니다. UI는 `turn`/`traffic` URL query parameter로 선택 상태를 유지하고 traffic 본문은 `/api/v1/logs/:id`로 지연 조회합니다.
 
 ## UI 구조
 
 React UI는 기능별 책임을 분리해 확장할 수 있도록 구성되어 있습니다.
 
-- `src/ui/data-query/`: `/api/v1/logs`와 `/api/v1/logs/:id` HTTP 조회 및 오류 변환
-- `src/ui/pages/`: 화면 상태, 필터·pagination·상세 이동 조합
-- `src/ui/components/`: `Filters`, `LogTable`, `LogDetail` 등 API에 직접 의존하지 않는 표시·입력 컴포넌트
+- `src/ui/data-query/`: `/api/v1/logs`, `/api/v1/logs/:id`, `/api/v1/turns` HTTP 조회 및 오류 변환
+- `src/ui/pages/`: 화면 상태, 필터·pagination·turn/traffic URL selection·상세 이동 조합
+- `src/ui/components/`: `Filters`, `LogTable`, `LogDetail`, `TurnTree` 등 API에 직접 의존하지 않는 표시·입력 컴포넌트
 - `src/ui/types.ts`: UI 공통 view-model과 filter 타입
 - `src/ui/main.tsx`: 선택한 page를 React root에 연결하는 bootstrap
 
