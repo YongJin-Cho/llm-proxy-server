@@ -41,6 +41,10 @@
 7. 기존 PB-005·PB-006과 신규 PB-007~PB-011의 의존관계·실행 순서가 제품 백로그에 반영되고, sprint-03 구현 범위가 추적 가능하다.
 8. 현재 MVP 동작을 보존하는 마이그레이션 전략, 회귀 검증 항목, 단일 프로세스 실행 문서 갱신 계획이 기록되어 있다.
 
+## Approval
+
+- 2026-03-10: 사용자 go-ahead(“ok”)로 sprint-02 계획 승인. 실행 보드를 시드하고 Spec→backlog delta 실행을 시작한다.
+
 ## Demo Checklist
 
 - `server.ts` 단일 파일 책임을 target module map으로 분해한 설계 검토

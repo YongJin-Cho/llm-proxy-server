@@ -8,6 +8,7 @@ Codex와 유사한 LLM 클라이언트와 OpenAI Model Provider 사이에서 요
 - 프록시를 통과한 요청과 응답을 추적 가능한 형태로 저장한다.
 - 운영자가 웹 UI에서 저장된 트래픽을 확인하여 동작과 오류를 모니터링할 수 있게 한다.
 - 구현·검증 가능한 요구사항과 제품 백로그를 확정한다.
+- API·UI·provider·저장소 확장을 위한 모듈 경계와 구현 기준을 설계한다.
 
 ## Audience
 - OpenAI 호환 API를 사용하는 Codex 계열 및 기타 LLM 클라이언트 사용자
@@ -26,6 +27,10 @@ Codex와 유사한 LLM 클라이언트와 OpenAI Model Provider 사이에서 요
 - 제공자 응답을 클라이언트에 반환
 - 요청·응답 쌍의 저장 및 조회
 - 웹 UI를 통한 저장 트래픽 모니터링
+- API·UI framework 후보 비교와 승인된 선택 기준
+- 복수 provider 설정과 client model ID → provider/model ID 라우팅 계약
+- API 로그 기록 경로와 UI 조회 경로의 DB 접근 경계
+- 기존 MVP 동작을 보존하는 migration·회귀 검증·단일 프로세스 실행 문서
 - 핵심 오류 처리와 운영에 필요한 기본 설정
 
 ### Out of Scope

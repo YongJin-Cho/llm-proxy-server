@@ -1,22 +1,89 @@
 # TODO: LLM Proxy Server
 
 > **Project root:** `llm-proxy-server`
-> **Current sprint:** sprint-01 — [LLM Proxy MVP 구현](./scrum/sprint-01.md)
+> **Current sprint:** sprint-02 — [확장 가능한 아키텍처 설계와 백로그 갱신](./scrum/sprint-02.md)
 > **Product Backlog:** [`scrum/product-backlog.md`](./scrum/product-backlog.md)
 
 ## Snapshot
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 6 | 0 | 0 | 0 |
+| 2 | 10 | 0 | 0 |
 
-**Sprint goal:** 승인된 Spec을 기준으로 localhost에서 실행 가능한 단일 프로세스 LLM Proxy MVP를 구현한다.
-**Current focus:** —
-**Recommended next:** Sprint plan approval — sprint-02
+**Sprint goal:** API·UI·provider·저장소 확장을 위한 설계 결정을 승인된 Spec과 제품 백로그에 반영한다.
+**Current focus:** T-002 — PRD 승인
+**Recommended next:** T-002 — PRD 승인 (PRD delta 초안 검토 후 go-ahead 필요)
 
 ## Tasks
 
-_(sprint-01 Boundary 완료. 다음 계획 sprint-02는 작성되었지만 아직 승인되지 않았으므로 실행 보드로 전환하지 않음.)_
+- [x] **T-001** — PRD delta 작성
+  - Phase: ① PRD
+  - Artifact: `spec/PRD.md`
+  - Depends: —
+  - Notes: sprint-02의 모듈화·framework·provider routing·DB boundary·확장 UI 설계를 제품 범위에 반영한다.
+
+- [ ] **T-002** — PRD 승인
+  - Phase: gate
+  - Artifact: `spec/PRD.md`
+  - Depends: T-001
+
+- [ ] **T-003** — delta AC 식별
+  - Phase: ② AC identification
+  - Artifact: `spec/AC.md`
+  - Depends: T-002
+
+- [ ] **T-004** — AC 목록 승인
+  - Phase: gate
+  - Artifact: `spec/AC.md`
+  - Depends: T-003
+
+- [ ] **T-005** — 첫 번째 unsettled AC 검토
+  - Phase: ③ AC review
+  - Artifact: `spec/AC.md`, `adr/`
+  - Depends: T-004
+  - Notes: dependency order에 따라 한 번에 하나의 blocking AC만 검토한다.
+
+- [ ] **T-006** — AC resolution gate
+  - Phase: gate
+  - Artifact: `spec/AC.md`, `adr/`
+  - Depends: T-005
+
+- [ ] **T-007** — 다음 AC 검토·resolution 반복
+  - Phase: ③ AC review
+  - Artifact: `spec/AC.md`, `adr/`
+  - Depends: T-006
+  - Notes: 모든 새 blocking AC가 designed/deferred가 될 때까지 필요한 만큼 반복한다.
+
+- [ ] **T-008** — ASR delta 통합
+  - Phase: ④ ASR consolidation
+  - Artifact: `spec/ASR.md`
+  - Depends: T-006, T-007
+
+- [ ] **T-009** — ASR 승인
+  - Phase: gate
+  - Artifact: `spec/ASR.md`
+  - Depends: T-008
+
+- [ ] **T-010** — Spec delta 작성·검토
+  - Phase: ⑤ Spec writing / ⑥ Spec review
+  - Artifact: `spec/llm-proxy-server.md`, `spec-review/`
+  - Depends: T-009
+
+- [ ] **T-011** — PB-007~PB-011 Spec 참조·DoD 갱신
+  - Phase: Spec→backlog encode
+  - Artifact: `scrum/product-backlog.md`
+  - Depends: T-010
+
+- [ ] **T-012** — Demo checklist 확인
+  - Phase: gate
+  - Artifact: `scrum/sprint-02.md`
+  - Depends: T-011
+
+- [ ] **T-013** — Sprint Boundary → sprint-03
+  - Phase: cross-cutting
+  - Artifact: `scrum/TODO-02.md`
+  - Depends: T-001, T-002, T-003, T-004, T-005, T-006, T-007, T-008, T-009, T-010, T-011, T-012
+  - Notes: sprint completion 승인 후 보드 archive, backlog 갱신, 다음 스프린트 계획으로 전환한다.
 
 ## Completed sprints
 
@@ -27,10 +94,5 @@ _(sprint-01 Boundary 완료. 다음 계획 sprint-02는 작성되었지만 아�
 
 ## Notes
 
-- T-003/T-004 구현 및 검증 완료: `npm run build`, `npm run verify` 통과, TypeScript diagnostics 이상 없음.
-- npm 11 환경에서 `better-sqlite3` install script 차단 문제를 확인하고 `verify`에 명시적 승인·rebuild 단계를 추가했다.
-- `verification/llm-proxy-server.md`에 Spec 기준 결과를 기록했다.
-- sprint-00 Boundary를 완료하고 승인된 sprint-01 실행 보드로 전환했다.
-- sprint-01 범위는 PB-002, PB-003, PB-004이며, curl 기반 통합 데모 검증으로 완료했다.
-- sprint-01의 Sprint completion 및 Boundary를 완료했다. PB-005, PB-006은 `scrum/sprint-02.md`에 다음 범위로 계획했다.
-- sprint-02 실행은 Sprint plan approval 이후 시작한다.
+- 2026-03-10: sprint-01 Boundary 완료 상태에서 sprint-02 계획을 승인하고 실행 보드를 시드했다.
+- sprint-02는 Spec→backlog delta 스프린트이며 실제 제품 구현은 범위에 포함하지 않는다.
