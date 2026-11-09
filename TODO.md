@@ -8,19 +8,19 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 0 | 9 | 0 | 0 |
+| 1 | 8 | 0 | 0 |
 
 **Sprint goal:** 승인된 Spec을 기준으로 localhost에서 실행 가능한 단일 프로세스 LLM Proxy MVP를 구현한다.
-**Current focus:** T-001
-**Recommended next:** T-001 — Responses API 프록시 기반 구현
+**Current focus:** T-002
+**Recommended next:** T-002 — PB-002 완료 게이트
 
 ## Tasks
 
-- [ ] **T-001** — PB-002: Responses API 프록시 기반 구현
+- [x] **T-001** — PB-002: Responses API 프록시 기반 구현
   - Phase: implementation
-  - Artifact: —
+  - Artifact: `src/server.ts`, `package.json`, `tsconfig.json`
   - Depends: —
-  - Notes: 비스트리밍 요청 전달, Provider 응답·오류·네트워크 오류 계약을 구현한다.
+  - Notes: `/api/v1/responses` 비스트리밍 요청 전달, Provider 응답·오류·네트워크 오류 계약의 초기 구현을 완료하고 TypeScript 빌드를 통과했다.
 
 - [ ] **T-002** — PB-002 완료 게이트
   - Phase: implementation gate

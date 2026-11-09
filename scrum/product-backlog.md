@@ -5,11 +5,11 @@
 ## Stories
 
 - [ ] **PB-002** — Responses API 프록시와 오류 전달
-  - Story: localhost의 LLM 클라이언트가 `/v1/responses`로 요청하면 Provider에 전달되고 성공·Provider 오류·네트워크 오류가 클라이언트와 로그에 추적 가능한 형태로 반환된다.
+  - Story: localhost의 LLM 클라이언트가 `/api/v1/responses`로 요청하면 Provider에 전달되고 성공·Provider 오류·네트워크 오류가 클라이언트와 로그에 추적 가능한 형태로 반환된다.
   - Spec: `spec/llm-proxy-server.md` §Requirements R-001–R-003; §Constraints C-001, C-005, C-007
   - Sprint: sprint-01
   - Depends: —
-  - Notes: 초기 `/v1/responses` 범위. Chat Completions와 Claude Messages API는 후속이다.
+  - Notes: 초기 `/api/v1/responses` 범위. 백엔드 API는 `/api/v1` 아래에 두며 `/v1/responses` 별칭은 제공하지 않는다. Chat Completions와 Claude Messages API는 후속이다.
 
 - [ ] **PB-003** — SSE 스트리밍 프록시와 집계 로그
   - Story: 스트리밍 Responses 요청의 SSE 이벤트가 클라이언트에 전달되고 정상·실패 종료 결과가 집계 로그로 저장된다.

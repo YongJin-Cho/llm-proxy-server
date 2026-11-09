@@ -2,7 +2,7 @@
 
 **Spec:** `spec/llm-proxy-server.md` (aligned with `spec/PRD.md`)
 **Reviewed:** 2026-03-10
-**Summary:** 6 pass, 0 fail, 0 needs-clarification
+**Summary:** 6 pass, 0 fail, 0 needs-clarification (route namespace re-confirmed)
 
 ## SSOT Sufficiency
 
@@ -30,6 +30,7 @@
 ## User Review
 
 - 2026-03-10: 사용자 go-ahead(“ok”)로 Spec을 구현·검증의 SSOT로 승인.
+- 2026-03-10: 사용자 go-ahead(“ok”)로 `/api/v1` 라우트 네임스페이스 변경을 승인하고, 수정된 Spec을 구현·검증의 SSOT로 재확인.
 
 ## Recommended Next Steps
 
