@@ -15,6 +15,17 @@ npm run build
 npm start
 ```
 
+`npm start` 전에 `prestart`가 실행되어 `better-sqlite3` native binding을 확인합니다. binding을 정상적으로 로드할 수 있으면 그대로 시작하고, 로드에 실패할 때만 `native:rebuild` 경로를 실행합니다. 일반적인 서버 재시작마다 native 모듈을 다시 빌드하지 않습니다.
+
+개발 중에는 서버와 UI watch를 함께 실행할 수 있습니다.
+
+```bash
+export OPENROUTER_API_KEY=sk-...
+npm run dev:watch
+```
+
+`dev:watch`는 서버를 `tsx watch src/server.ts`로 실행하고, UI를 `vite build --watch`로 빌드합니다. 두 watcher 중 하나가 종료되면 다른 watcher도 종료됩니다. 종료하려면 `Ctrl+C`를 누릅니다.
+
 기본 `config.json`은 다음과 같습니다.
 
 ```json
@@ -52,14 +63,22 @@ npm start
 
 Authorization, API 키, Cookie 계열 헤더는 `[REDACTED]`로 저장됩니다. 요청·응답 본문은 `config.json`의 `maxBodyBytes`를 넘지 않도록 제한됩니다.
 
-## 검증
+## 빌드와 검증
 
 ```bash
+# native binding을 다시 빌드하지 않고 로드 가능 여부만 확인
+npm run native:check
+
+# UI와 서버 TypeScript를 빌드
 npm run build
+
+# 통합 검증 전체 실행
 npm run verify
 ```
 
-`verify`는 임시 `config.json`과 process environment secret을 사용해 UI entrypoint, 세 API route와 provider path mapping, usage/cost normalization, `api_kind` persistence, turn grouping/fallback fixture, `/api/v1/turns` pagination·legacy projection·body-free child summary, provider model mapping, unknown model rejection, secret redaction, SQLite read/write boundary를 재현합니다. UI는 `turn`/`traffic` URL query parameter로 선택 상태를 유지하고 traffic 본문은 `/api/v1/logs/:id`로 지연 조회합니다.
+`npm run native:ensure`는 `native:check`가 실패할 때만 `npm run native:rebuild`를 실행합니다. Node.js 버전/ABI, 운영체제·CPU 아키텍처, `better-sqlite3` 버전이 바뀌었거나 native binding 오류가 발생한 경우에만 rebuild가 필요할 수 있습니다.
+
+`npm run build`는 `vite build`로 UI를 `dist/ui`에 생성한 뒤 서버 TypeScript를 `dist`에 컴파일합니다. `npm run verify`는 native binding 확인과 build를 먼저 수행한 다음, 임시 `config.json`과 process environment secret을 사용해 UI entrypoint, 세 API route와 provider path mapping, usage/cost normalization, `api_kind` persistence, turn grouping/fallback fixture, `/api/v1/turns` pagination·legacy projection·body-free child summary, provider model mapping, unknown model rejection, secret redaction, SQLite read/write boundary, safe content viewer를 검증합니다. UI는 `turn`/`traffic` URL query parameter로 선택 상태를 유지하고 traffic 본문은 `/api/v1/logs/:id`로 지연 조회합니다.
 
 ## UI 구조
 
