@@ -35,7 +35,7 @@ function JsonContainerNode({ path, value, onOpen }: { path: string; value: unkno
   return <details open>
     <summary>{Array.isArray(value) ? `Array (${entries.length})` : `Object (${entries.length})`}</summary>
     <div className="json-container-children">
-      {entries.map(([key, child]) => <div className="json-container-row" key={`${path}.${key}`}><strong>{key}: </strong>{JsonContainerNode(`${path}.${key}`, child, onOpen)}</div>)}
+      {entries.map(([key, child]) => <div className="json-container-row" key={`${path}.${key}`}><strong>{key}: </strong>{JsonContainerNode({ path: `${path}.${key}`, value: child, onOpen })}</div>)}
     </div>
   </details>;
 }
