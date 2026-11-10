@@ -48,5 +48,7 @@ assert.doesNotMatch(tree, /onRenameTraffic/);
 assert.doesNotMatch(page, /updateTrafficMetadata/);
 assert.doesNotMatch(page, /renameTraffic/);
 assert.match(turnView, /summary\.provider/);
-assert.match(turnView, /summary\.execution_environment/);
+assert.match(turnView, /summary\.duration_ms/);
+assert.match(turnView, /compactString/);
+assert.match(turnView, /showLabel=\{false\}/);
 console.log('Viewer verification passed: detection precedence, safe fallbacks, curated overrides, UTF-8 full-content bound, read-only rendering, field-scoped reset, traffic management separation, and turn summary metadata.');

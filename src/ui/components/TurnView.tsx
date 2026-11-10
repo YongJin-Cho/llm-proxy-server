@@ -19,11 +19,6 @@ function formattedCost(valueToFormat: number | null | undefined) {
   return valueToFormat === null || valueToFormat === undefined ? '—' : valueToFormat.toFixed(4);
 }
 
-function displayContent(content: unknown) {
-  if (content === null || content === undefined) return '—';
-  return typeof content === 'string' ? content : JSON.stringify(content, null, 2);
-}
-
 function trafficLabel(traffic: TurnTraffic, index: number) {
   return traffic.title || String(index + 1);
 }
@@ -46,7 +41,7 @@ export function TurnView({ turn, loading, onTraffic }: Props) {
   const summary = turn.summary;
   const turnLabel = turn.title || turn.id.slice(0, 8);
   return <section className="card turn-view" aria-label="Turn view">
-    <section className="traffic-summary" aria-label="Turn summary">
+    <section className="turn-summary-section traffic-summary" aria-label="Turn summary">
       <h2>Turn {turnLabel} summary</h2>
       <dl className="summary-grid">
         <div><dt>Status</dt><dd><span className={`status ${summary.status}`}>{summary.status}</span></dd></div>
@@ -59,14 +54,14 @@ export function TurnView({ turn, loading, onTraffic }: Props) {
         <div><dt>Elapsed time</dt><dd>{formattedNumber(summary.duration_ms)}{summary.duration_ms === null || summary.duration_ms === undefined ? '' : 'ms'}</dd></div>
       </dl>
     </section>
-    <section className="turn-messages" aria-label="Turn request and response">
-      <h2>Request</h2>
-      <pre>{displayContent(summary.start_user_input)}</pre>
-      <h2>Response</h2>
-      <ContentViewer key={`${turn.id}:response`} label="response" content={summary.end_ai_output} hint="markdown" />
+    <section className="turn-content-section request-response-content" aria-label="Turn request and response">
+      <ContentViewer key={`${turn.id}:request`} label="request" content={summary.start_user_input} hint="markdown" compactString showLabel={false} />
+      <ContentViewer key={`${turn.id}:response`} label="response" content={summary.end_ai_output} hint="markdown" showLabel={false} />
     </section>
-    <div className="table-scroll"><table><thead><tr><th>Traffic</th><th>Input tokens</th><th>Cached input tokens</th><th>Output tokens</th><th>Elapsed time</th><th>Cost</th></tr></thead><tbody>
-      {turn.traffic.map((traffic, index) => <TrafficSummaryRow key={traffic.id} traffic={traffic} index={index} onSelect={() => onTraffic(turn.id, traffic.id)} />)}
-    </tbody></table></div>
+    <section className="turn-traffic-table-section" aria-label="Turn traffic table">
+      <div className="table-scroll"><table><thead><tr><th>Traffic</th><th>Input tokens</th><th>Cached input tokens</th><th>Output tokens</th><th>Elapsed time</th><th>Cost</th></tr></thead><tbody>
+        {turn.traffic.map((traffic, index) => <TrafficSummaryRow key={traffic.id} traffic={traffic} index={index} onSelect={() => onTraffic(turn.id, traffic.id)} />)}
+      </tbody></table></div>
+    </section>
   </section>;
 }

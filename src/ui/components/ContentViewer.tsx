@@ -9,8 +9,8 @@ import { curatedLanguages, parseJsonContent, resolveSelection, serializeViewerCo
 
 loader.config({ monaco });
 
-type Props = { label: string; content?: unknown; hint?: string };
-type StringTarget = { path: string; value: string };
+type Props = { label: string; content?: unknown; hint?: string; compactString?: boolean; showLabel?: boolean };
+type StringTarget = { path: string; value: string; hint?: string };
 
 const modeLabels: Array<[ViewerMode, string]> = [
   ['auto', 'Auto'], ['json', 'JSON'], ['markdown', 'Markdown'], ['code', 'Code'], ['plain-text', 'Plain text'],
@@ -45,7 +45,7 @@ function JsonContainerNode({ path, value, onOpen }: { path: string; value: unkno
 
 function PopupViewer({ target, onClose }: { target: StringTarget; onClose: () => void }) {
   const [selection, setSelection] = useState<ViewerSelection>({ mode: 'auto' });
-  const resolved = useMemo(() => resolveSelection(target.value, selection), [target.value, selection]);
+  const resolved = useMemo(() => resolveSelection(target.value, selection, target.hint), [target.value, target.hint, selection]);
   const changeMode = (mode: ViewerMode) => setSelection(mode === 'code' ? { mode, language: resolved.language ?? 'plaintext' } : { mode });
   const changeLanguage = (language: string) => setSelection({ mode: 'code', language });
 
@@ -69,18 +69,29 @@ function PopupViewer({ target, onClose }: { target: StringTarget; onClose: () =>
   </div>;
 }
 
-export function ContentViewer({ label, content, hint }: Props) {
+export function ContentViewer({ label, content, hint, compactString = false, showLabel = true }: Props) {
   const [target, setTarget] = useState<StringTarget>();
   const [selection, setSelection] = useState<ViewerSelection>({ mode: 'auto' });
   const source = useMemo(() => serializeViewerContent(content), [content]);
   const parsed = useMemo(() => parseJsonContent(source), [source]);
   const isJsonContainer = (label === 'request' || label === 'response') && parsed !== undefined && typeof parsed === 'object' && parsed !== null;
   const resolved = useMemo(() => resolveSelection(source, selection, hint), [source, selection, hint]);
-  if (content === null || content === undefined) return <section className="content-viewer"><h4>{label}</h4><p>—</p></section>;
+  if (content === null || content === undefined) return <section className="content-viewer">{showLabel && <h4>{label}</h4>}<p>—</p></section>;
 
   if (isJsonContainer) return <section className="content-viewer json-container-viewer" aria-label={`${label} JSON tree`}>
     <div className="viewer-body json-container-body">
-      <div className="json-container-row json-container-root-row"><strong>{label}: </strong><JsonContainerNode path="$" value={parsed} onOpen={setTarget} /></div>
+      <div className="json-container-row json-container-root-row">{showLabel && <strong>{label}: </strong>}<JsonContainerNode path="$" value={parsed} onOpen={setTarget} /></div>
+    </div>
+    {target && <PopupViewer key={target.path} target={target} onClose={() => setTarget(undefined)} />}
+  </section>;
+
+  const scalarContent = typeof content === 'string' ? content : undefined;
+  const isLongScalar = compactString && scalarContent !== undefined && scalarContent.length > 160;
+  if (isLongScalar) return <section className="content-viewer" aria-label={`${label} content viewer`}>
+    {showLabel && <h4>{label}</h4>}
+    <div className="viewer-body">
+      <span className="json-string-preview">{scalarContent.slice(0, 160)}…</span>
+      <button type="button" className="link content-expand" onClick={() => setTarget({ path: '$', value: scalarContent, hint })}>전체 보기</button>
     </div>
     {target && <PopupViewer key={target.path} target={target} onClose={() => setTarget(undefined)} />}
   </section>;
@@ -88,7 +99,7 @@ export function ContentViewer({ label, content, hint }: Props) {
   const changeMode = (mode: ViewerMode) => setSelection(mode === 'code' ? { mode, language: resolved.language ?? 'plaintext' } : { mode });
   const changeLanguage = (language: string) => setSelection({ mode: 'code', language });
   return <section className="content-viewer" aria-label={`${label} content viewer`}>
-    <div className="viewer-header"><h4>{label}</h4><div className="viewer-controls">
+    <div className="viewer-header">{showLabel && <h4>{label}</h4>}<div className="viewer-controls">
       <label>표시 형식<select value={selection.mode} onChange={(event) => changeMode(event.target.value as ViewerMode)} aria-label={`${label} 표시 형식`}>{modeLabels.map(([value, text]) => <option key={value} value={value}>{text}</option>)}</select></label>
       {selection.mode === 'code' && <label><select aria-label={`${label} 코드 언어`} value={selection.language ?? 'plaintext'} onChange={(event) => changeLanguage(event.target.value)}>{curatedLanguages.map(({ id, label: text }) => <option key={id} value={id}>{text}</option>)}</select></label>}
       <span className="viewer-meta">감지: {resolved.detectedMode}{resolved.fallbackReason ? ` · fallback: ${resolved.fallbackReason}` : ''}</span>

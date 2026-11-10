@@ -95,6 +95,7 @@ TrafficPage
 
 - R-026: Popup viewer의 mode/language 선택 상태는 request/response field와 문자열 leaf 식별자별 현재 viewer instance에만 유지해야 한다. 다른 문자열 leaf 선택, traffic 변경, viewer close, 새로고침 시 자동 감지 상태로 초기화하며 URL, 서버, localStorage에 저장하지 않아야 한다. 저장된 각 문자열 값이 1 MiB 이하이면 별도 문자 수·줄 수 truncation 없이 popup에서 전체를 확인할 수 있어야 한다. ← ASR-031; R-009~R-010 of `spec/llm-proxy-turn-management.md`
 - R-027: TurnView는 별도 turn 제목 heading 없이 `Turn <turn 제목> summary` heading을 표시하고, TrafficView는 `Turn <turn 제목>/Traffic <traffic 표시값> summary` heading을 표시해야 한다. 두 summary는 `Status`, `Model`, `Provider`, `Cost`, `Input tokens`, `Cached input tokens`, `Output tokens`, `Elapsed time` 순서를 사용하며 cost는 소수점 4자리, token/time은 3자리 콤마로 표시한다. TurnView response는 `ContentViewer`의 plain text Markdown, JSON object/array tree, 긴 문자열 popup 동작을 재사용해야 한다. ← R-020~R-021 of `spec/llm-proxy-turn-management.md`
+- R-028: TurnView는 summary, request/response content, traffic table을 독립 section으로 렌더링해야 한다. request/response content에는 별도 Request/Response heading을 렌더링하지 않고 `ContentViewer` object만 표시하며 request와 response viewer 사이에 divider를 둬야 한다. request의 긴 scalar 문자열은 축약 preview와 popup viewer 전체 보기 동작을 제공해야 한다. ← R-022 of `spec/llm-proxy-turn-management.md`
 
 ## Constraints
 

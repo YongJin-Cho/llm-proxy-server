@@ -8,7 +8,7 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 13 | 1 | 0 | 0 |
+| 14 | 1 | 0 | 0 |
 
 **Sprint goal:** 승인된 Turn 관리·분석 Spec의 남은 viewer slice로 traffic content를 형식별로 안전하게 표시하고, mode override·fallback·보안 경계를 자동 검증한다.
 **Current focus:** T-004
@@ -94,10 +94,16 @@
   - Depends: T-013
   - Notes: Turn 제목 제거·summary 제목 변경, response 형식별 viewer, cost/token/time 표시 포맷과 필드 순서를 구현하고 build/verify evidence를 갱신했다.
 
+- [x] **T-015** — Turn request/response section viewer 정렬·검증
+  - Phase: implementation + verification
+  - Artifact: `spec/llm-proxy-turn-management.md`, `spec/llm-proxy-ui.md`, `src/ui/components/TurnView.tsx`, `src/ui/components/ContentViewer.tsx`, `src/ui/styles.css`, `scripts/verify-turn.mjs`, `verification/llm-proxy-turn-management.md`
+  - Depends: T-014
+  - Notes: summary/request-response/table section을 분리하고 request/response header를 제거하며 request 긴 문자열 preview와 popup viewer를 구현했다.
+
 - [ ] **T-004** — Sprint Boundary → next implementation sprint
   - Phase: cross-cutting
   - Artifact: `scrum/TODO-14.md`
-  - Depends: T-001, T-002, T-003, T-005, T-006, T-007, T-008, T-009, T-010, T-011, T-012, T-013, T-014
+  - Depends: T-001, T-002, T-003, T-005, T-006, T-007, T-008, T-009, T-010, T-011, T-012, T-013, T-014, T-015
   - Notes: archive board, update backlog, close PB-028~PB-029, plan next implementation slice
 
 ## Completed sprints
