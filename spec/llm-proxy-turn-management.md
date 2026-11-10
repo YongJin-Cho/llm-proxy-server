@@ -29,6 +29,7 @@
 - R-015: Sidebar page가 최초로 유효한 turn 목록을 표시할 때 첫 번째 turn을 기본 선택하고 첫 번째 turn만 펼치며 나머지 turn은 접어야 한다. URL에 이미 선택 상태가 있으면 이를 보존하고, 이후 사용자의 펼치기/접기 상태를 임의로 초기화하지 않아야 한다.
 - R-016: Sidebar turn row는 펼치기 아이콘, flag 아이콘, 왼쪽 정렬 title 사이의 간격을 최소화하고 `...` 메뉴를 오른쪽 끝에 정렬해야 한다. Filter label은 `All`과 `Stored`를 사용하며 현재 filter는 선택 상태와 접근성 상태(`aria-selected`)로 명확히 구별해야 한다. Pagination의 이전/다음 조작은 배경과 테두리 없는 왼쪽/오른쪽 삼각형 아이콘 버튼으로 제공하고 `Page N`은 보조 텍스트보다 작은 글꼴로 표시해야 한다. 휴지통도 배경 없는 아이콘 버튼으로 표시해야 하며, 펼치기/flag 버튼은 서로 붙여 배치하고 flag 아이콘은 작은 글꼴로 표시해야 한다. Turn 메뉴의 관리 항목은 `rename`과 `delete` 영문 label을 사용해야 한다.
 - R-017: Pagination 옆 휴지통 action은 현재 filter·page·limit로 서버가 계산한 현재 page의 표시 항목 중 flag=false인 turn/legacy 항목을 모두 삭제해야 한다. 삭제는 각 turn의 child traffic을 cascade하고, 단일 bulk operation으로 처리해야 하며, flag=true 항목은 보존해야 한다. 성공 후 현재 query를 재조회하고 빈 page는 마지막 유효 page로 보정해야 한다. 삭제 전에는 사용자 확인을 요구해야 한다. ← Direct Input
+- R-018: Sidebar의 traffic child는 저장된 전역 `turn_sequence`가 아니라 각 parent turn의 child 배열 순서를 기준으로 1부터 시작하는 표시 번호를 사용해야 한다. 사용자가 지정한 traffic title이 있으면 표시 번호보다 title을 우선해야 하며, 저장/API sequence 값 자체는 변경하지 않아야 한다. ← Direct Input (2026-03-10)
 
 ## Constraints
 
@@ -56,6 +57,7 @@
 - 실제 package 버전과 lockfile 조합은 구현 전 설치 검증에서 확정한다. React 19 호환성·bundle·worker·license·security 검증에 실패하면 구현 전에 Spec을 갱신하고 재승인한다.
 - 없음: provider는 stable routing ID로 표시하고, traffic summary 값은 `/api/v1/turns` child projection과 기존 detail API가 제공한다.
 - Direct Input (2026-03-10): 현재 page에 표시되는 legacy 노드도 사용자에게 표시된 unflagged 항목이므로 bulk 삭제 대상에 포함한다.
+- Direct Input (2026-03-10): traffic 번호는 데이터 식별자가 아니라 parent turn 내부의 sidebar 표시 순서이며, 사용자 지정 title과 전역 저장 sequence에는 영향을 주지 않는다.
 
 ## Related
 

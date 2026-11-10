@@ -62,8 +62,8 @@ export function TurnTree({ nodes, selectedTurn, selectedTraffic, page, hasNext, 
           </div>
         </div>
         {!isCollapsed && <div className="traffic-children">
-          {node.traffic.map((traffic) => <button type="button" className={`traffic-child text-button ${selectedTraffic === traffic.id ? 'selected' : ''}`} key={traffic.id} onClick={() => onTraffic(node.id, traffic.id)}>
-            <span className="traffic-kind">Traffic</span> {traffic.title || (traffic.turn_sequence ?? '—')} <span className="traffic-meta">· {traffic.status}</span>
+          {node.traffic.map((traffic, index) => <button type="button" className={`traffic-child text-button ${selectedTraffic === traffic.id ? 'selected' : ''}`} key={traffic.id} onClick={() => onTraffic(node.id, traffic.id)}>
+            <span className="traffic-kind">Traffic</span> {traffic.title || index + 1} <span className="traffic-meta">· {traffic.status}</span>
           </button>)}
         </div>}
       </section>;

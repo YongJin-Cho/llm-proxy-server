@@ -8,7 +8,7 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 7 | 1 | 0 | 0 |
+| 8 | 1 | 0 | 0 |
 
 **Sprint goal:** 승인된 Turn 관리·분석 Spec의 남은 viewer slice로 traffic content를 형식별로 안전하게 표시하고, mode override·fallback·보안 경계를 자동 검증한다.
 **Current focus:** T-004
@@ -58,10 +58,16 @@
   - Depends: T-007
   - Notes: prev/next 배경·테두리 제거, 메뉴 label을 `rename`/`delete`로 변경, build/verify evidence 반영
 
+  - [x] **T-009** — Turn 내부 traffic 표시 번호 정렬 구현·검증
+  - Phase: implementation + verification
+  - Artifact: `spec/llm-proxy-turn-management.md`, `src/ui/components/TurnTree.tsx`, `scripts/verify-turn.mjs`, `verification/llm-proxy-turn-management.md`
+  - Depends: T-008
+  - Notes: 전역 turn_sequence 대신 각 turn child 배열 순서로 1부터 표시하고 custom traffic title 우선, build/verify 통과
+
   - [ ] **T-004** — Sprint Boundary → next implementation sprint
   - Phase: cross-cutting
   - Artifact: `scrum/TODO-14.md`
-  - Depends: T-001, T-002, T-003, T-005, T-006, T-007, T-008
+  - Depends: T-001, T-002, T-003, T-005, T-006, T-007, T-008, T-009
   - Notes: archive board, update backlog, close PB-028~PB-029, plan next implementation slice
 
 ## Completed sprints
