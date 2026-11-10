@@ -49,7 +49,7 @@ const streamResponse = (req, res, payload) => {
     '',
   ].join('\n\n'));
   else res.end([
-    'event: message_start\ndata: {"type":"message_start","message":{"id":"msg-stream-1","type":"message","role":"assistant","model":"provider/messages-model","content":[],"usage":{"input_tokens":4}}}',
+    'event: message_start\ndata: {"type":"message_start","message":{"id":"msg-stream-1","type":"message","role":"assistant","model":"provider/messages-model","content":[],"usage":{"input_tokens":4,"cache_creation_input_tokens":2,"cache_read_input_tokens":3}}}',
     'event: content_block_start\ndata: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}',
     'event: content_block_delta\ndata: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Hello "}}',
     'event: content_block_delta\ndata: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Messages"}}',
@@ -58,7 +58,7 @@ const streamResponse = (req, res, payload) => {
     'event: content_block_delta\ndata: {"type":"content_block_delta","index":1,"delta":{"type":"input_json_delta","partial_json":"{\\"q\\": "}}',
     'event: content_block_delta\ndata: {"type":"content_block_delta","index":1,"delta":{"type":"input_json_delta","partial_json":"\\"test\\"}"}}',
     'event: content_block_stop\ndata: {"type":"content_block_stop","index":1}',
-    'event: message_delta\ndata: {"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"output_tokens":2}}',
+    'event: message_delta\ndata: {"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"output_tokens":2,"cost":0.006}}',
     'event: message_stop\ndata: {"type":"message_stop"}',
     '',
   ].join('\n\n'));
@@ -83,7 +83,7 @@ const providerB = createServer((req, res) => {
     providerRequests.push({ provider: 'b', path: req.url, headers: req.headers, body: payload });
     if (payload.stream === true) return streamResponse(req, res, payload);
     res.writeHead(200, { 'content-type': 'application/json' });
-    const usage = req.url === '/messages' ? { input_tokens: 4, output_tokens: 1 } : { prompt_tokens: 4, completion_tokens: 1 };
+    const usage = req.url === '/messages' ? { input_tokens: 4, cache_creation_input_tokens: 2, cache_read_input_tokens: 3, output_tokens: 1, cost: 0.005 } : { prompt_tokens: 4, completion_tokens: 1 };
     res.end(JSON.stringify({ id: 'response-b', model: payload.model, output: [], choices: [], content: [], usage }));
   });
 });
@@ -202,7 +202,10 @@ try {
   assert.deepEqual(streamedMessagesResponse.content[1].input, { q: 'test' });
   assert.equal(streamedMessagesResponse.stop_reason, 'tool_use');
   assert.equal(streamedMessagesResponse.usage.input_tokens, 4);
+  assert.equal(streamedMessagesResponse.usage.cache_creation_input_tokens, 2);
+  assert.equal(streamedMessagesResponse.usage.cache_read_input_tokens, 3);
   assert.equal(streamedMessagesResponse.usage.output_tokens, 2);
+  assert.equal(streamedMessagesResponse.usage.cost, 0.006);
   assert.equal(listed.filter((entry) => entry.api_kind === 'responses').length, 3);
   const chatLog = listed.find((entry) => entry.api_kind === 'chat_completions' && entry.streaming === 0);
   const messagesLog = listed.find((entry) => entry.api_kind === 'messages' && entry.streaming === 0);
@@ -214,7 +217,11 @@ try {
   assert.equal(responsesLog.output_tokens, 2);
   assert.equal(responsesLog.total_tokens, 5);
   assert.equal(responsesLog.cost_usd, 0.003);
-  assert.equal(messagesLog.total_tokens, 5);
+  assert.equal(messagesLog.input_tokens, 9);
+  assert.equal(messagesLog.cached_input_tokens, 2);
+  assert.equal(messagesLog.output_tokens, 1);
+  assert.equal(messagesLog.total_tokens, 10);
+  assert.equal(messagesLog.cost_usd, 0.005);
   const alphaLog = listed.find((entry) => entry.model === 'client-alpha' && entry.request_json.includes('REDACTED'));
   assert.ok(alphaLog);
   assert.doesNotMatch(alphaLog.request_json, /client-secret/);

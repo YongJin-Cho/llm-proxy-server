@@ -16,6 +16,7 @@ function TrafficSummary({ log }: { log: Log }) {
   return <section className="card traffic-summary" aria-label="Traffic summary">
     <h2>Traffic summary</h2>
     <dl className="summary-grid">
+      <div><dt>Status</dt><dd><span className={`status ${log.status}`}>{log.status}</span></dd></div>
       <div><dt>Model</dt><dd>{value(log.model)}</dd></div>
       <div><dt>Provider</dt><dd>{value(log.provider)}</dd></div>
       <div><dt>Input tokens</dt><dd>{value(log.input_tokens)}</dd></div>
@@ -33,6 +34,6 @@ export function TrafficView({ log, loading, error, onBack }: Props) {
   if (!log) return <section className="card" aria-label="Traffic view empty"><button type="button" onClick={onBack}>← turn</button><p>traffic를 선택하세요.</p></section>;
   return <>
     <TrafficSummary log={log} />
-    <LogDetail log={log} onBack={onBack} />
+    <LogDetail log={log} />
   </>;
 }
