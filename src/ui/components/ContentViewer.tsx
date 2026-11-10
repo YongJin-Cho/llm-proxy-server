@@ -25,7 +25,9 @@ function StringLeaf({ path, value, onOpen }: { path: string; value: string; onOp
   const preview = isTruncated ? `${value.slice(0, 160)}…` : value;
   return <span className="json-string-leaf">
     <span className="json-string-preview">&quot;{preview}&quot;</span>
-    {isTruncated && <button type="button" className="icon-button json-string-expand" onClick={() => onOpen({ path, value })} aria-label={`${path} 문자열 전체 보기`} title="문자열 확대">⤢</button>}
+    {isTruncated && <button type="button" className="icon-button json-string-expand" onClick={() => onOpen({ path, value })} aria-label={`${path} 문자열 전체 보기`} title="문자열 확대">
+      <svg aria-hidden="true" viewBox="0 0 20 20" focusable="false"><circle cx="8.5" cy="8.5" r="5.5" /><path d="m13 13 4 4" /></svg>
+    </button>}
   </span>;
 }
 
@@ -75,8 +77,9 @@ export function ContentViewer({ label, content, hint }: Props) {
   if (!content) return <section className="content-viewer"><h4>{label}</h4><p>—</p></section>;
 
   if (isJsonContainer) return <section className="content-viewer json-container-viewer" aria-label={`${label} JSON tree`}>
-    <div className="viewer-header"><h4>{label}</h4></div>
-    <div className="viewer-body"><JsonContainerNode path="$" value={parsed} onOpen={setTarget} /></div>
+    <div className="viewer-body json-container-body">
+      <div className="json-container-row json-container-root-row"><strong>{label}: </strong><JsonContainerNode path="$" value={parsed} onOpen={setTarget} /></div>
+    </div>
     {target && <PopupViewer key={target.path} target={target} onClose={() => setTarget(undefined)} />}
   </section>;
 

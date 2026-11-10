@@ -50,11 +50,16 @@ button:disabled { cursor: default; opacity: .45; } table { width: 100%; border-c
 pre { white-space: pre-wrap; overflow: auto; background: #f7f8fa; padding: 12px; border-radius: 6px; } .pagination { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; } .error { color: #bb2d3b; }
 .content-viewer { margin-top: 16px; border-top: 1px solid #edf0f4; padding-top: 12px; }
 .json-container-node { display: inline; }
-.json-container-node > summary { display: inline; margin-top: 0; }
+.json-container-node > summary { display: inline; margin-top: 0; list-style: none; }
+.json-container-node > summary::-webkit-details-marker { display: none; }
+.json-container-node > summary::before { content: '▾'; display: inline-block; width: 14px; margin-right: 2px; color: #596579; }
+.json-container-node:not([open]) > summary::before { content: '▸'; }
 .json-container-children { display: block; border-left: 1px solid #dfe4ec; margin: 4px 0 4px 8px; padding-left: 12px; }
 .json-container-row { padding: 4px 0; overflow-wrap: anywhere; }
 .json-string-preview { white-space: pre-wrap; color: #27364f; }
-.json-string-expand { margin-left: 8px; padding: 0 2px; border: 0; font-size: 16px; line-height: 1; vertical-align: baseline; }
+.json-string-expand { margin-left: 8px; padding: 1px 2px; border: 0; background: transparent; color: #245cc5; line-height: 1; vertical-align: -2px; }
+.json-string-expand:hover { background: transparent; color: #174a9c; }
+.json-string-expand svg { display: block; width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
 .viewer-popup-backdrop { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 24px; background: rgb(23 32 51 / 55%); }
 .viewer-popup { width: min(900px, 100%); max-height: min(760px, 90vh); overflow: auto; background: white; border-radius: 10px; box-shadow: 0 20px 60px rgb(0 0 0 / 30%); padding: 20px; }
 .viewer-popup-header { display: flex; justify-content: space-between; gap: 16px; align-items: start; }
