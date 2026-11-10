@@ -28,7 +28,19 @@ const languageAliases: Record<string, string> = {
 const supportedLanguages: Set<string> = new Set(curatedLanguages.map(({ id }) => id));
 const markdownPattern = /(^#{1,6}\s|```[\s\S]*```|(^|\n)\s*[-*+]\s+|\[[^\]]+\]\([^\)]+\)|(^|\n)>\s)/m;
 
-export function parseJsonContent(content: string): unknown | undefined {
+export function serializeViewerContent(content: unknown): string {
+  if (typeof content === 'string') return content;
+  if (content === null || content === undefined) return '';
+  try {
+    const serialized = JSON.stringify(content, null, 2);
+    return serialized ?? String(content);
+  } catch {
+    return String(content);
+  }
+}
+
+export function parseJsonContent(content: unknown): unknown | undefined {
+  if (typeof content !== 'string') return content === null || content === undefined ? undefined : content;
   try { return JSON.parse(content) as unknown; } catch { return undefined; }
 }
 
@@ -41,31 +53,33 @@ function explicitHint(hint?: string): { mode?: Exclude<ViewerMode, 'auto'>; lang
   return supportedLanguages.has(language) ? { mode: language === 'plaintext' ? 'plain-text' : 'code', language } : {};
 }
 
-export function detectContent(content: string, hint?: string): Detection {
+export function detectContent(content: unknown, hint?: string): Detection {
+  const source = serializeViewerContent(content);
   const hinted = explicitHint(hint);
   if (hinted.mode === 'json') {
-    const parsedJson = parseJsonContent(content);
+    const parsedJson = parseJsonContent(source);
     return parsedJson === undefined ? { detectedMode: 'plain-text', fallbackReason: 'JSON hint could not be parsed' } : { detectedMode: 'json', parsedJson };
   }
   if (hinted.mode === 'markdown') return { detectedMode: 'markdown' };
   if (hinted.mode === 'code') return { detectedMode: 'code', language: hinted.language };
   if (hinted.mode === 'plain-text') return { detectedMode: 'plain-text' };
 
-  const parsedJson = parseJsonContent(content);
+  const parsedJson = parseJsonContent(source);
   if (parsedJson !== undefined) return { detectedMode: 'json', parsedJson };
-  if (markdownPattern.test(content)) return { detectedMode: 'markdown' };
+  if (markdownPattern.test(source)) return { detectedMode: 'markdown' };
 
-  const highlighted = hljs.highlightAuto(content);
+  const highlighted = hljs.highlightAuto(source);
   const language = highlighted.language ? languageAliases[highlighted.language] ?? highlighted.language : undefined;
   if (language && supportedLanguages.has(language) && (highlighted.relevance ?? 0) >= 3) return { detectedMode: 'code', language };
   return { detectedMode: 'plain-text', fallbackReason: 'No confident supported format was detected' };
 }
 
-export function resolveSelection(content: string, selection: ViewerSelection, hint?: string): Detection & { selectedMode: Exclude<ViewerMode, 'auto'>; language?: string } {
-  const detected = detectContent(content, hint);
+export function resolveSelection(content: unknown, selection: ViewerSelection, hint?: string): Detection & { selectedMode: Exclude<ViewerMode, 'auto'>; language?: string } {
+  const source = serializeViewerContent(content);
+  const detected = detectContent(source, hint);
   if (selection.mode === 'auto') return { ...detected, selectedMode: detected.detectedMode };
   if (selection.mode === 'json') {
-    const parsedJson = parseJsonContent(content);
+    const parsedJson = parseJsonContent(source);
     return parsedJson === undefined
       ? { ...detected, selectedMode: 'plain-text', fallbackReason: 'Selected JSON mode could not parse this content' }
       : { ...detected, parsedJson, selectedMode: 'json' };

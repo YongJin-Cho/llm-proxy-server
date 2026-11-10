@@ -7,8 +7,8 @@ export type Log = {
   http_status?: number;
   latency_ms?: number;
   started_at: string;
-  request_json?: string;
-  response_json?: string;
+  request_json?: unknown;
+  response_json?: unknown;
   error?: string;
   input_tokens?: number;
   cached_input_tokens?: number;

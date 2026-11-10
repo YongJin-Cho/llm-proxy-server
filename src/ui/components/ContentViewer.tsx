@@ -5,11 +5,11 @@ import * as monaco from 'monaco-editor';
 import ReactMarkdown from 'react-markdown';
 import rehypeSanitize from 'rehype-sanitize';
 import remarkGfm from 'remark-gfm';
-import { curatedLanguages, parseJsonContent, resolveSelection, type ViewerMode, type ViewerSelection } from '../data-query/content-viewer';
+import { curatedLanguages, parseJsonContent, resolveSelection, serializeViewerContent, type ViewerMode, type ViewerSelection } from '../data-query/content-viewer';
 
 loader.config({ monaco });
 
-type Props = { label: string; content?: string | null; hint?: string };
+type Props = { label: string; content?: unknown; hint?: string };
 type StringTarget = { path: string; value: string };
 
 const modeLabels: Array<[ViewerMode, string]> = [
@@ -67,7 +67,7 @@ function PopupViewer({ target, onClose }: { target: StringTarget; onClose: () =>
 export function ContentViewer({ label, content, hint }: Props) {
   const [target, setTarget] = useState<StringTarget>();
   const [selection, setSelection] = useState<ViewerSelection>({ mode: 'auto' });
-  const source = content ?? '';
+  const source = useMemo(() => serializeViewerContent(content), [content]);
   const parsed = useMemo(() => parseJsonContent(source), [source]);
   const isJsonContainer = (label === '요청' || label === '응답') && parsed !== undefined && typeof parsed === 'object' && parsed !== null;
   const resolved = useMemo(() => resolveSelection(source, selection, hint), [source, selection, hint]);

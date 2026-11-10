@@ -8,7 +8,7 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 9 | 1 | 0 | 0 |
+| 10 | 1 | 0 | 0 |
 
 **Sprint goal:** 승인된 Turn 관리·분석 Spec의 남은 viewer slice로 traffic content를 형식별로 안전하게 표시하고, mode override·fallback·보안 경계를 자동 검증한다.
 **Current focus:** T-004
@@ -70,10 +70,16 @@
   - Depends: T-009
   - Notes: `src/` 서버는 `tsx watch`, UI는 `vite build --watch`로 감시한다. `better-sqlite3`는 로드 실패 시에만 승인/rebuild한다. `npm run build`와 `npm run verify` 통과.
 
+  - [x] **T-011** — traffic request/response JSON object viewer 데이터 정규화 fix
+  - Phase: implementation + verification
+  - Artifact: `src/ui/data-query/content-viewer.ts`, `src/ui/components/ContentViewer.tsx`, `src/ui/types.ts`, `scripts/verify-viewer.ts`
+  - Depends: T-010
+  - Notes: JSON 문자열과 이미 파싱된 object/array 입력을 동일하게 정규화해 headers/body와 중첩 JSON을 표시하고 회귀 검증을 추가했다. `npm run build`와 `npm run verify` 통과.
+
   - [ ] **T-004** — Sprint Boundary → next implementation sprint
   - Phase: cross-cutting
   - Artifact: `scrum/TODO-14.md`
-  - Depends: T-001, T-002, T-003, T-005, T-006, T-007, T-008, T-009, T-010
+  - Depends: T-001, T-002, T-003, T-005, T-006, T-007, T-008, T-009, T-010, T-011
   - Notes: archive board, update backlog, close PB-028~PB-029, plan next implementation slice
 
 ## Completed sprints

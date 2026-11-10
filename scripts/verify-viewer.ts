@@ -1,11 +1,16 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { detectContent, resolveSelection, utf8ByteLength } from '../src/ui/data-query/content-viewer.js';
+import { detectContent, parseJsonContent, resolveSelection, serializeViewerContent, utf8ByteLength } from '../src/ui/data-query/content-viewer.js';
 
 const json = detectContent('{"message":"hello","count":2}');
 assert.equal(json.detectedMode, 'json');
 assert.deepEqual(json.parsedJson, { message: 'hello', count: 2 });
+const objectContent = { headers: { authorization: '[REDACTED]' }, body: { model: 'client-alpha' } };
+assert.deepEqual(parseJsonContent(objectContent), objectContent);
+assert.deepEqual(JSON.parse(serializeViewerContent(objectContent)), objectContent);
+assert.equal(detectContent(objectContent, 'json').detectedMode, 'json');
+assert.equal(resolveSelection(objectContent, { mode: 'json' }).selectedMode, 'json');
 
 const hintedJson = detectContent('{"message":"hello"}', 'json');
 assert.equal(hintedJson.detectedMode, 'json');
@@ -33,6 +38,7 @@ assert.match(viewer, /rehypeSanitize/);
 assert.match(viewer, /readOnly: true/);
 assert.match(viewer, /domReadOnly: true/);
 assert.match(viewer, /enableClipboard=\{false\}/);
+assert.match(viewer, /serializeViewerContent\(content\)/);
 assert.doesNotMatch(viewer, /dangerouslySetInnerHTML|\beval\s*\(|new Function|<iframe/);
 assert.match(detail, /key=\{`\$\{log\.id\}:request`\}/);
 assert.match(detail, /key=\{`\$\{log\.id\}:response`\}/);
