@@ -1,5 +1,5 @@
 import { strict as assert } from 'node:assert';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { TurnGroupingService } from '../dist/domain/turn.js';
@@ -62,4 +62,16 @@ sqlite.deleteTurn('managed-turn');
 assert.equal(sqlite.get('managed-traffic'), undefined);
 sqlite.close();
 rmSync(tempDir, { recursive: true, force: true });
-console.log('Turn verification passed: grouping fallbacks, sequence ordering, metadata persistence, flagged filtering, and cascade deletion.');
+
+const turnTree = readFileSync(new URL('../src/ui/components/TurnTree.tsx', import.meta.url), 'utf8');
+const trafficPage = readFileSync(new URL('../src/ui/pages/TrafficPage.tsx', import.meta.url), 'utf8');
+assert.match(turnTree, /turn-collapse[\s\S]*turn-flag[\s\S]*turn-title[\s\S]*turn-menu/);
+assert.match(turnTree, /이름 변경/);
+assert.match(turnTree, /삭제/);
+assert.equal(turnTree.includes('onRenameTraffic'), false);
+assert.equal(turnTree.includes('traffic-rename'), false);
+assert.match(turnTree, /nodes\.slice\(1\)/);
+assert.match(trafficPage, /if \(!selection\.turn && result\.data\[0\]\)/);
+assert.equal(trafficPage.includes('updateTrafficMetadata'), false);
+assert.equal(trafficPage.includes('renameTraffic'), false);
+console.log('Turn verification passed: grouping fallbacks, sequence ordering, metadata persistence, flagged filtering, cascade deletion, and sidebar interaction contract.');

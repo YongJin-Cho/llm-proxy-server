@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { deleteTurn, fetchLog, fetchTurns, updateTrafficMetadata, updateTurnMetadata } from '../data-query/log-api';
+import { deleteTurn, fetchLog, fetchTurns, updateTurnMetadata } from '../data-query/log-api';
 import { TrafficView } from '../components/TrafficView';
 import { TurnTree } from '../components/TurnTree';
 import { TurnView } from '../components/TurnView';
@@ -37,6 +37,10 @@ export function TrafficPage() {
     if (result.data.length === 0 && page > 1) { setTurnPage(page - 1); return; }
     setTurns(result.data);
     setTurnHasNext(result.has_next);
+    if (!selection.turn && result.data[0]) {
+      writeSelection(result.data[0].id);
+      setSelection({ turn: result.data[0].id });
+    }
   }).catch((reason: Error) => setError(reason.message));
 
   useEffect(() => {
@@ -74,7 +78,6 @@ export function TrafficPage() {
   const selectTurn = (id: string) => { writeSelection(id); setSelection({ turn: id }); };
   const selectTraffic = (turnId: string, id: string) => { writeSelection(turnId, id); setSelection({ turn: turnId, traffic: id }); };
   const renameTurn = (id: string, title: string | null) => updateTurnMetadata(id, { title }).then(() => loadTurns()).catch((reason: Error) => setError(reason.message));
-  const renameTraffic = (id: string, title: string | null) => updateTrafficMetadata(id, { title }).then(() => loadTurns()).catch((reason: Error) => setError(reason.message));
   const toggleTurnFlag = (id: string, flag: boolean) => updateTurnMetadata(id, { flag }).then(() => loadTurns()).catch((reason: Error) => setError(reason.message));
   const removeTurn = (id: string) => {
     if (!window.confirm('이 turn과 child traffic을 삭제할까요?')) return;
@@ -87,7 +90,7 @@ export function TrafficPage() {
       <button type="button" className={turnFilter === 'all' ? 'selected' : ''} onClick={() => changeTurnFilter('all')}>전체</button>
       <button type="button" className={turnFilter === 'flagged' ? 'selected' : ''} onClick={() => changeTurnFilter('flagged')}>Flagged</button>
     </div>
-    <TurnTree nodes={turns} selectedTurn={selection.turn} selectedTraffic={selection.traffic} page={turnPage} hasNext={turnHasNext} onPagePrevious={() => setTurnPage((page) => Math.max(1, page - 1))} onPageNext={() => setTurnPage((page) => page + 1)} onTurn={selectTurn} onTraffic={selectTraffic} onRename={renameTurn} onRenameTraffic={renameTraffic} onToggleFlag={toggleTurnFlag} onDelete={removeTurn} />
+    <TurnTree nodes={turns} selectedTurn={selection.turn} selectedTraffic={selection.traffic} page={turnPage} hasNext={turnHasNext} onPagePrevious={() => setTurnPage((page) => Math.max(1, page - 1))} onPageNext={() => setTurnPage((page) => page + 1)} onTurn={selectTurn} onTraffic={selectTraffic} onRename={renameTurn} onToggleFlag={toggleTurnFlag} onDelete={removeTurn} />
   </aside>;
 
   return <main className="traffic-layout">{sidebar}

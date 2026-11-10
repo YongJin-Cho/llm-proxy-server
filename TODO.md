@@ -8,7 +8,7 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 3 | 1 | 0 | 0 |
+| 4 | 1 | 0 | 0 |
 
 **Sprint goal:** 승인된 Turn 관리·분석 Spec의 남은 viewer slice로 traffic content를 형식별로 안전하게 표시하고, mode override·fallback·보안 경계를 자동 검증한다.
 **Current focus:** T-004
@@ -34,10 +34,16 @@
   - Depends: T-002
   - Notes: Sprint 13 기능과 viewer 및 기존 turn tree/URL/traffic API 회귀를 `npm run build`/`npm run verify`로 검증하고 `verification/llm-proxy-turn-management.md`와 `AGENTS.md`에 evidence를 기록했다.
 
+- [x] **T-005** — 파일 탐색기형 sidebar UI 요구사항 구현·검증
+  - Phase: implementation + verification
+  - Artifact: `spec/llm-proxy-turn-management.md`, `src/ui/components/TurnTree.tsx`, `src/ui/pages/TrafficPage.tsx`, `src/ui/styles.css`
+  - Depends: T-003
+  - Notes: turn row action order/menu, traffic management menu removal, initial selection and expansion state, build/verify evidence
+
 - [ ] **T-004** — Sprint Boundary → next implementation sprint
   - Phase: cross-cutting
   - Artifact: `scrum/TODO-14.md`
-  - Depends: T-001, T-002, T-003
+  - Depends: T-001, T-002, T-003, T-005
   - Notes: archive board, update backlog, close PB-028~PB-029, plan next implementation slice
 
 ## Completed sprints

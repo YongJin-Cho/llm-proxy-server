@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { TurnNode } from '../types.js';
 
 type Props = {
@@ -12,13 +12,21 @@ type Props = {
   onTurn: (id: string) => void;
   onTraffic: (turnId: string, trafficId: string) => void;
   onRename: (id: string, title: string | null) => void;
-  onRenameTraffic: (id: string, title: string | null) => void;
   onToggleFlag: (id: string, flag: boolean) => void;
   onDelete: (id: string) => void;
 };
 
-export function TurnTree({ nodes, selectedTurn, selectedTraffic, page, hasNext, onPagePrevious, onPageNext, onTurn, onTraffic, onRename, onRenameTraffic, onToggleFlag, onDelete }: Props) {
+export function TurnTree({ nodes, selectedTurn, selectedTraffic, page, hasNext, onPagePrevious, onPageNext, onTurn, onTraffic, onRename, onToggleFlag, onDelete }: Props) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [openMenu, setOpenMenu] = useState<string>();
+  const initialExpansionApplied = useRef(false);
+
+  useEffect(() => {
+    if (initialExpansionApplied.current || nodes.length === 0) return;
+    setCollapsed(new Set(nodes.slice(1).map((node) => node.id)));
+    initialExpansionApplied.current = true;
+  }, [nodes]);
+
   const toggleCollapsed = (id: string) => setCollapsed((current) => {
     const next = new Set(current);
     if (next.has(id)) next.delete(id); else next.add(id);
@@ -36,25 +44,25 @@ export function TurnTree({ nodes, selectedTurn, selectedTraffic, page, hasNext, 
       const isCollapsed = collapsed.has(node.id);
       return <section className="turn-node" key={`${node.kind}:${node.id}`}>
         <div className="turn-node-header">
-          <button type="button" className="turn-collapse" onClick={() => toggleCollapsed(node.id)} aria-label={`${isCollapsed ? '펼치기' : '접기'} ${node.title || node.id}`} aria-expanded={!isCollapsed}>
+          <button type="button" className="turn-collapse icon-button" onClick={() => toggleCollapsed(node.id)} aria-label={`${isCollapsed ? '펼치기' : '접기'} ${node.title || node.id}`} aria-expanded={!isCollapsed}>
             {isCollapsed ? '▸' : '▾'}
           </button>
-          <button type="button" className={`turn-title ${selectedTurn === node.id ? 'selected' : ''}`} onClick={() => onTurn(node.id)}>
-            {node.kind === 'legacy' ? 'Legacy' : 'Turn'} {node.title || node.id.slice(0, 8)} · {node.status} ({node.traffic_count})
+          <button type="button" className={`turn-flag icon-button ${node.flag ? 'flagged' : ''}`} onClick={() => onToggleFlag(node.id, !node.flag)} aria-label={`${node.flag ? 'Unflag' : 'Flag'} ${node.id}`}>{node.flag ? '★' : '☆'}</button>
+          <button type="button" className={`turn-title text-button ${selectedTurn === node.id ? 'selected' : ''}`} onClick={() => onTurn(node.id)}>
+            {node.kind === 'legacy' ? 'Legacy' : 'Turn'} {node.title || node.id.slice(0, 8)} <span className="turn-meta">· {node.status} ({node.traffic_count})</span>
           </button>
-          <button type="button" className="turn-flag" onClick={() => onToggleFlag(node.id, !node.flag)} aria-label={`${node.flag ? 'Unflag' : 'Flag'} ${node.id}`}>{node.flag ? '★' : '☆'}</button>
-        </div>
-        <div className="turn-actions">
-          <button type="button" onClick={() => onRename(node.id, window.prompt('Turn 제목', node.title ?? '') || null)}>제목</button>
-          {node.kind === 'turn' && <button type="button" onClick={() => onDelete(node.id)}>삭제</button>}
+          <div className="turn-menu-wrap">
+            <button type="button" className="turn-menu icon-button" aria-label={`${node.title || node.id} 메뉴`} aria-haspopup="menu" aria-expanded={openMenu === node.id} onClick={() => setOpenMenu((current) => current === node.id ? undefined : node.id)}>•••</button>
+            {openMenu === node.id && <div className="turn-menu-list" role="menu">
+              <button type="button" role="menuitem" onClick={() => { setOpenMenu(undefined); onRename(node.id, window.prompt('Turn 제목', node.title ?? '') || null); }}>이름 변경</button>
+              <button type="button" role="menuitem" onClick={() => { setOpenMenu(undefined); onDelete(node.id); }}>삭제</button>
+            </div>}
+          </div>
         </div>
         {!isCollapsed && <div className="traffic-children">
-          {node.traffic.map((traffic) => <div className="traffic-child-row" key={traffic.id}>
-            <button type="button" className={selectedTraffic === traffic.id ? 'selected' : ''} onClick={() => onTraffic(node.id, traffic.id)}>
-              Traffic {traffic.title || (traffic.turn_sequence ?? '—')} · {traffic.status}
-            </button>
-            <button type="button" className="traffic-rename" onClick={() => onRenameTraffic(traffic.id, window.prompt('Traffic 제목', traffic.title ?? '') || null)}>제목</button>
-          </div>)}
+          {node.traffic.map((traffic) => <button type="button" className={`traffic-child text-button ${selectedTraffic === traffic.id ? 'selected' : ''}`} key={traffic.id} onClick={() => onTraffic(node.id, traffic.id)}>
+            <span className="traffic-kind">Traffic</span> {traffic.title || (traffic.turn_sequence ?? '—')} <span className="traffic-meta">· {traffic.status}</span>
+          </button>)}
         </div>}
       </section>;
     })}
