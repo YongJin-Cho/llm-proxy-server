@@ -4,7 +4,7 @@
 사용자가 편집한 turn·traffic 제목과 flag 상태를 기존 traffic 본문·lifecycle 원본과 분리해 어떻게 저장하고, turn 삭제를 어떤 물리 삭제와 cascade 규칙으로 처리할 것인가?
 
 ## Status
-proposed
+approved
 
 ## Context
 - 이번 UI는 turn과 traffic의 제목 편집 및 flag 설정·해제를 제공한다.
@@ -17,6 +17,7 @@ proposed
 - 기존 legacy traffic 표시와 flat traffic 조회 호환성을 유지해야 한다.
 
 ## Decision
+**Option B — 기존 row의 관리 컬럼과 turn 단위 물리 삭제.** `turns`와 `traffic_logs`에 제목·flag 같은 관리 컬럼을 추가하되 request/response JSON과 lifecycle 원본 컬럼은 변경하지 않는다. turn 삭제는 하나의 transaction에서 해당 turn의 모든 child traffic과 turn row를 물리 삭제한다. traffic 단독 삭제, 논리 삭제, 복원, 삭제 이력은 제공하지 않는다.
 
 ## Options
 ### Option A — 별도 관리 metadata와 turn 단위 물리 삭제
@@ -45,7 +46,7 @@ proposed
 | 복원 가능성 | 없음 | 없음 |
 
 ## Recommendation
-- **Option B — 기존 row의 관리 컬럼과 turn 단위 물리 삭제**를 권장한다. 현재 `turns`와 `traffic_logs`가 이미 분리되어 있고 `turn_id` 관계가 있으므로, 원본 JSON을 보존하면서 조회·flag 필터·cascade 삭제를 가장 단순하게 구현할 수 있다. 삭제된 데이터의 복구나 삭제 이력은 제공하지 않는다.
+- **Option B — 기존 row의 관리 컬럼과 turn 단위 물리 삭제**를 권장한다. 현재 `turns`와 `traffic_logs`가 이미 분리되어 있고 `turn_id` 관계가 있으므로, 원본 JSON을 보존하면서 조회·flag 필터·cascade 삭제를 가장 단순하게 구현할 수 있다.
 
 ## Consequences
 - 제목·flag는 기존 row의 별도 관리 컬럼에 저장하며 request/response body와 lifecycle 원본은 수정하지 않는다.
@@ -70,4 +71,5 @@ proposed
 
 ## Notes
 - 2026-03-10: AC-025 review를 위해 세 가지 저장·삭제 전략을 비교하는 proposed ADR을 작성했다.
-- 2026-03-10: 사용자 입력에 따라 traffic 단독 삭제를 제거하고, turn 단위 물리 삭제·child traffic cascade·논리 삭제/복원 제외로 삭제 의미를 수정했다. 제목·flag 저장 위치는 Option A/B 비교로 재검토한다.
+- 2026-03-10: 사용자 입력에 따라 traffic 단독 삭제를 제거하고 turn 단위 물리 삭제·child traffic cascade·논리 삭제/복원 제외로 삭제 의미를 수정했다.
+- 2026-03-10: 사용자 go-ahead("B로 해줘")로 Option B를 승인하고 Status를 approved로 변경했다. 기존 row에 관리 컬럼을 추가하고 원본 본문은 보존한다.

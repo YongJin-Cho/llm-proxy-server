@@ -44,7 +44,7 @@
   - Phase: AC review
   - Artifact: `spec/AC.md`, `adr/`
   - Depends: T-004
-  - Notes: AC-025를 reviewing으로 전환하고 proposed ADR을 작성했다. 사용자 입력으로 turn 단위 물리 삭제·child traffic cascade·논리 삭제/복원 제외를 반영했다. 제목·flag 저장 위치 ADR 승인 후 AC-025를 designed로 정리한다.
+  - Notes: AC-025를 reviewing으로 전환하고 proposed ADR을 작성했다. 사용자 입력으로 turn 단위 물리 삭제·child traffic cascade·논리 삭제/복원 제외를 반영했다. 사용자 go-ahead("B로 해줘")로 Option B ADR을 approved 처리하고 AC-025를 designed로 정리했다. AC-026 review를 시작했다.
 
   - [ ] **T-006** — ASR 통합 및 승인
   - Phase: ASR

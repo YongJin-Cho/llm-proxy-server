@@ -340,25 +340,25 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 ### AC-025 — Turn·traffic 관리 메타데이터 저장과 삭제 의미
 
 - **Category:** Structure & organization
-- **Status:** reviewing
+- **Status:** designed
 - **Statement:** 사용자가 편집한 turn·traffic 제목과 flag 상태를 기존 traffic 본문·lifecycle 원본과 분리해 어떤 저장 모델로 영구화하고, turn 삭제를 어떤 물리 삭제와 cascade 규칙으로 처리할 것인가?
 - **Why it matters:** 관리 메타데이터를 원본에 덮어쓰거나 turn 삭제 범위를 암묵적으로 정하면 조회·검색·저장 공간·turn 관계의 일관성이 깨질 수 있다.
 - **Depends on:** AC-019, AC-020
 - **Related ADRs:**
-  - `adr/turn-management-metadata-and-deletion.md` — proposed
+  - `adr/turn-management-metadata-and-deletion.md` — approved
 - **Resolution path:** adr + direct-input
-- **Resolution:** 사용자가 삭제 의미를 직접 결정했다. 삭제 단위는 turn이며, turn 삭제 시 해당 turn의 모든 traffic을 하나의 transaction에서 물리 삭제한다. traffic 단독 삭제, 논리 삭제, 복원, 삭제 이력은 제공하지 않는다. 제목·flag 저장 위치는 ADR의 Option A(별도 metadata)와 Option B(기존 row 관리 컬럼) 중 검토 중이다.
+- **Resolution:** ADR Option B를 채택한다. `turns`와 `traffic_logs`에 제목·flag 같은 관리 컬럼을 추가하되 request/response JSON과 lifecycle 원본은 변경하지 않는다. 삭제 단위는 turn만 제공하며, turn 삭제 시 해당 turn의 모든 child traffic과 turn row를 하나의 transaction에서 물리 삭제한다. traffic 단독 삭제, 논리 삭제, 복원, 삭제 이력은 제공하지 않는다.
 
 ### AC-026 — 전체·flagged 필터의 조회 책임과 pagination 계약
 
 - **Category:** Integration & dependencies
-- **Status:** identified
+- **Status:** reviewing
 - **Statement:** 전체·flagged 등 sidebar 필터를 서버 query가 책임질지 UI가 현재 page에서 필터링할지, flag 변경·삭제와 pagination 경계에서 어떤 일관성·정렬·page size 계약을 제공할 것인가?
 - **Why it matters:** UI 임의 필터링은 전체 결과를 누락할 수 있고, 서버 필터링의 계약이 없으면 flagged 탐색·페이지 이동·변경 직후 결과가 재현되지 않는다.
 - **Depends on:** AC-020, AC-025
 - **Related ADRs:**
-  - 아직 없음
-- **Resolution path:** adr | direct-input
+  - `adr/turn-filter-pagination-contract.md` — proposed
+- **Resolution path:** adr
 - **Resolution:** 아직 미정.
 
 ### AC-027 — Turn summary와 traffic usage summary 데이터 계약
@@ -396,5 +396,6 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - 2026-03-10: Turn 관리·분석 UI PRD delta 승인에 따라 AC-025~AC-028을 identified로 추가했다. 관리 메타데이터 저장·삭제, 서버 필터·페이지네이션, summary/usage projection, 안전한 형식별 renderer가 이번 review의 blocking concern이다.
 - 2026-03-10: AC 목록 승인 후 AC-025를 reviewing으로 전환하고 `adr/turn-management-metadata-and-deletion.md`를 proposed 상태로 연결했다.
 - 2026-03-10: 사용자 입력으로 AC-025의 삭제 의미를 확정했다. traffic 단독 삭제는 지원하지 않고, turn 삭제는 모든 child traffic을 포함한 물리 삭제로 처리하며 논리 삭제·복원·삭제 이력은 제공하지 않는다. 제목·flag 저장 위치는 ADR Option A/B의 잔여 쟁점으로 남겼다.
+- 2026-03-10: 사용자 go-ahead("B로 해줘")로 AC-025를 designed 처리하고 Option B를 채택했다. AC-026을 reviewing으로 전환하고 `adr/turn-filter-pagination-contract.md`를 proposed 상태로 연결했다.
 - 2026-03-10: 사용자 go-ahead("ok")로 AC-023의 Option B를 승인했다. 미완료 turn pool, tool-call ID 역색인, 관찰 순서 기반 traffic sequence를 사용한다.
 - 2026-03-10: 사용자 go-ahead("ok")로 후속 ADR `ambiguous-missing-tool-id-fallback.md`를 승인했다. 매칭 불가 traffic은 fallback reason과 함께 새 standalone turn으로 격리한다.
