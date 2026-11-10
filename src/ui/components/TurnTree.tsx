@@ -36,9 +36,9 @@ export function TurnTree({ nodes, selectedTurn, selectedTraffic, page, hasNext, 
 
   return <nav className="turn-tree" aria-label="Turn traffic tree">
     <div className="turn-tree-header"><h2>Turns</h2><div className="turn-pagination">
-      <button type="button" className="pagination-arrow" disabled={page <= 1} onClick={onPagePrevious} aria-label="Previous page">←</button>
+      <button type="button" className="pagination-arrow" disabled={page <= 1} onClick={onPagePrevious} aria-label="Previous page">◀</button>
       <span className="pagination-page">Page {page}</span>
-      <button type="button" className="pagination-arrow" disabled={!hasNext} onClick={onPageNext} aria-label="Next page">→</button>
+      <button type="button" className="pagination-arrow" disabled={!hasNext} onClick={onPageNext} aria-label="Next page">▶</button>
       <button type="button" className="pagination-trash" onClick={onDeleteUnflaggedPage} aria-label="Delete unflagged turns on this page" title="현재 page의 unflagged turn 삭제">🗑</button>
     </div></div>
     {nodes.length === 0 && <p>표시할 turn이 없습니다.</p>}

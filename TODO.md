@@ -8,7 +8,7 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 5 | 1 | 0 | 0 |
+| 6 | 1 | 0 | 0 |
 
 **Sprint goal:** 승인된 Turn 관리·분석 Spec의 남은 viewer slice로 traffic content를 형식별로 안전하게 표시하고, mode override·fallback·보안 경계를 자동 검증한다.
 **Current focus:** T-004
@@ -45,6 +45,12 @@
   - Artifact: `spec/llm-proxy-turn-management.md`, `src/api/routes.ts`, `src/application/log-query-service.ts`, `src/persistence/sqlite-traffic-log.ts`, `src/ui/`
   - Depends: T-005
   - Notes: compact row spacing, All/Stored active tabs, arrow pagination, current-page unflagged-only transactional deletion. `npm run build`와 `npm run verify` 통과.
+
+  - [x] **T-007** — sidebar icon·간격 세부 조정 구현·검증
+  - Phase: implementation + verification
+  - Artifact: `spec/llm-proxy-turn-management.md`, `src/ui/components/TurnTree.tsx`, `src/ui/styles.css`, `verification/llm-proxy-turn-management.md`
+  - Depends: T-006
+  - Notes: triangle pagination icons, backgroundless trash icon, tighter expand/flag spacing, smaller flag icon. `npm run build`와 `npm run verify` 통과.
 
   - [ ] **T-004** — Sprint Boundary → next implementation sprint
   - Phase: cross-cutting

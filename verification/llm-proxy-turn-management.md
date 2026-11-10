@@ -32,7 +32,7 @@
 | C-005 | pass | no external content fetch or re-save path; viewer consumes only bounded API fields |
 | R-014 | pass | `TurnTree.tsx` renders text-first rows, ordered turn controls, turn-only overflow menu, and traffic rows without management actions |
 | R-015 | pass | `TrafficPage.tsx` selects the first loaded turn when URL selection is absent; `TurnTree.tsx` expands only the first initial node and preserves later local state |
-| R-016 | pass | `TurnTree.tsx` uses compact icon/title columns, left-aligned titles, right-aligned menu, arrow pagination, reduced page label, and `TrafficPage.tsx` exposes All/Stored with `aria-selected` |
+| R-016 | pass | `TurnTree.tsx` uses compact icon/title columns, left-aligned titles, right-aligned menu, left/right triangle pagination, reduced page label, backgroundless trash icon, smaller flag icon, and `TrafficPage.tsx` exposes All/Stored with `aria-selected` |
 | R-017 | pass | Page trash calls the server-side bulk endpoint; persistence re-evaluates the page in one transaction, preserves flagged rows, cascades unflagged turn traffic, and reloads the current query |
 | C-007 | pass | traffic title/delete controls and traffic metadata mutation wiring are absent from the sidebar |
 | C-008 | pass | bulk deletion uses the application service and persistence transaction rather than repeated UI-level deletes |
