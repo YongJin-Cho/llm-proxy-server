@@ -8,7 +8,7 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 4 | 1 | 0 | 0 |
+| 5 | 1 | 0 | 0 |
 
 **Sprint goal:** 승인된 Turn 관리·분석 Spec의 남은 viewer slice로 traffic content를 형식별로 안전하게 표시하고, mode override·fallback·보안 경계를 자동 검증한다.
 **Current focus:** T-004
@@ -40,10 +40,16 @@
   - Depends: T-003
   - Notes: turn row action order/menu, traffic management menu removal, initial selection and expansion state, build/verify evidence
 
-- [ ] **T-004** — Sprint Boundary → next implementation sprint
+  - [x] **T-006** — Sidebar filter·pagination·bulk deletion delta 구현·검증
+  - Phase: implementation + verification
+  - Artifact: `spec/llm-proxy-turn-management.md`, `src/api/routes.ts`, `src/application/log-query-service.ts`, `src/persistence/sqlite-traffic-log.ts`, `src/ui/`
+  - Depends: T-005
+  - Notes: compact row spacing, All/Stored active tabs, arrow pagination, current-page unflagged-only transactional deletion. `npm run build`와 `npm run verify` 통과.
+
+  - [ ] **T-004** — Sprint Boundary → next implementation sprint
   - Phase: cross-cutting
   - Artifact: `scrum/TODO-14.md`
-  - Depends: T-001, T-002, T-003, T-005
+  - Depends: T-001, T-002, T-003, T-005, T-006
   - Notes: archive board, update backlog, close PB-028~PB-029, plan next implementation slice
 
 ## Completed sprints

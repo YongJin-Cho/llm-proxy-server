@@ -7,23 +7,29 @@ body { margin: 0; } main { max-width: 1180px; margin: 0 auto; padding: 32px 20px
 .turn-tree-header .turn-pagination { margin: 0; }
 .turn-node { padding: 3px 0; }
 .turn-node button { margin: 0; }
-.turn-node-header { display: grid; grid-template-columns: 22px 22px minmax(0, 1fr) 26px; gap: 2px; align-items: center; }
+.turn-node-header { display: grid; grid-template-columns: 20px 20px minmax(0, 1fr) 26px; gap: 0; align-items: center; }
 .turn-node-header button { width: 100%; }
 .icon-button, .text-button { border: 0; background: transparent; color: #27364f; }
 .icon-button { padding: 5px 2px; text-align: center !important; }
 .turn-collapse { color: #596579; font-size: 13px; }
 .turn-flag { color: #a7b0bf; font-size: 15px; }
 .turn-flag.flagged { color: #d28a00; }
-.turn-title { min-width: 0; padding: 6px 4px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.turn-title { min-width: 0; padding: 6px 2px; font-weight: 600; text-align: left !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .turn-title:hover, .traffic-child:hover { background: #f1f5fb; color: #245cc5; }
 .turn-title.selected, .traffic-child.selected { background: #e7effc; color: #174a9c; }
 .turn-meta, .traffic-meta { color: #7a8495; font-size: 11px; font-weight: 400; }
-.turn-menu-wrap { position: relative; }
+.turn-menu-wrap { position: relative; justify-self: end; }
 .turn-menu { color: #596579; letter-spacing: 1px; font-weight: 700; }
 .turn-menu-list { position: absolute; z-index: 2; top: 28px; right: 0; min-width: 92px; padding: 4px; background: white; border: 1px solid #dfe4ec; border-radius: 6px; box-shadow: 0 6px 16px rgb(23 32 51 / 14%); }
 .turn-menu-list button { display: block; width: 100%; border: 0; background: transparent; color: #27364f; padding: 7px 8px; font-size: 12px; }
 .turn-menu-list button:hover { background: #f1f5fb; }
-.turn-tree .turn-pagination button { width: auto; padding: 4px 6px; font-size: 11px; }
+.turn-tree .turn-pagination button { width: auto; padding: 3px 5px; font-size: 11px; }
+.pagination-page { color: #596579; font-size: 10px; white-space: nowrap; }
+.pagination-arrow, .pagination-trash { line-height: 1; }
+.pagination-trash { margin-left: 2px; }
+.turn-filter { display: flex; gap: 4px; margin-bottom: 10px; }
+.turn-filter button { flex: 1; padding: 5px 8px; border: 1px solid transparent; background: transparent; color: #596579; font-size: 12px; }
+.turn-filter button.selected { border-color: #b8c9e5; background: #e7effc; color: #174a9c; font-weight: 700; }
 .traffic-children { display: grid; gap: 1px; padding: 2px 0 2px 44px; }
 .traffic-child { width: 100%; border: 0; background: transparent; color: #245cc5; padding: 5px 4px; font-size: 12px; text-align: left; }
 .traffic-content { min-width: 0; }

@@ -17,6 +17,13 @@ export function registerRoutes(app: FastifyInstance, config: AppConfig, query: T
     const filter = url.searchParams.get('filter') === 'flagged' ? 'flagged' : 'all';
     return reply.send(query.listTurns(page, limit, filter));
     });
+    app.delete('/api/v1/turns/page', async (request, reply) => {
+    const url = new URL(request.raw.url ?? '/', `http://${request.headers.host ?? config.host}`);
+    const page = Math.max(Number(url.searchParams.get('page') ?? 1), 1);
+    const limit = Math.min(Math.max(Number(url.searchParams.get('limit') ?? 20), 1), 100);
+    const filter = url.searchParams.get('filter') === 'flagged' ? 'flagged' : 'all';
+    return reply.send({ deleted: query.deleteUnflaggedTurnsOnPage(page, limit, filter) });
+    });
     app.patch('/api/v1/turns/:id', async (request, reply) => {
     query.updateTurnMetadata((request.params as { id: string }).id, request.body as { title?: string | null; flag?: boolean });
     return reply.code(204).send();

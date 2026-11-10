@@ -141,6 +141,33 @@ export class SqliteTrafficLogStore implements TrafficLogWriter, TrafficLogReader
   updateTrafficMetadata(id: string, update: MetadataUpdate) {
     this.db.prepare('UPDATE traffic_logs SET title=COALESCE(@title, title), flag=COALESCE(@flag, flag) WHERE id=@id').run({ id, title: update.title ?? null, flag: update.flag === undefined ? null : (update.flag ? 1 : 0) });
   }
+  deleteUnflaggedTurnsOnPage(page: number, limit: number, filter: 'all' | 'flagged' = 'all') {
+    const safePage = Math.max(1, page);
+    const safeLimit = Math.min(Math.max(1, limit), 100);
+    const flagClause = filter === 'flagged' ? 'WHERE flag = 1' : '';
+    const legacyFlagClause = filter === 'flagged' ? 'AND flag = 1' : '';
+    const rows = this.db.prepare(`SELECT id, 'turn' AS kind, started_at FROM turns ${flagClause}
+      UNION ALL SELECT id, 'legacy' AS kind, started_at FROM traffic_logs WHERE turn_id IS NULL ${legacyFlagClause}
+      ORDER BY started_at DESC, id DESC LIMIT @limit OFFSET @offset`).all({ limit: safeLimit, offset: (safePage - 1) * safeLimit }) as Array<{ id: string; kind: 'turn' | 'legacy'; started_at: string }>;
+    const transaction = this.db.transaction(() => {
+      let deleted = 0;
+      for (const row of rows) {
+        const flag = row.kind === 'turn'
+          ? this.db.prepare('SELECT flag FROM turns WHERE id = ?').get(row.id) as { flag: number } | undefined
+          : this.db.prepare('SELECT flag FROM traffic_logs WHERE id = ?').get(row.id) as { flag: number } | undefined;
+        if (!flag || flag.flag !== 0) continue;
+        if (row.kind === 'turn') {
+          this.db.prepare('DELETE FROM traffic_logs WHERE turn_id = ?').run(row.id);
+          this.db.prepare('DELETE FROM turns WHERE id = ?').run(row.id);
+        } else {
+          this.db.prepare('DELETE FROM traffic_logs WHERE id = ?').run(row.id);
+        }
+        deleted += 1;
+      }
+      return deleted;
+    });
+    return transaction();
+  }
   deleteTurn(id: string) {
     const transaction = this.db.transaction(() => {
       this.db.prepare('DELETE FROM traffic_logs WHERE turn_id = ?').run(id);

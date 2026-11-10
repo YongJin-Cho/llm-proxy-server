@@ -9,6 +9,7 @@ type Props = {
   hasNext: boolean;
   onPagePrevious: () => void;
   onPageNext: () => void;
+  onDeleteUnflaggedPage: () => void;
   onTurn: (id: string) => void;
   onTraffic: (turnId: string, trafficId: string) => void;
   onRename: (id: string, title: string | null) => void;
@@ -16,7 +17,7 @@ type Props = {
   onDelete: (id: string) => void;
 };
 
-export function TurnTree({ nodes, selectedTurn, selectedTraffic, page, hasNext, onPagePrevious, onPageNext, onTurn, onTraffic, onRename, onToggleFlag, onDelete }: Props) {
+export function TurnTree({ nodes, selectedTurn, selectedTraffic, page, hasNext, onPagePrevious, onPageNext, onDeleteUnflaggedPage, onTurn, onTraffic, onRename, onToggleFlag, onDelete }: Props) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [openMenu, setOpenMenu] = useState<string>();
   const initialExpansionApplied = useRef(false);
@@ -35,9 +36,10 @@ export function TurnTree({ nodes, selectedTurn, selectedTraffic, page, hasNext, 
 
   return <nav className="turn-tree" aria-label="Turn traffic tree">
     <div className="turn-tree-header"><h2>Turns</h2><div className="turn-pagination">
-      <button type="button" disabled={page <= 1} onClick={onPagePrevious}>이전</button>
-      <span>Page {page}</span>
-      <button type="button" disabled={!hasNext} onClick={onPageNext}>다음</button>
+      <button type="button" className="pagination-arrow" disabled={page <= 1} onClick={onPagePrevious} aria-label="Previous page">←</button>
+      <span className="pagination-page">Page {page}</span>
+      <button type="button" className="pagination-arrow" disabled={!hasNext} onClick={onPageNext} aria-label="Next page">→</button>
+      <button type="button" className="pagination-trash" onClick={onDeleteUnflaggedPage} aria-label="Delete unflagged turns on this page" title="현재 page의 unflagged turn 삭제">🗑</button>
     </div></div>
     {nodes.length === 0 && <p>표시할 turn이 없습니다.</p>}
     {nodes.map((node) => {

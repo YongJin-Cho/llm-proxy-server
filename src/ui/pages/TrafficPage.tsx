@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { deleteTurn, fetchLog, fetchTurns, updateTurnMetadata } from '../data-query/log-api';
+import { deleteTurn, deleteUnflaggedTurnsOnPage, fetchLog, fetchTurns, updateTurnMetadata } from '../data-query/log-api';
 import { TrafficView } from '../components/TrafficView';
 import { TurnTree } from '../components/TurnTree';
 import { TurnView } from '../components/TurnView';
@@ -83,14 +83,20 @@ export function TrafficPage() {
     if (!window.confirm('이 turn과 child traffic을 삭제할까요?')) return;
     deleteTurn(id).then(() => { if (selection.turn === id) { writeSelection(); setSelection({}); } return loadTurns(); }).catch((reason: Error) => setError(reason.message));
   };
+  const removeUnflaggedPage = () => {
+    if (!window.confirm('현재 page에 보이는 unflagged turn을 모두 삭제할까요?')) return;
+    deleteUnflaggedTurnsOnPage(turnPage, limit, turnFilter)
+      .then(() => loadTurns())
+      .catch((reason: Error) => setError(reason.message));
+  };
   const selectedTurn = turns.find((turn) => turn.id === selection.turn);
 
   const sidebar = <aside>
-    <div className="turn-filter" role="group" aria-label="Turn filter">
-      <button type="button" className={turnFilter === 'all' ? 'selected' : ''} onClick={() => changeTurnFilter('all')}>전체</button>
-      <button type="button" className={turnFilter === 'flagged' ? 'selected' : ''} onClick={() => changeTurnFilter('flagged')}>Flagged</button>
+    <div className="turn-filter" role="tablist" aria-label="Turn filter">
+      <button type="button" role="tab" aria-selected={turnFilter === 'all'} className={turnFilter === 'all' ? 'selected' : ''} onClick={() => changeTurnFilter('all')}>All</button>
+      <button type="button" role="tab" aria-selected={turnFilter === 'flagged'} className={turnFilter === 'flagged' ? 'selected' : ''} onClick={() => changeTurnFilter('flagged')}>Stored</button>
     </div>
-    <TurnTree nodes={turns} selectedTurn={selection.turn} selectedTraffic={selection.traffic} page={turnPage} hasNext={turnHasNext} onPagePrevious={() => setTurnPage((page) => Math.max(1, page - 1))} onPageNext={() => setTurnPage((page) => page + 1)} onTurn={selectTurn} onTraffic={selectTraffic} onRename={renameTurn} onToggleFlag={toggleTurnFlag} onDelete={removeTurn} />
+    <TurnTree nodes={turns} selectedTurn={selection.turn} selectedTraffic={selection.traffic} page={turnPage} hasNext={turnHasNext} onPagePrevious={() => setTurnPage((page) => Math.max(1, page - 1))} onPageNext={() => setTurnPage((page) => page + 1)} onDeleteUnflaggedPage={removeUnflaggedPage} onTurn={selectTurn} onTraffic={selectTraffic} onRename={renameTurn} onToggleFlag={toggleTurnFlag} onDelete={removeTurn} />
   </aside>;
 
   return <main className="traffic-layout">{sidebar}

@@ -104,4 +104,5 @@ export interface TrafficLogReader {
   updateTurnMetadata(id: string, update: MetadataUpdate): void;
   updateTrafficMetadata(id: string, update: MetadataUpdate): void;
   deleteTurn(id: string): void;
+  deleteUnflaggedTurnsOnPage(page: number, limit: number, filter?: 'all' | 'flagged'): number;
   }

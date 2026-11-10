@@ -206,7 +206,7 @@
   - Spec: `spec/llm-proxy-turn-management.md` §Requirements R-001–R-012; §Constraints C-001–C-005
   - Sprint: sprint-14
   - Depends: PB-025, PB-026, PB-027, PB-028
-  - Notes: Sprint 14 Scope. `npm run build`와 `npm run verify`를 검증 진입점으로 사용한다.
+  - Notes: Sprint 14 Scope. `npm run build`와 `npm run verify`를 검증 진입점으로 사용한다. Sidebar All/Stored, arrow pagination, compact alignment, current-page unflagged bulk deletion을 포함한다.
 
 ## Notes
 

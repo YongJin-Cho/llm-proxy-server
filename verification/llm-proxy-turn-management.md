@@ -1,7 +1,7 @@
 # Verification: Turn 관리·분석 UI — Sprint 14
 
-**Spec:** `spec/llm-proxy-turn-management.md` §R-007–R-015, Constraints C-004–C-007
-**Scope:** PB-028 안전한 형식별 traffic content viewer 및 PB-029 통합 검증·실행 문서
+**Spec:** `spec/llm-proxy-turn-management.md` §R-007–R-017, Constraints C-004–C-008
+**Scope:** PB-028 안전한 형식별 traffic content viewer 및 PB-029 통합 검증·실행 문서, sidebar 관리 delta
 **Verified:** 2026-03-10
 **Commands:** `npm run build`; `npm run verify`; `npm run dev`/`npm start` native binding hooks
 **Result:** pass
@@ -15,7 +15,8 @@
 - `LogDetail` uses a separate keyed viewer for request, response, and error fields. The key includes traffic ID and field name, so mode/language state resets on traffic change and is not stored in URL, server, or localStorage.
 - Full content is retained in the viewer; the `<details>` control only changes visibility. `utf8ByteLength` and the fixture verify the 1,048,576 UTF-8 byte boundary without character/line truncation.
 - `scripts/verify-viewer.ts` covers JSON precedence, invalid JSON fallback, Markdown detection, plain-text fallback, curated language override, unsupported language fallback, UTF-8 size boundary, sanitization/read-only static safety checks, and field-scoped reset.
-- `scripts/verify-turn.mjs` statically verifies the sidebar interaction contract: turn action order, turn-only rename/delete menu, absence of traffic management actions, and first-turn initial expansion/selection logic.
+- `scripts/verify-turn.mjs` verifies the sidebar interaction contract: turn action order, compact pagination controls, All/Stored filter labels and active-state wiring, page trash action, turn-only rename/delete menu, absence of traffic management actions, initial expansion/selection logic, and transactional unflagged-page deletion with flagged preservation.
+- `SqliteTrafficLogStore.deleteUnflaggedTurnsOnPage` selects the same server-side page ordering as the tree query, deletes only flag=0 rows in one transaction, cascades child traffic, and includes displayed legacy nodes.
 
 ## Results
 
@@ -31,7 +32,10 @@
 | C-005 | pass | no external content fetch or re-save path; viewer consumes only bounded API fields |
 | R-014 | pass | `TurnTree.tsx` renders text-first rows, ordered turn controls, turn-only overflow menu, and traffic rows without management actions |
 | R-015 | pass | `TrafficPage.tsx` selects the first loaded turn when URL selection is absent; `TurnTree.tsx` expands only the first initial node and preserves later local state |
+| R-016 | pass | `TurnTree.tsx` uses compact icon/title columns, left-aligned titles, right-aligned menu, arrow pagination, reduced page label, and `TrafficPage.tsx` exposes All/Stored with `aria-selected` |
+| R-017 | pass | Page trash calls the server-side bulk endpoint; persistence re-evaluates the page in one transaction, preserves flagged rows, cascades unflagged turn traffic, and reloads the current query |
 | C-007 | pass | traffic title/delete controls and traffic metadata mutation wiring are absent from the sidebar |
+| C-008 | pass | bulk deletion uses the application service and persistence transaction rather than repeated UI-level deletes |
 | PB-029 regression | pass | existing `verify.mjs`, `verify-turn.mjs`, and `verify-viewer.ts` all pass |
 
 ## Build output note
@@ -41,5 +45,5 @@ The local-worker Monaco configuration avoids a runtime CDN dependency, but incre
 ## Verification command output
 
 - `npm run build`: pass; Vite production build and TypeScript compilation completed.
-- `npm run verify`: pass; native binding approval/rebuild, existing proxy regression, turn grouping/metadata/filter/summary regression, and viewer-specific checks completed.
+- `npm run verify`: pass; native binding approval/rebuild, existing proxy regression, turn grouping/metadata/filter/summary regression, viewer-specific checks, and unflagged current-page deletion checks completed.
 - `npm run dev` and `npm start`: `predev`/`prestart` invoke the same native binding approval/rebuild before loading the server.

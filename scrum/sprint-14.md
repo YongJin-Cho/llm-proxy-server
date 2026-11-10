@@ -20,7 +20,8 @@
 2. JSON tree, sanitized Markdown, read-only Monaco viewer와 `Auto`/사용자 mode override가 제공된다.
 3. detection 실패·지원 불가 형식은 plain text로 fallback하며 content가 실행되지 않는다.
 4. 1 MiB field 전문 표시와 viewer 인스턴스 범위 state가 검증된다.
-5. 제목·flag·삭제 cascade, filter/pagination, summary/partial 및 기존 turn tree·URL·traffic API 회귀가 통합 검증된다.
+5. Sidebar row spacing/alignment, All/Stored active filter, arrow pagination과 현재 page unflagged bulk deletion이 구현된다.
+6. 제목·flag·삭제 cascade, filter/pagination, summary/partial 및 기존 turn tree·URL·traffic API 회귀가 통합 검증된다.
 6. `npm run build`와 `npm run verify`가 통과하고 검증·실행 문서가 갱신된다.
 
 ## Demo Checklist
@@ -28,6 +29,7 @@
 - [ ] 사용자 mode override와 detection 실패/지원 불가 형식의 plain text fallback을 확인한다.
 - [ ] content가 실행되지 않고, 1 MiB field가 잘리지 않으며, viewer state가 다른 traffic으로 누출되지 않음을 확인한다.
 - [ ] Sprint 13의 metadata/filter/pagination/summary와 기존 turn tree·URL selection·traffic detail 회귀를 확인한다.
+- [ ] All/Stored active state, arrow pagination, compact row layout과 page trash의 unflagged-only cascade를 확인한다.
 - [ ] `npm run build`와 `npm run verify` 및 실행 문서 갱신을 확인한다.
 
 ## Approval

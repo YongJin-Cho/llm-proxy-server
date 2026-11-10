@@ -26,4 +26,8 @@ export class TrafficLogQueryService {
   deleteTurn(id: string) {
     this.reader.deleteTurn(id);
   }
+
+  deleteUnflaggedTurnsOnPage(page: number, limit: number, filter: 'all' | 'flagged' = 'all') {
+    return this.reader.deleteUnflaggedTurnsOnPage(page, limit, filter);
+  }
 }

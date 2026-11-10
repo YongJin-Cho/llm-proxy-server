@@ -27,6 +27,8 @@
 - R-013: `GET /api/v1/turns`의 각 child traffic summary는 본문 없이 다음 normalized display fields를 제공해야 한다: stable `provider` ID, client `model`, `input_tokens`, `cached_input_tokens`, `output_tokens`, `total_tokens`, `cost_usd`, `latency_ms`, status, sequence/title metadata. 값이 저장되지 않았으면 `null`을 반환해야 하며 UI는 값을 추정하거나 다른 traffic의 값으로 보완하지 않아야 한다. 동일한 provider/model/usage/cost/latency 필드는 기존 traffic detail API에서도 제공해야 한다. ← Direct Input; ASR-030; `adr/traffic-log-api-metadata.md`
 - R-014: Sidebar tree는 파일 탐색기처럼 turn과 child traffic을 박스형 action 영역 없이 텍스트 중심으로 표시해야 한다. Turn row의 순서는 펼치기/접기 아이콘 버튼, flag 표시·전환, turn title, `...` 메뉴 버튼이어야 하며 `...` 메뉴는 turn 이름 변경과 turn 삭제만 제공해야 한다. Traffic row에는 제목 변경·삭제 등 관리 메뉴를 제공하지 않아야 한다.
 - R-015: Sidebar page가 최초로 유효한 turn 목록을 표시할 때 첫 번째 turn을 기본 선택하고 첫 번째 turn만 펼치며 나머지 turn은 접어야 한다. URL에 이미 선택 상태가 있으면 이를 보존하고, 이후 사용자의 펼치기/접기 상태를 임의로 초기화하지 않아야 한다.
+- R-016: Sidebar turn row는 펼치기 아이콘, flag 아이콘, 왼쪽 정렬 title 사이의 간격을 최소화하고 `...` 메뉴를 오른쪽 끝에 정렬해야 한다. Filter label은 `All`과 `Stored`를 사용하며 현재 filter는 선택 상태와 접근성 상태(`aria-selected`)로 명확히 구별해야 한다. Pagination의 이전/다음 조작은 화살표 버튼으로 제공하고 `Page N`은 보조 텍스트보다 작은 글꼴로 표시해야 한다.
+- R-017: Pagination 옆 휴지통 action은 현재 filter·page·limit로 서버가 계산한 현재 page의 표시 항목 중 flag=false인 turn/legacy 항목을 모두 삭제해야 한다. 삭제는 각 turn의 child traffic을 cascade하고, 단일 bulk operation으로 처리해야 하며, flag=true 항목은 보존해야 한다. 성공 후 현재 query를 재조회하고 빈 page는 마지막 유효 page로 보정해야 한다. 삭제 전에는 사용자 확인을 요구해야 한다. ← Direct Input
 
 ## Constraints
 
@@ -37,6 +39,7 @@
 - C-005: 저장된 content는 bounded content로 취급한다. Viewer는 저장 한도를 우회해 원본 외부 데이터를 가져오거나 content를 서버에 재저장하지 않아야 한다. ← AC-004; ASR-004; ASR-031
 - C-006: `provider`는 provider endpoint URL이나 secret이 아니라 model routing에 사용된 stable provider configuration ID여야 한다. UI와 API는 provider URL, API key, 인증 header를 provider display field로 노출하지 않아야 한다.
 - C-007: Turn 관리 action은 turn 단위로만 노출해야 하며 traffic 단위 제목 변경·삭제 UI를 다시 추가하지 않아야 한다.
+- C-008: 현재 page 일괄 삭제는 UI가 개별 ID를 조합해 반복 삭제하지 않고 application service와 persistence transaction을 통해 수행해야 한다. API는 요청된 page/filter/limit를 서버에서 동일한 정렬 규칙으로 해석해야 한다.
 
 ## Out of Scope
 
@@ -52,6 +55,7 @@
 
 - 실제 package 버전과 lockfile 조합은 구현 전 설치 검증에서 확정한다. React 19 호환성·bundle·worker·license·security 검증에 실패하면 구현 전에 Spec을 갱신하고 재승인한다.
 - 없음: provider는 stable routing ID로 표시하고, traffic summary 값은 `/api/v1/turns` child projection과 기존 detail API가 제공한다.
+- Direct Input (2026-03-10): 현재 page에 표시되는 legacy 노드도 사용자에게 표시된 unflagged 항목이므로 bulk 삭제 대상에 포함한다.
 
 ## Related
 

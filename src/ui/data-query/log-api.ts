@@ -40,3 +40,9 @@ export async function deleteTurn(id: string) {
   const response = await fetch(`/api/v1/turns/${encodeURIComponent(id)}`, { method: 'DELETE' });
   if (!response.ok) throw new Error(`turn 삭제 실패 (${response.status})`);
 }
+
+export async function deleteUnflaggedTurnsOnPage(page: number, limit: number, filter: 'all' | 'flagged') {
+  const response = await fetch(`/api/v1/turns/page?page=${page}&limit=${limit}&filter=${filter}`, { method: 'DELETE' });
+  if (!response.ok) throw new Error(`현재 page의 unflagged turn 삭제 실패 (${response.status})`);
+  return response.json() as Promise<{ deleted: number }>;
+}
