@@ -67,15 +67,15 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 ### ASR-003 — SQLite 트래픽 로그 저장
 - **Source:** AC-003 — 트래픽 로그 저장 모델과 저장소
 - **Statement:** SQLite에 로그 메타데이터와 JSON 요청·응답 본문을 저장하고 목록·상세·시간순 정렬·페이지네이션 조회를 제공한다.
-- **Decision summary:** Option A를 채택한다. 본문 제한과 마스킹은 ASR-004를 따른다.
+- **Decision summary:** Option A를 채택한다. request 수신 한도와 마스킹은 ASR-004를 따른다. 저장 request/response JSON은 전체 보존한다.
 - **Depends on:** ASR-001, ASR-002
 - **Related AC:** AC-003
 - **Related ADRs:** `adr/traffic-log-storage.md` — approved
 
-### ASR-004 — 민감정보 마스킹과 본문 제한
+### ASR-004 — 민감정보 마스킹과 request/response 전체 보존
 - **Source:** AC-004 — 민감정보 보호와 로그 보존
-- **Statement:** Authorization, API key, cookie 등 비밀 헤더를 저장 전에 마스킹하고 요청·응답 본문은 설정 가능한 최대 크기까지 저장한다. UI에는 마스킹된 결과만 표시한다.
-- **Decision summary:** Option A를 채택한다. 초기에는 자동 TTL 삭제를 제공하지 않는다.
+- **Statement:** Authorization, API key, cookie 등 비밀 헤더를 저장 전에 마스킹한다. `maxBodyBytes`는 request body 수신 한도로 적용하고, request/response JSON은 저장 시 잘라내지 않고 SQLite `TEXT`에 전체 보존한다. UI에는 마스킹된 결과만 표시한다.
+- **Decision summary:** 사용자 Direct Input으로 저장 truncation을 제거한다. 초기에는 자동 TTL 삭제를 제공하지 않는다.
 - **Depends on:** ASR-003
 - **Related AC:** AC-004
 - **Related ADRs:** `adr/sensitive-data-retention.md` — approved
@@ -289,7 +289,7 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 
 ### ASR-031 — 안전한 긴 문자열 viewer 계약
 - **Source:** AC-028 — 긴 문자열 형식 표시와 안전한 전체 보기
-- **Statement:** Viewer adapter는 JSON parse 성공 시 request/response를 read-only JSON object/array tree container로 표시해야 한다. object/array/number/boolean/null은 tree 탐색 대상으로 유지하고 문자열 leaf만 viewer 입력으로 취급해야 한다. 문자열 leaf는 기본 축약 preview를 제공하며 전체 보기 요청 시 popup viewer window/dialog에서 해당 문자열만 표시해야 한다. Popup viewer의 `Auto`는 선택된 문자열에 대해 content hint → JSON parse → 제한된 Markdown 판별 → `highlight.js` 후보 → plain text fallback 순서를 따른다. 사용자는 `Auto`, `JSON`, `Markdown`, `Code`, `Plain text`와 curated code language를 선택할 수 있고 선택은 현재 request/response field의 문자열 leaf viewer instance presentation 상태로만 유지해야 한다. 저장된 content는 실행하지 않고 raw HTML·iframe·`eval`·`new Function`을 허용하지 않는다. 각 JSON 문자열 값이 1 MiB(1,048,576 UTF-8 bytes) 이하이면 별도 문자 수·줄 수 truncation 없이 popup에서 전문을 제공하며, 1 MiB 초과는 AC-004 저장 크기 제한을 따른다.
+- **Statement:** Viewer adapter는 JSON parse 성공 시 request/response를 read-only JSON object/array tree container로 표시해야 한다. object/array/number/boolean/null은 tree 탐색 대상으로 유지하고 문자열 leaf만 viewer 입력으로 취급해야 한다. 문자열 leaf는 기본 축약 preview를 제공하며 전체 보기 요청 시 popup viewer window/dialog에서 해당 문자열만 표시해야 한다. Popup viewer의 `Auto`는 선택된 문자열에 대해 content hint → JSON parse → 제한된 Markdown 판별 → `highlight.js` 후보 → plain text fallback 순서를 따른다. 사용자는 `Auto`, `JSON`, `Markdown`, `Code`, `Plain text`와 curated code language를 선택할 수 있고 선택은 현재 request/response field의 문자열 leaf viewer instance presentation 상태로만 유지해야 한다. 저장된 content는 실행하지 않고 raw HTML·iframe·`eval`·`new Function`을 허용하지 않는다. 각 JSON 문자열 값이 1 MiB(1,048,576 UTF-8 bytes) 이하이면 별도 문자 수·줄 수 truncation 없이 popup에서 전문을 제공한다. request/response JSON은 저장 단계에서 잘라내지 않으며 `maxBodyBytes`는 request 수신 한도다.
 - **Decision summary:** Option D와 후속 Option A 결정들을 채택한다. 형식별 전문 viewer 조합, 제한된 mode contract, viewer 인스턴스 범위 선택 보존, 1 MiB 전문 표시 기준을 사용한다.
 - **Depends on:** ASR-027, ASR-028
 - **Related AC:** AC-028

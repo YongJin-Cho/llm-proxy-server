@@ -61,7 +61,7 @@ npm run dev:watch
 - `GET /api/v1/logs/:id`: 로그 상세 조회
 - `GET /api/v1/turns?page=1&limit=20`: turn tree와 본문 없는 child traffic summary 조회
 
-Authorization, API 키, Cookie 계열 헤더는 `[REDACTED]`로 저장됩니다. 요청·응답 본문은 `config.json`의 `maxBodyBytes`를 넘지 않도록 제한됩니다.
+Authorization, API 키, Cookie 계열 헤더는 `[REDACTED]`로 저장됩니다. `maxBodyBytes`는 들어오는 request body의 수신 한도입니다. 저장되는 request JSON은 마스킹된 headers와 전체 body를, response JSON은 aggregate된 전체 응답을 SQLite에 저장하며 저장 단계에서 JSON 문자열을 자르지 않습니다.
 
 ## 빌드와 검증
 

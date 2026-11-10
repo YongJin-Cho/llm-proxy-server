@@ -72,7 +72,7 @@ const providerA = createServer((req, res) => {
     if (payload.stream === true) return streamResponse(req, res, payload);
     res.writeHead(200, { 'content-type': 'application/json' });
     const usage = req.url === '/chat/completions' ? { prompt_tokens: 3, completion_tokens: 2 } : { input_tokens: 3, output_tokens: 2 };
-    res.end(JSON.stringify({ id: 'response-a', model: payload.model, output: [], choices: [], content: [], usage, cost_usd: 0.01 }));
+    res.end(JSON.stringify({ id: 'response-a', model: payload.model, output: [], choices: [], content: [], usage, cost_usd: 0.01, large_payload: 'r'.repeat(5000) }));
   });
 });
 const providerB = createServer((req, res) => {
@@ -127,7 +127,7 @@ try {
   assert.equal(ui.status, 200);
   assert.match(ui.body, /<div id="root"><\/div>/);
 
-  const alpha = await request(`${base}/api/v1/responses`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer client-secret' }, body: JSON.stringify({ model: 'client-alpha', input: 'hello' }) });
+  const alpha = await request(`${base}/api/v1/responses`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer client-secret' }, body: JSON.stringify({ model: 'client-alpha', input: 'x'.repeat(3500) }) });
   assert.equal(alpha.status, 200);
   assert.equal(JSON.parse(alpha.body).id, 'response-a');
   const beta = await request(`${base}/api/v1/responses`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: 'client-beta', input: 'hello' }) });
@@ -211,7 +211,11 @@ try {
   const alphaLog = listed.find((entry) => entry.model === 'client-alpha' && entry.request_json.includes('REDACTED'));
   assert.ok(alphaLog);
   assert.doesNotMatch(alphaLog.request_json, /client-secret/);
-  console.log('Verification passed: UI entrypoint, three API routes, provider path mapping, usage/cost normalization, api_kind persistence, model rejection, secret handling, and read/write boundaries.');
+  const storedRequest = JSON.parse(alphaLog.request_json);
+  assert.equal(storedRequest.body.input.length, 3500);
+  const storedResponse = JSON.parse(alphaLog.response_json);
+  assert.equal(storedResponse.large_payload.length, 5000);
+  console.log('Verification passed: UI entrypoint, three API routes, provider path mapping, usage/cost normalization, api_kind persistence, model rejection, secret handling, and complete request/response JSON persistence.');
 } finally {
   proxy.kill('SIGTERM');
   providerA.close();

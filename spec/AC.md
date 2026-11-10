@@ -91,7 +91,7 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - **Related ADRs:**
   - 없음
 - **Resolution path:** adr
-- **Resolution:** Option A를 채택한다. Authorization, API 키, 쿠키 등 알려진 비밀 헤더를 저장 전에 마스킹하고, 요청·응답 JSON 본문은 설정 가능한 최대 크기까지 저장하며 초과분은 잘라낸다. UI에는 마스킹된 저장 결과만 표시한다. 초기에는 자동 TTL 삭제를 제공하지 않는다.
+- **Resolution:** Authorization, API 키, 쿠키 등 알려진 비밀 헤더를 저장 전에 마스킹하고, `maxBodyBytes`는 들어오는 request body의 수신 한도로 적용한다. request/response JSON은 저장 단계에서 잘라내지 않고, 헤더 마스킹 및 response aggregate 후 전체 문자열을 SQLite `TEXT`로 저장한다. UI에는 마스킹된 저장 결과만 표시한다. 오류 문자열만 설정 한도로 제한한다. 초기에는 자동 TTL 삭제를 제공하지 않는다.
 
 ### AC-005 — 프록시 및 모니터링 UI 접근 통제
 
@@ -384,7 +384,7 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - **Related ADRs:**
   - `adr/long-string-safe-rendering.md` — approved
 - **Resolution path:** adr
-- **Resolution:** 기존 ADR Option D를 UI 표현 구조에 맞게 수정한다. request/response 전체 content를 하나의 viewer 형식으로 감지하지 않고, JSON parse 성공 시 read-only JSON object/array tree를 container로 표시한다. object/array/number/boolean/null은 tree 탐색 대상으로 유지하고 문자열 leaf만 viewer 입력으로 취급한다. 문자열 leaf는 기본 축약 preview를 제공하며 전체 보기 요청 시 popup viewer window/dialog에서 해당 문자열만 표시한다. Popup viewer는 `Auto`, `JSON`, `Markdown`, `Code`, `Plain text`와 curated code language를 제공하고, 선택된 문자열에 대해 content hint → JSON parse → 제한된 Markdown 판별 → `highlight.js` 후보 → escaped plain text fallback 순서로 감지한다. 사용자 선택은 자동 감지보다 우선하며 문자열 leaf별 현재 viewer instance presentation 상태로만 유지한다. 모든 표시 경로는 저장된 content를 실행하지 않고 raw HTML·iframe·`eval`·`new Function`을 허용하지 않는다. 각 JSON 문자열 값이 1 MiB(1,048,576 UTF-8 bytes) 이하이면 별도 문자 수·줄 수 truncation 없이 popup에서 전문을 제공하며, 1 MiB 초과분은 AC-004 저장 크기 제한에서 처리한다.
+- **Resolution:** 기존 ADR Option D를 UI 표현 구조에 맞게 수정한다. request/response 전체 content를 하나의 viewer 형식으로 감지하지 않고, JSON parse 성공 시 read-only JSON object/array tree를 container로 표시한다. object/array/number/boolean/null은 tree 탐색 대상으로 유지하고 문자열 leaf만 viewer 입력으로 취급한다. 문자열 leaf는 기본 축약 preview를 제공하며 전체 보기 요청 시 popup viewer window/dialog에서 해당 문자열만 표시한다. Popup viewer는 `Auto`, `JSON`, `Markdown`, `Code`, `Plain text`와 curated code language를 제공하고, 선택된 문자열에 대해 content hint → JSON parse → 제한된 Markdown 판별 → `highlight.js` 후보 → escaped plain text fallback 순서로 감지한다. 사용자 선택은 자동 감지보다 우선하며 문자열 leaf별 현재 viewer instance presentation 상태로만 유지한다. 모든 표시 경로는 저장된 content를 실행하지 않고 raw HTML·iframe·`eval`·`new Function`을 허용하지 않는다. 각 JSON 문자열 값이 1 MiB(1,048,576 UTF-8 bytes) 이하이면 별도 문자 수·줄 수 truncation 없이 popup에서 전문을 제공한다. request/response JSON은 저장 단계에서 잘라내지 않으며 `maxBodyBytes`는 request 수신 한도다.
 
 
 ## Notes

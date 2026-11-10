@@ -13,12 +13,12 @@ approved
 - 초기 deliverable에는 완성형 보존 정책이나 외부 비밀관리 시스템을 포함하지 않는다.
 
 ## Decision
-**Option A — 헤더 마스킹과 본문 제한·기본 보존.** 알려진 인증·비밀 헤더를 저장 전에 마스킹하고, 요청·응답 JSON 본문은 설정 가능한 최대 크기까지 저장하며 초과분은 잘라낸다.
+**헤더 마스킹과 request 수신 한도·request/response 전체 보존.** 알려진 인증·비밀 헤더를 저장 전에 마스킹하고, `maxBodyBytes`는 들어오는 request body 수신 한도로 적용한다. request/response JSON은 저장 단계에서 잘라내지 않고 전체 보존한다. 오류 문자열만 별도 제한한다.
 
 ## Options
 ### Option A — 헤더 마스킹과 본문 제한·기본 보존
 - Authorization, API 키, 쿠키 등 알려진 비밀 헤더를 저장 전에 마스킹한다.
-- 요청·응답 JSON 본문은 설정 가능한 최대 크기까지 저장하고 초과분은 잘라내며, 로컬 개발 기본값을 제공한다.
+- `maxBodyBytes`를 request 수신 한도로 적용하고 저장 request/response JSON은 전체 보존한다. 오류 문자열만 별도 제한한다.
 - Pro: 디버깅 가치와 기본 보안을 균형 있게 유지한다.
 - Con: 본문에 포함된 비정형 비밀이나 개인정보를 완전히 식별하지 못할 수 있다.
 
@@ -41,10 +41,10 @@ approved
 | 운영 의존성 | 낮음 | 낮음 | 높음 |
 
 ## Recommendation
-- 초기 로컬·단일 사용자 제품에는 Option A를 권장한다. 알려진 인증정보는 반드시 마스킹하고, 본문 크기는 제한하며, 보존 기간은 명시적인 설정으로 둔다.
+- 초기 로컬·단일 사용자 제품에는 헤더 마스킹과 request 수신 한도·전체 request/response 보존을 권장한다. 저장량과 보존 기간은 후속 운영 정책으로 명시한다.
 
 ## Consequences
-- 로그 저장 전 헤더 마스킹과 본문 크기 제한을 구현해야 한다.
+- 로그 저장 전 헤더 마스킹을 구현하고, request 수신에는 `maxBodyBytes`를 적용해야 한다. request/response JSON은 저장 단계에서 잘라내지 않는다.
 - 민감정보의 비정형 본문 탐지와 암호화·TTL 자동 삭제는 초기 범위에서 제외하거나 후속 범위로 남긴다.
 
 ## Downstream Concerns
@@ -57,4 +57,5 @@ approved
 
 ## Notes
 - 2026-03-10: AC-004의 민감정보 보호와 보존 결정을 위해 proposed ADR을 작성했다.
-- 2026-03-10: Status → approved. Option A를 선택해 헤더 마스킹과 본문 크기 제한을 채택했다.
+- 2026-03-10: Status → approved. 헤더 마스킹과 본문 크기 제한 정책을 채택했다.
+- 2026-03-10: 사용자 Direct Input으로 정책을 수정했다. `maxBodyBytes`는 request 수신 한도로 유지하고, 저장 request/response JSON은 전체 보존하며 오류 문자열만 제한한다.

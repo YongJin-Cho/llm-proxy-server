@@ -19,9 +19,10 @@ llm-proxy-server/
 
 ## Working principles
 
-1. 구현과 검증의 SSOT는 `spec/llm-proxy-server.md`이며, 구조 변경은 현재 승인된 sprint Scope 안에서 수행한다.
+1. 구현과 검증의 SSOT는 관련 승인 Spec이며, 구조 변경은 현재 승인된 sprint Scope 안에서 수행한다.
 2. API key와 secret은 `config.json`에 저장하지 않고 `apiKeyEnv`가 지정한 process environment에서만 읽는다. 로그·오류 응답·UI에 평문으로 기록하지 않는다.
-3. 변경 후 빌드와 영향 범위에 맞는 통합 검증을 실행하고 결과는 `verification/`에 기록한다.
+3. `maxBodyBytes`는 request body 수신 한도다. 저장 request/response JSON은 헤더 마스킹 및 response aggregate 후 잘라내지 않고 전체 보존한다. 오류 문자열은 별도 bounded 정책을 따른다.
+4. 변경 후 빌드와 영향 범위에 맞는 통합 검증을 실행하고 결과는 `verification/`에 기록한다.
 
 ## Implementation guide
 

@@ -47,7 +47,7 @@ approved
 - PostgreSQL 또는 파일 기반 저장은 초기 범위에서 채택하지 않는다.
 
 ## Downstream Concerns
-- [x] **directly resolved — 로그 본문 저장 형식과 크기 제한:** 요청·응답 본문은 JSON으로 저장하되, 민감정보 마스킹과 본문 크기 제한은 AC-004 결정에 따른다.
+- [x] **directly resolved — 로그 본문 저장 형식과 크기 제한:** 요청·응답 본문은 JSON으로 저장한다. 민감정보 헤더는 마스킹하고 `maxBodyBytes`는 request 수신 한도로 적용하며, 저장 request/response JSON은 잘라내지 않는다.
 - [x] **directly resolved — 조회 방식:** 초기 UI 조회는 목록·상세·기본 시간순 정렬과 페이지네이션으로 제한한다.
 
 ## Related

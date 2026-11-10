@@ -8,7 +8,7 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 10 | 1 | 0 | 0 |
+| 11 | 1 | 0 | 0 |
 
 **Sprint goal:** 승인된 Turn 관리·분석 Spec의 남은 viewer slice로 traffic content를 형식별로 안전하게 표시하고, mode override·fallback·보안 경계를 자동 검증한다.
 **Current focus:** T-004
@@ -76,10 +76,16 @@
   - Depends: T-010
   - Notes: JSON 문자열과 이미 파싱된 object/array 입력을 동일하게 정규화해 headers/body와 중첩 JSON을 표시하고 회귀 검증을 추가했다. `npm run build`와 `npm run verify` 통과.
 
+  - [x] **T-012** — request/response JSON 전체 저장 보장
+  - Phase: implementation + verification
+  - Artifact: `src/application/proxy-service.ts`, `scripts/verify.mjs`, `spec/AC.md`, `spec/ASR.md`, `spec/llm-proxy-turn-management.md`, `verification/`
+  - Depends: T-011
+  - Notes: request/response 저장 시 truncation을 제거하고 request 수신 한도·오류 문자열 bound는 유지했다. `maxBodyBytes: 4096`보다 큰 JSON field 전체 parse/길이를 검증했으며 `npm run build`와 `npm run verify` 통과.
+
   - [ ] **T-004** — Sprint Boundary → next implementation sprint
   - Phase: cross-cutting
   - Artifact: `scrum/TODO-14.md`
-  - Depends: T-001, T-002, T-003, T-005, T-006, T-007, T-008, T-009, T-010, T-011
+  - Depends: T-001, T-002, T-003, T-005, T-006, T-007, T-008, T-009, T-010, T-011, T-012
   - Notes: archive board, update backlog, close PB-028~PB-029, plan next implementation slice
 
 ## Completed sprints

@@ -8,7 +8,7 @@
 
 ## Evidence
 
-- `src/ui/data-query/content-viewer.ts` implements the required detection order: content hint, JSON parse, constrained Markdown detection, curated `highlight.js` language candidate, and plain-text fallback.
+- `src/ui/data-query/content-viewer.ts` implements the required detection order: content hint, JSON parse, constrained Markdown detection, curated `highlight.js` language candidate, and plain-text fallback. JSON object/array values are normalized without losing nested request/response fields.
 - `src/ui/components/ContentViewer.tsx` routes all content through one adapter and provides `Auto`, `JSON`, `Markdown`, `Code`, and `Plain text` controls. The adapter normalizes both JSON strings and already-parsed object/array API values before rendering, preserving request `headers`/`body` and response object fields.
 - JSON is rendered through `@uiw/react-json-view` with clipboard disabled; Markdown uses `react-markdown` + `remark-gfm` + `rehype-sanitize` without `rehype-raw`; code uses local `monaco-editor` workers through `@monaco-editor/react` with `readOnly`, `domReadOnly`, disabled context menu, and curated languages.
 - `ContentViewer` does not use `dangerouslySetInnerHTML`, `eval`, `new Function`, or iframe rendering. Raw content is passed only to the selected safe viewer or escaped React `<pre>` output.
@@ -18,6 +18,7 @@
 - `package.json` exposes `dev:watch`, which runs `tsx watch src/server.ts` and `vite build --watch` together through `scripts/dev-watch.mjs`; `native:ensure` runs the approval/rebuild path only when `better-sqlite3` cannot be loaded.
 - `scripts/verify-turn.mjs` verifies the sidebar interaction contract: turn action order, backgroundless compact pagination controls, All/Stored filter labels and active-state wiring, page trash action, turn-only `rename`/`delete` menu, absence of traffic management actions, initial expansion/selection logic, per-turn traffic numbering with custom-title precedence, and transactional unflagged-page deletion with flagged preservation.
 - `SqliteTrafficLogStore.deleteUnflaggedTurnsOnPage` selects the same server-side page ordering as the tree query, deletes only flag=0 rows in one transaction, cascades child traffic, and includes displayed legacy nodes.
+- `ProxyService` keeps the request body receive limit and error-string bound, but no longer applies `bounded()` to persisted request JSON or aggregated response JSON. `scripts/verify.mjs` stores a 3,500-character request field and 5,000-character response field with `maxBodyBytes: 4096`, then parses and checks their complete lengths.
 
 ## Results
 
@@ -26,7 +27,7 @@
 | R-007 | pass | `ContentViewer.tsx`, dependency lockfile, and production build |
 | R-008 | pass | `content-viewer.ts`, `verify-viewer.ts` |
 | R-009 | pass | mode/language controls, curated list, keyed field instances |
-| R-010 | pass | untruncated source rendering, `<details>` visibility only, UTF-8 fixture |
+| R-010 | pass | untruncated source rendering, complete request/response persistence beyond `maxBodyBytes`, `<details>` visibility only, UTF-8 fixture |
 | R-011 | pass | sanitizer plugin, no raw HTML renderer, Monaco read-only options, static safety assertions |
 | R-012 | pass | adapter returns detected mode, selected mode, language, and fallback reason |
 | C-004 | pass with noted cost | React 19-compatible build succeeds; local Monaco worker assets are emitted. Production output includes a large Monaco bundle and emits the existing npm audit warning of 5 vulnerabilities; no dependency was force-upgraded blindly. |
@@ -47,5 +48,5 @@ The local-worker Monaco configuration avoids a runtime CDN dependency, but incre
 ## Verification command output
 
 - `npm run build`: pass; Vite production build and TypeScript compilation completed.
-- `npm run verify`: pass; native binding approval/rebuild, existing proxy regression, turn grouping/metadata/filter/summary regression, viewer-specific checks, and unflagged current-page deletion checks completed.
+- `npm run verify`: pass; native binding approval/rebuild, complete request/response JSON persistence checks beyond `maxBodyBytes`, existing proxy regression, turn grouping/metadata/filter/summary regression, viewer-specific checks, and unflagged current-page deletion checks completed.
 - `npm run dev` and `npm start`: `predev`/`prestart` invoke the same native binding approval/rebuild before loading the server.

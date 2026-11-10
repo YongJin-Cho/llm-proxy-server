@@ -66,7 +66,7 @@ export class ProxyService {
         startedAt,
         model: clientModel ?? null,
         streaming: streaming ? 1 : 0,
-        requestJson: bounded(JSON.stringify({ headers: maskedHeaders(req.headers), body: input }), this.config.maxBodyBytes),
+        requestJson: JSON.stringify({ headers: maskedHeaders(req.headers), body: input }),
       });
       inserted = true;
       const turn = this.turns.startTraffic({ trafficId: id, semantic: adapter.turnSemantic, request: input, now: startedAt });
@@ -93,7 +93,7 @@ export class ProxyService {
         status: upstream.ok ? 'completed' : 'failed',
         httpStatus: upstream.status,
         latencyMs: Date.now() - started,
-        responseJson: bounded(adapter.aggregateResponse(response), this.config.maxBodyBytes),
+        responseJson: adapter.aggregateResponse(response),
         error: upstream.ok ? null : bounded(response, this.config.maxBodyBytes),
         ...adapter.usageMetadata(response),
         });
@@ -142,7 +142,7 @@ export class ProxyService {
     }
     const response = Buffer.concat(chunks).toString('utf8');
     const completed = upstream.ok && adapter.isComplete(response) && !disconnected;
-    this.writer.finish({ id, finishedAt: new Date().toISOString(), status: completed ? 'completed' : 'failed', httpStatus: upstream.status, latencyMs: Date.now() - started, responseJson: bounded(adapter.aggregateResponse(response), this.config.maxBodyBytes), error: completed ? null : bounded(disconnected ? 'client disconnected before stream completion' : response || 'stream ended before completion', this.config.maxBodyBytes), ...adapter.usageMetadata(response) });
+    this.writer.finish({ id, finishedAt: new Date().toISOString(), status: completed ? 'completed' : 'failed', httpStatus: upstream.status, latencyMs: Date.now() - started, responseJson: adapter.aggregateResponse(response), error: completed ? null : bounded(disconnected ? 'client disconnected before stream completion' : response || 'stream ended before completion', this.config.maxBodyBytes), ...adapter.usageMetadata(response) });
     if (turnId) this.turns.finishTraffic({ turnId, semantic: adapter.turnSemantic, response: safeJson(adapter.aggregateResponse(response)), finishedAt: new Date().toISOString(), succeeded: upstream.ok });
     if (!disconnected) res.end();
     }
