@@ -84,14 +84,17 @@ export class ResponsesAdapter extends ProxyAdapter {
       const body = JSON.parse(this.aggregateResponse(response)) as Record<string, unknown>;
       const usage = body.usage && typeof body.usage === 'object' ? body.usage as Record<string, unknown> : undefined;
       const input = typeof usage?.input_tokens === 'number' ? usage.input_tokens : null;
-      const cached = typeof usage?.cached_input_tokens === 'number' ? usage.cached_input_tokens : null;
+      const inputDetails = usage?.input_tokens_details && typeof usage.input_tokens_details === 'object'
+        ? usage.input_tokens_details as Record<string, unknown>
+        : undefined;
+      const cached = typeof inputDetails?.cached_tokens === 'number' ? inputDetails.cached_tokens : null;
       const output = typeof usage?.output_tokens === 'number' ? usage.output_tokens : null;
       return {
         inputTokens: input,
         cachedInputTokens: cached,
         outputTokens: output,
         totalTokens: input !== null && output !== null ? input + output : null,
-        costUsd: typeof body.cost_usd === 'number' ? body.cost_usd : null,
+        costUsd: typeof usage?.cost === 'number' ? usage.cost : null,
       };
     } catch {
       return emptyUsage();
