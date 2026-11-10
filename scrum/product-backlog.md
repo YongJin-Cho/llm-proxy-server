@@ -194,19 +194,19 @@
   - Depends: PB-026
   - Notes: Sprint 13 후보 Scope. UI가 summary 계산을 재구현하거나 provider 미보고 cost를 추정하지 않는다.
 
-- [ ] **PB-028** — 안전한 형식별 traffic content viewer 구현
+- [x] **PB-028** — 안전한 형식별 traffic content viewer 구현
   - Story: JSON tree, sanitized Markdown, read-only Monaco와 `Auto`/사용자 mode override를 제공하고, detection 실패·지원 불가 형식은 plain text로 fallback하며 content를 실행하지 않는다.
   - Spec: `spec/llm-proxy-turn-management.md` §Requirements R-007–R-012; §Constraints C-004–C-005
   - Sprint: sprint-14
   - Depends: PB-023
-  - Notes: Sprint 14 Scope. 승인된 dependency stack을 설치 검증하고 1 MiB field 전문 표시·viewer 인스턴스 범위 state·보안 회귀를 포함한다.
+  - Notes: Sprint 14 Scope. DoD 충족. 승인된 dependency stack을 설치 검증하고 1 MiB field 전문 표시·viewer 인스턴스 범위 state·보안 회귀를 완료했다.
 
-- [ ] **PB-029** — Turn 관리·분석 통합 검증과 실행 문서
+- [x] **PB-029** — Turn 관리·분석 통합 검증과 실행 문서
   - Story: 제목·flag·삭제 cascade, all/flagged filter, pagination 보정, summary/usage partial, viewer mode/fallback/1 MiB 전문 표시와 기존 turn tree·URL·traffic API 회귀를 자동 검증하고 실행 문서를 갱신한다.
   - Spec: `spec/llm-proxy-turn-management.md` §Requirements R-001–R-012; §Constraints C-001–C-005
   - Sprint: sprint-14
   - Depends: PB-025, PB-026, PB-027, PB-028
-  - Notes: Sprint 14 Scope. `npm run build`와 `npm run verify`를 검증 진입점으로 사용한다. Sidebar All/Stored, arrow pagination, compact alignment, current-page unflagged bulk deletion을 포함한다.
+  - Notes: Sprint 14 Scope. DoD 충족. `npm run build`와 `npm run verify`로 검증했다. Sidebar All/Stored, arrow pagination, compact alignment, current-page unflagged bulk deletion을 포함한다.
 
 ## Notes
 
@@ -226,3 +226,4 @@
 - 2026-03-10: Sprint 12 Spec review를 통과한 승인 Spec을 PB-025~PB-029 구현 story로 append했다.
 - 2026-03-10: Sprint 12 Boundary에서 PB-025~PB-027을 Sprint 13 후보 Scope로 지정했다. PB-028~PB-029는 후속 implementation sprint 후보로 유지한다.
 - 2026-03-10: Sprint 13 Boundary에서 PB-025~PB-027의 DoD를 충족해 종료했다. PB-028~PB-029를 Sprint 14 후보 Scope로 유지한다.
+- 2026-03-10: Sprint 14 Boundary에서 PB-028~PB-029의 DoD를 충족해 종료했다. 현재 제품 backlog의 모든 story가 완료되었다.
