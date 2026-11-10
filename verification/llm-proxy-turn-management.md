@@ -2,9 +2,9 @@
 
 **Spec:** `spec/llm-proxy-turn-management.md` §R-007–R-019, `spec/llm-proxy-ui.md` §R-021–R-022, Constraints C-004–C-008
 **Scope:** PB-028 안전한 형식별 traffic content viewer 및 PB-029 통합 검증·실행 문서, sidebar 관리 delta
-**Verified:** 2026-03-10 (updated for T-017 defect closure)
-**Commands:** `npm run build`; `npm run verify`; `npm run native:check`; `npm run dev`/`npm start` native binding ensure hooks
-**Result:** pass
+**Verified:** 2026-03-10 (re-verification)
+**Commands:** `npm run build`; `npm run verify`; TypeScript diagnostics for `TurnView.tsx`, `ContentViewer.tsx`, and `styles.css`
+**Result:** 1 fail, 0 partial; implementation is not fully aligned with R-022/R-028
 
 ## Evidence
 
@@ -18,7 +18,7 @@
 - `package.json` exposes `dev:watch`, which runs `tsx watch src/server.ts` and `vite build --watch` together through `scripts/dev-watch.mjs`; `native:ensure` runs the approval/rebuild path only when `better-sqlite3` cannot be loaded.
 - `scripts/verify-turn.mjs` verifies the sidebar interaction contract: turn action order, backgroundless compact pagination controls, All/Stored filter labels and active-state wiring, page trash action, turn-only `rename`/`delete` menu, absence of traffic management actions, initial expansion/selection logic, per-turn traffic numbering with custom-title precedence, and transactional unflagged-page deletion with flagged preservation.
 - `TurnView` renders the requested turn summary without a separate turn heading, labels it `Turn <turn title> summary`, formats cost to four decimal places and token/time values with thousands separators, and orders fields as status/model/provider/cost/input/cached input/output/elapsed time. Its traffic table uses (`Traffic`, `Input tokens`, `Cached input tokens`, `Output tokens`, `Elapsed time`, `Cost`) and the same title-or-parent-index rule as the sidebar.
-- TurnView renders summary, request/response content, and traffic table as three independent `card` sections, matching TrafficView's card separation. Separate Request/Response headings are removed while the `ContentViewer` objects retain `request:`/`response:` labels; both fields use the traffic detail viewer path, are separated by a divider, and scalar values render as JSON strings (for example `"hi"`). Long scalar values use a JSON-formatted shortened preview with popup full view.
+- TurnView renders summary, request/response content, and traffic table as three independent `card` sections, matching TrafficView's card separation. Separate Request/Response headings are removed while the `ContentViewer` objects retain `request:`/`response:` labels; both fields use the traffic detail viewer path, and scalar values render as JSON strings (for example `"hi"`). Long scalar values use a JSON-formatted shortened preview with popup full view. The intended divider rule exists but does not match the current DOM and is therefore recorded as a failure below.
 - `TrafficView` labels its summary `Turn <turn title>/Traffic <traffic display value> summary` and uses the same field order and number formatting. Turn response content reuses `ContentViewer` with Markdown hint for plain text while preserving JSON object/array tree and long-string popup behavior; JSON content itself is not number-formatted.
 - `SqliteTrafficLogStore` extracts turn request/response messages from the first/last traffic using the Responses, Chat Completions, and Messages API-specific role/content rules while retaining legacy simple `input`/`output_text` compatibility.
 - `SqliteTrafficLogStore.deleteUnflaggedTurnsOnPage` selects the same server-side page ordering as the tree query, deletes only flag=0 rows in one transaction, cascades child traffic, and includes displayed legacy nodes.
@@ -43,10 +43,23 @@
 | R-018 | pass | `TurnTree.tsx` uses each parent turn's child array index for the fallback display number, keeps custom traffic titles first, and leaves persisted global sequence values unchanged |
 | Turn page delta | pass | `TurnView` matches sidebar traffic labels, displays the Traffic summary fields with turn-wide usage totals, renders the requested summary title/order/number formatting, reuses the safe response viewer, and renders the requested six-column traffic table. API-specific summary extraction is implemented in `SqliteTrafficLogStore`. |
 | Summary presentation delta | pass | `TrafficView` and `TurnView` use the requested title formats, status/model/provider/cost/input/cached input/output/elapsed order, four-decimal cost, and comma-separated token/time values. `npm run build` and `npm run verify` pass. |
-| Turn request/response section delta | pass | `TurnView` has three independent `card` sections for summary/content/table, no separate Request/Response headings, retained `request:`/`response:` viewer labels, a divider between viewer objects, and JSON string scalar preview with popup full view for both scalar fields. Source-level checks and `npm run verify` pass. |
+| Turn request/response section delta (R-022 / R-028) | fail | `TurnView` has three independent `card` sections, no separate Request/Response headings, retained `request:`/`response:` labels, and scalar preview/popup behavior. However, the divider CSS selector is `.turn-view .request-response-content > .content-viewer + .content-viewer` (`src/ui/styles.css:38`), while `request-response-content` and `turn-view` are on the same section (`src/ui/components/TurnView.tsx:57`); the selector therefore does not match and the required visual divider is not applied. `npm run build` and `npm run verify` pass because the source contract does not test rendered CSS matching. |
 | C-007 | pass | traffic title/delete controls and traffic metadata mutation wiring are absent from the sidebar |
 | C-008 | pass | bulk deletion uses the application service and persistence transaction rather than repeated UI-level deletes |
 | PB-029 regression | pass | existing `verify.mjs`, `verify-turn.mjs`, and `verify-viewer.ts` all pass |
+
+## Deviations (Non-compliance)
+
+- **R-022 / R-028 — Major:** The request/response viewer section lacks a reliably matching visual divider selector. The implementation places both `turn-view` and `request-response-content` on the same section, but the CSS selector requires `request-response-content` to be a descendant of `.turn-view`. As a result, the required request/response separation is not evidenced by the rendered styling.
+
+## Design Review Notes
+
+- Automated source checks verify that a divider-related CSS selector exists, but do not verify that the selector matches the actual DOM structure. This is a verification coverage gap, not evidence of compliance.
+
+## Recommended Next Steps
+
+- Fix the selector or DOM structure, then re-run the scoped R-022/R-028 verification and update this report.
+- The remaining checked requirements and automated suites passed: `npm run build`, `npm run verify`, and TypeScript diagnostics reported no errors for the inspected files.
 
 ## Build output note
 
