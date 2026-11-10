@@ -76,6 +76,8 @@ assert.match(turnTree, /turn-collapse[\s\S]*turn-flag[\s\S]*turn-title[\s\S]*tur
 assert.match(turnTree, /pagination-arrow/);
 const styles = readFileSync(new URL('../src/ui/styles.css', import.meta.url), 'utf8');
 assert.match(styles, /\.pagination-arrow, \.pagination-trash[^\n]*border: 0 !important; background: transparent !important;/);
+assert.match(styles, /\.request-response-content > \.content-viewer \+ \.content-viewer \{ border-top: 1px solid #edf0f4; \}/);
+assert.equal(styles.includes('.turn-view .request-response-content > .content-viewer + .content-viewer'), false);
 assert.match(turnTree, /pagination-trash/);
 assert.match(turnTree, /onDeleteUnflaggedPage/);
 assert.match(turnTree, />rename<\//);
