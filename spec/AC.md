@@ -364,26 +364,26 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 ### AC-027 — Turn summary와 traffic usage summary 데이터 계약
 
 - **Category:** Integration & dependencies
-- **Status:** reviewing
+- **Status:** designed
 - **Statement:** turn summary의 시작 user input·종료 AI output·모델·실행 환경·처리 시간과 전체/traffic별 usage·cost를 어떤 query projection과 null/partial 데이터 규칙으로 제공하고 표시할 것인가?
 - **Why it matters:** 여러 traffic의 값 선택·집계·누락 처리가 정해지지 않으면 summary가 서로 다른 화면에서 다르게 계산되거나 partial/in-progress turn을 오해하게 만든다.
 - **Depends on:** AC-018, AC-020, AC-023
 - **Related ADRs:**
   - `adr/usage-and-cost-metadata.md` — approved
-  - `adr/turn-summary-usage-projection.md` — proposed
+  - `adr/turn-summary-usage-projection.md` — approved
 - **Resolution path:** adr
-- **Resolution:** 아직 미정.
+- **Resolution:** ADR Option A를 채택한다. 서버 query service가 turn과 child traffic에서 summary DTO를 생성한다. 시작 user input은 첫 traffic에서, 종료 AI output은 마지막 completed traffic에서 선택한다. usage·cost는 child traffic의 non-null 값을 합산하고 값이 하나도 없으면 `null`, 일부 traffic에만 값이 있으면 partial 상태와 함께 반환한다. UI는 계산 규칙을 재구현하지 않으며 provider가 보고하지 않은 cost를 추정하지 않는다.
 
 ### AC-028 — 긴 문자열 형식 표시와 안전한 전체 보기
 
 - **Category:** Constraints (structural)
-- **Status:** identified
+- **Status:** reviewing
 - **Statement:** request/response의 긴 문자열을 언제 축약하고 어떤 기준으로 Markdown·JSON·JavaScript 등을 표시하며, 전체 보기와 불확실·지원 불가 형식의 fallback을 XSS·임의 실행 없이 어떻게 제공할 것인가?
 - **Why it matters:** renderer 선택은 읽기 편의성과 보안에 동시에 영향을 주며, 형식 오인식이나 실행 가능한 표시가 저장된 provider/client 데이터의 위험을 높일 수 있다.
 - **Depends on:** AC-004, AC-021, AC-025
 - **Related ADRs:**
-  - 아직 없음
-- **Resolution path:** adr | direct-input
+  - `adr/long-string-safe-rendering.md` — proposed
+- **Resolution path:** adr
 - **Resolution:** 아직 미정.
 
 
@@ -399,5 +399,6 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - 2026-03-10: 사용자 입력으로 AC-025의 삭제 의미를 확정했다. traffic 단독 삭제는 지원하지 않고, turn 삭제는 모든 child traffic을 포함한 물리 삭제로 처리하며 논리 삭제·복원·삭제 이력은 제공하지 않는다. 제목·flag 저장 위치는 ADR Option A/B의 잔여 쟁점으로 남겼다.
 - 2026-03-10: 사용자 go-ahead("B로 해줘")로 AC-025를 designed 처리하고 Option B를 채택했다. AC-026을 reviewing으로 전환하고 `adr/turn-filter-pagination-contract.md`를 proposed 상태로 연결했다.
 - 2026-03-10: 사용자 go-ahead("ok")로 AC-026의 Option A를 승인하고 designed 처리했다. filter query shape은 downstream ADR 후보로 남겼다. AC-027을 reviewing으로 전환하고 `adr/turn-summary-usage-projection.md`를 proposed 상태로 연결했다.
+- 2026-03-10: 사용자 go-ahead("ok")로 AC-027의 Option A를 승인하고 designed 처리했다. summary extraction과 partial representation은 downstream ADR 후보로 남겼다. AC-028을 reviewing으로 전환하고 `adr/long-string-safe-rendering.md`를 proposed 상태로 연결했다.
 - 2026-03-10: 사용자 go-ahead("ok")로 AC-023의 Option B를 승인했다. 미완료 turn pool, tool-call ID 역색인, 관찰 순서 기반 traffic sequence를 사용한다.
 - 2026-03-10: 사용자 go-ahead("ok")로 후속 ADR `ambiguous-missing-tool-id-fallback.md`를 승인했다. 매칭 불가 traffic은 fallback reason과 함께 새 standalone turn으로 격리한다.

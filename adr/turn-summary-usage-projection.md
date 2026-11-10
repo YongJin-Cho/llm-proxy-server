@@ -4,7 +4,7 @@
 turn summary와 traffic별 usage·cost summary를 서버가 어떤 projection과 null·partial 데이터 규칙으로 제공할 것인가?
 
 ## Status
-proposed
+approved
 
 ## Context
 - turn은 여러 traffic으로 구성되며, 각 traffic에는 모델·상태·latency·usage·cost가 저장될 수 있다.
@@ -14,13 +14,14 @@ proposed
 - turn tree endpoint는 sidebar용 summary를 제공하고 traffic 상세 본문은 선택 시 지연 조회한다.
 
 ## Decision
+**Option A — 서버 query projection과 명시적 partial 규칙.** 서버 query service가 turn과 child traffic을 읽어 summary DTO를 생성한다. 시작 user input은 첫 traffic에서, 종료 AI output은 마지막 completed traffic에서 선택한다. usage·cost는 child traffic의 non-null 값을 합산하고, 값이 하나도 없으면 `null`로 반환하며 일부 traffic만 값이 있으면 partial 상태와 함께 알린다. UI는 계산 규칙을 재구현하지 않는다.
 
 ## Options
 ### Option A — 서버 query projection과 명시적 partial 규칙
 - 서버 query service가 turn과 child traffic을 읽어 summary DTO를 생성한다.
 - 시작 user input은 첫 traffic의 request에서, 종료 AI output은 마지막 completed traffic의 response에서 선택한다.
 - usage·cost는 turn child traffic의 non-null 값을 합산하고, 값이 하나도 없으면 `null`을 반환한다. 일부 traffic만 값이 있으면 partial 상태와 함께 알려준다.
-- Pro: 모든 client가 같은 계산을 사용하고 pagination·legacy projection과 일관된다.
+- Pro: 모든 client가 같은 계산을 사용하고, pagination·legacy projection과 일관된다.
 - Con: query projection과 provider별 본문 추출 규칙을 서버에 구현해야 한다.
 
 ### Option B — UI가 child traffic을 받아 summary 계산
@@ -66,3 +67,4 @@ proposed
 
 ## Notes
 - 2026-03-10: AC-027 review를 위해 서버 projection·UI 계산·write-time materialization 선택지를 비교하는 proposed ADR을 작성했다.
+- 2026-03-10: 사용자 go-ahead("ok")로 Option A를 승인하고 Status를 approved 처리했다. summary extraction과 partial representation은 downstream ADR 후보로 남겼다.
