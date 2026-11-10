@@ -34,7 +34,7 @@
 - R-019: Turn page의 traffic table은 sidebar에 표시되는 child traffic 식별자와 동일한 표시값을 사용해야 하며, `Traffic`, `Input tokens`, `Cached input tokens`, `Output tokens`, `Elapsed time`, `Cost` column 순서로 제공해야 한다. Turn summary의 usage는 child traffic의 non-null 값을 field별로 합산하고, 합계가 없는 field는 `null`로 표시해야 하며 UI는 usage를 재계산하지 않아야 한다. ← Direct Input
 - R-020: Turn 화면은 별도 `Turn <turn 제목>` 제목을 표시하지 않고 summary 제목을 `Turn <turn 제목> summary`로 표시해야 한다. Traffic summary 제목은 `Turn <turn 제목>/Traffic <traffic 표시값> summary` 형식이어야 한다. Turn과 Traffic summary field 순서는 `Status`, `Model`, `Provider`, `Cost`, `Input tokens`, `Cached input tokens`, `Output tokens`, `Elapsed time`이어야 한다. Cost는 UI 표시 시 소수점 4자리로 반올림하고, token 및 elapsed time 값은 3자리 콤마로 표시해야 하며 null은 `—`로 표시해야 한다. ← Direct Input (2026-03-10)
 - R-021: Turn summary의 response는 traffic detail과 동일한 안전한 content viewer 규칙을 사용해야 한다. plain text response는 Markdown viewer로 감지·표시할 수 있어야 하고 JSON object/array response는 JSON tree로 표시해야 하며, JSON tree 내부의 긴 문자열은 popup viewer로 전체 확인할 수 있어야 한다. Response JSON object의 원본 값에는 summary 숫자 표시 포맷을 적용하지 않아야 한다. ← Direct Input (2026-03-10)
-- R-022: Turn page는 `summary`, `request/response`, `traffic table`을 별도 section으로 구분해야 한다. request/response section에는 별도 Request/Response heading을 표시하지 않고 traffic detail과 같은 content viewer object만 출력하며, request와 response 사이에는 시각적 구분선을 표시해야 한다. request가 긴 문자열이면 inline preview로 줄여 표시하고 해당 문자열만 popup viewer에서 전체 확인할 수 있어야 한다. ← Direct Input (2026-03-10)
+- R-022: Turn page는 `summary`, `request/response`, `traffic table`을 별도 section으로 구분해야 한다. request/response section에는 별도 Request/Response heading을 표시하지 않고 traffic detail과 같은 content viewer object만 출력하되, 각 viewer object 안에서 `request:` 또는 `response:` label을 표시해야 한다. request와 response 사이에는 시각적 구분선을 표시해야 한다. request 또는 response가 긴 scalar 문자열이면 160자 preview로 줄여 표시하고 해당 문자열만 popup viewer에서 전체 확인할 수 있어야 한다. ← Direct Input (2026-03-10)
 
 ## Constraints
 
@@ -65,7 +65,7 @@
 - Direct Input (2026-03-10): traffic 번호는 데이터 식별자가 아니라 parent turn 내부의 sidebar 표시 순서이며, 사용자 지정 title과 전역 저장 sequence에는 영향을 주지 않는다.
 - Direct Input (2026-03-10): Turn page의 request/response는 첫 traffic request와 마지막 traffic response에서 API별 user/assistant 메시지 규칙으로 추출하고, usage는 turn 전체 traffic 합계를 사용한다.
 - Direct Input (2026-03-10): Turn/Traffic summary의 제목·field 순서·숫자 표현과 Turn response viewer는 UI presentation delta로 고정한다.
-- Direct Input (2026-03-10): Turn page의 request/response section은 traffic detail viewer를 재사용하고, request/response heading은 제거하며 request와 response 사이를 divider로 구분한다.
+- Direct Input (2026-03-10): Turn page의 request/response section은 traffic detail viewer를 재사용하고, 별도 Request/Response heading은 제거하되 viewer object의 `request:`/`response:` label은 유지하며 request와 response 사이를 divider로 구분한다. 긴 scalar는 양쪽 모두 preview와 popup viewer를 제공한다.
 
 ## Related
 

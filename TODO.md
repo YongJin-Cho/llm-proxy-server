@@ -8,7 +8,7 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 14 | 1 | 0 | 0 |
+| 15 | 1 | 0 | 0 |
 
 **Sprint goal:** 승인된 Turn 관리·분석 Spec의 남은 viewer slice로 traffic content를 형식별로 안전하게 표시하고, mode override·fallback·보안 경계를 자동 검증한다.
 **Current focus:** T-004
@@ -99,6 +99,12 @@
   - Artifact: `spec/llm-proxy-turn-management.md`, `spec/llm-proxy-ui.md`, `src/ui/components/TurnView.tsx`, `src/ui/components/ContentViewer.tsx`, `src/ui/styles.css`, `scripts/verify-turn.mjs`, `verification/llm-proxy-turn-management.md`
   - Depends: T-014
   - Notes: summary/request-response/table section을 분리하고 request/response header를 제거하며 request 긴 문자열 preview와 popup viewer를 구현했다.
+
+- [x] **T-016** — Turn request/response scalar label·preview 정렬 구현·검증
+  - Phase: implementation + verification
+  - Artifact: `spec/llm-proxy-turn-management.md`, `spec/llm-proxy-ui.md`, `src/ui/components/TurnView.tsx`, `scripts/verify-turn.mjs`, `verification/llm-proxy-turn-management.md`
+  - Depends: T-015
+  - Notes: request/response viewer의 `request:`/`response:` label을 유지하고 양쪽 긴 scalar preview/popup을 검증했다. `npm run build`와 `npm run verify` 통과.
 
 - [ ] **T-004** — Sprint Boundary → next implementation sprint
   - Phase: cross-cutting

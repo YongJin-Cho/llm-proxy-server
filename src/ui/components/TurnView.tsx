@@ -55,8 +55,8 @@ export function TurnView({ turn, loading, onTraffic }: Props) {
       </dl>
     </section>
     <section className="turn-content-section request-response-content" aria-label="Turn request and response">
-      <ContentViewer key={`${turn.id}:request`} label="request" content={summary.start_user_input} hint="markdown" compactString showLabel={false} />
-      <ContentViewer key={`${turn.id}:response`} label="response" content={summary.end_ai_output} hint="markdown" showLabel={false} />
+      <ContentViewer key={`${turn.id}:request`} label="request" content={summary.start_user_input} hint="markdown" compactString />
+      <ContentViewer key={`${turn.id}:response`} label="response" content={summary.end_ai_output} hint="markdown" compactString />
     </section>
     <section className="turn-traffic-table-section" aria-label="Turn traffic table">
       <div className="table-scroll"><table><thead><tr><th>Traffic</th><th>Input tokens</th><th>Cached input tokens</th><th>Output tokens</th><th>Elapsed time</th><th>Cost</th></tr></thead><tbody>
