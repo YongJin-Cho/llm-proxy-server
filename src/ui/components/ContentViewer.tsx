@@ -21,10 +21,11 @@ function byteLength(content: string) {
 }
 
 function StringLeaf({ path, value, onOpen }: { path: string; value: string; onOpen: (target: StringTarget) => void }) {
-  const preview = value.length > 160 ? `${value.slice(0, 160)}…` : value;
+  const isTruncated = value.length > 160;
+  const preview = isTruncated ? `${value.slice(0, 160)}…` : value;
   return <span className="json-string-leaf">
     <span className="json-string-preview">&quot;{preview}&quot;</span>
-    <button type="button" className="link json-string-expand" onClick={() => onOpen({ path, value })} aria-label={`${path} 문자열 전체 보기`}>확대</button>
+    {isTruncated && <button type="button" className="icon-button json-string-expand" onClick={() => onOpen({ path, value })} aria-label={`${path} 문자열 전체 보기`} title="문자열 확대">⤢</button>}
   </span>;
 }
 
@@ -32,8 +33,8 @@ function JsonContainerNode({ path, value, onOpen }: { path: string; value: unkno
   if (typeof value === 'string') return <StringLeaf path={path} value={value} onOpen={onOpen} />;
   if (value === null || typeof value !== 'object') return <span>{String(value)}</span>;
   const entries = Array.isArray(value) ? value.map((item, index) => [String(index), item] as const) : Object.entries(value);
-  return <details open>
-    <summary>{Array.isArray(value) ? `Array (${entries.length})` : `Object (${entries.length})`}</summary>
+  return <details className="json-container-node" open>
+    <summary>{Array.isArray(value) ? `Array(${entries.length})` : `Object(${entries.length})`}</summary>
     <div className="json-container-children">
       {entries.map(([key, child]) => <div className="json-container-row" key={`${path}.${key}`}><strong>{key}: </strong>{JsonContainerNode({ path: `${path}.${key}`, value: child, onOpen })}</div>)}
     </div>
@@ -74,7 +75,7 @@ export function ContentViewer({ label, content, hint }: Props) {
   if (!content) return <section className="content-viewer"><h4>{label}</h4><p>—</p></section>;
 
   if (isJsonContainer) return <section className="content-viewer json-container-viewer" aria-label={`${label} JSON tree`}>
-    <div className="viewer-header"><h4>{label}</h4><span className="viewer-meta">JSON object tree · 문자열을 선택해 확대</span></div>
+    <div className="viewer-header"><h4>{label}</h4></div>
     <div className="viewer-body"><JsonContainerNode path="$" value={parsed} onOpen={setTarget} /></div>
     {target && <PopupViewer key={target.path} target={target} onClose={() => setTarget(undefined)} />}
   </section>;
