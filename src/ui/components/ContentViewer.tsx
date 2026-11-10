@@ -76,7 +76,7 @@ export function ContentViewer({ label, content, hint }: Props) {
   if (isJsonContainer) return <section className="content-viewer json-container-viewer" aria-label={`${label} JSON tree`}>
     <div className="viewer-header"><h4>{label}</h4><span className="viewer-meta">JSON object tree · 문자열을 선택해 확대</span></div>
     <div className="viewer-body"><JsonContainerNode path="$" value={parsed} onOpen={setTarget} /></div>
-    {target && <PopupViewer target={target} onClose={() => setTarget(undefined)} />}
+    {target && <PopupViewer key={target.path} target={target} onClose={() => setTarget(undefined)} />}
   </section>;
 
   const changeMode = (mode: ViewerMode) => setSelection(mode === 'code' ? { mode, language: resolved.language ?? 'plaintext' } : { mode });

@@ -162,6 +162,7 @@ try {
   assert.equal(typeof turnPage.total, 'number');
   assert.equal(Array.isArray(turnPage.data), true);
   assert.equal(turnPage.data.every((node) => node.traffic.every((traffic) => !('request_json' in traffic) && !('response_json' in traffic))), true);
+  assert.equal(turnPage.data.some((node) => node.summary.provider === 'alpha' && node.traffic.some((traffic) => traffic.provider === 'alpha')), true);
 
   const list = await request(`${base}/api/v1/logs?status=completed&limit=10&offset=0`);
   assert.equal(list.status, 200);

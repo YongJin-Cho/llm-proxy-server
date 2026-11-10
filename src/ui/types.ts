@@ -31,6 +31,7 @@ export type TurnSummary = {
   start_user_input: unknown | null;
   end_ai_output: unknown | null;
   model: string | null;
+  provider: string | null;
   execution_environment: unknown | null;
   status: string;
   traffic_count: number;

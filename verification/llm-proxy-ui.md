@@ -4,7 +4,7 @@
 **Artifact(s):** `src/ui/`, `scripts/verify.mjs`, `scripts/verify-turn.mjs`, `scripts/verify-viewer.ts`
 **Verified:** 2026-03-10
 **Commands:** `npm run verify`; TypeScript/TSX diagnostics for the reviewed UI modules
-**Summary:** 32 pass, 4 partial, 1 fail, 0 not-verifiable
+**Summary:** 35 pass, 1 partial, 0 fail, 0 not-verifiable
 
 ## Scope
 
@@ -19,7 +19,7 @@ This audit covers the complete UI Spec (`spec/llm-proxy-ui.md`) and the UI-facin
 | 3 | UI R-003 | pass | `fetchTurns(page, limit, filter)` sends server filter/pagination; mutation handlers reload the current query and `loadTurns` backs an empty page down. |
 | 4 | UI R-004 | pass | `TrafficPage.tsx` stores `turn`/`traffic` in URL query parameters, initializes from URL, and handles `popstate`; content is not stored in URL. |
 | 5 | UI R-005 | pass | `TrafficPage.tsx` renders exactly `TrafficView` for traffic selection and `TurnView` otherwise. |
-| 6 | UI R-006 | partial | `TurnView.tsx` displays title, status, count, model, duration, usage/cost, partial, input, and output from server projection, but does not display `execution_environment` or model provider in the turn summary. |
+| 6 | UI R-006 | pass | `TurnView.tsx` displays title, status, count, model, provider, execution environment, duration, usage/cost, partial, input, and output from server projection. |
 | 7 | UI R-007 | pass | `TurnView.tsx` renders child traffic summary rows and routes selection with both turn and traffic IDs. |
 | 8 | UI R-008 | pass | `TrafficPage.tsx` lazily calls `fetchLog` only for traffic selection; `TrafficView` delegates request/response/error display to `LogDetail`. |
 | 9 | UI R-009 | pass | Detail loading/error/back states are local to `TrafficView`; tree state remains rendered by the page. |
@@ -35,19 +35,19 @@ This audit covers the complete UI Spec (`spec/llm-proxy-ui.md`) and the UI-facin
 | 19 | UI R-019 | pass | `TurnTree.tsx` maintains per-node collapse state and independent collapse/flag buttons. |
 | 20 | UI R-020 | pass | `TurnTree.tsx` places `Turns` and pagination in the same header row; CSS provides narrow-screen wrapping behavior. |
 | 21 | UI R-021 | pass | `TurnView.tsx` table displays sequence/title fallback, model, provider, input/cached/output tokens, cost, and latency with null fallback. |
-| 22 | UI R-022 | partial | `TurnView.tsx` uses server-projected start/end messages and summary usage/cost/duration, but omits provider and `execution_environment` from the displayed summary. |
+| 22 | UI R-022 | pass | `TurnView.tsx` uses server-projected start/end messages, model/provider, execution environment, usage/cost, and duration without recomputation. |
 | 23 | UI R-023 | pass | `TrafficView.tsx` shows stable provider, model, normalized token fields, cost, and latency before `LogDetail`, preserving null display. |
 | 24 | UI R-024 | pass | Request/response JSON object trees are read-only and independently rendered; invalid/non-container content uses the safe viewer fallback. |
 | 25 | UI R-025 | pass | String leaf popup is read-only, closes back to the tree, and does not mutate source content. |
-| 26 | UI R-026 | fail | `PopupViewer` owns `selection` state, but changing `target` to another string leaf does not reset that state because the popup component remains mounted. This violates reset-on-different-leaf and can leak mode/language between string viewers. |
-| 27 | Turn-management R-001 (UI surface) | partial | Server/API/persistence support title and flag metadata for both turn and traffic, but `TurnTree.tsx` exposes only turn rename; `updateTrafficMetadata()` is defined in `log-api.ts` but is not called by any UI component. |
+| 26 | UI R-026 | pass | `PopupViewer` is keyed by `target.path`, so selecting another string leaf remounts the viewer and resets mode/language to Auto; traffic/field changes remain keyed as before. |
+| 27 | Turn-management R-001 (UI surface) | pass | `TurnTree.tsx` exposes traffic title editing and `TrafficPage.tsx` routes it through `updateTrafficMetadata()` while preserving source content/lifecycle fields. |
 | 28 | Turn-management R-003/R-004 | pass | Server filter/pagination is consumed by `TrafficPage`; flag/delete actions reload the current filter/page and empty-page correction is implemented. |
 | 29 | Turn-management R-005/R-006 | pass | `TurnView.tsx` consumes server summary/usage/partial projection without recomputing it; current server verification covers summary and normalized values. |
 | 30 | Turn-management R-007/R-011/R-012 | pass | `ContentViewer.tsx` uses the selected safe adapters, sanitized Markdown, read-only Monaco, disabled clipboard, and escaped plain text; `verify-viewer.ts` static safety checks pass. |
 | 31 | Turn-management R-008/R-009/R-010 | pass | Detection fallback, mode controls, curated languages, field-keyed reset across traffic/field changes, and UTF-8 1 MiB boundary are implemented and fixture-verified. |
 | 32 | Turn-management R-013 | pass | `listTurns` and detail projection expose provider/model/normalized usage/cost/latency fields; `TurnView` and `TrafficView` consume them without estimation. |
 | 33 | UI C-001–C-007, C-009–C-012 | pass | Module boundaries, no direct persistence access, no raw SSE UI, server-projected values, safe renderers, and provider ID display rules are preserved. |
-| 34 | UI C-008 | partial | Server projection and presentation state are separate, but popup mode/language state is not reset when the selected string leaf changes within the same popup instance. |
+| 34 | UI C-008 | pass | Server projection and presentation state are separate; popup mode/language is isolated by the selected leaf key and resets on leaf, traffic, field, close, or refresh changes. |
 | 35 | Turn-management C-003–C-006 | pass | Metadata changes route through API/data-query, viewer does not bypass bounded API content, and provider is displayed as a stable ID rather than URL/secret. |
 | 36 | Server/turn regression entrypoints | pass | `npm run verify` passed UI entrypoint, three API routes, routing, usage/cost, redaction, turn grouping, metadata/filter/cascade, and viewer checks. Reviewed UI module diagnostics reported no errors. |
 
@@ -59,10 +59,7 @@ This audit covers the complete UI Spec (`spec/llm-proxy-ui.md`) and the UI-facin
 
 ## Deviations (Non-compliance)
 
-1. **UI R-026 / UI C-008 — Critical/Major:** popup viewer mode/language state can carry from one JSON string leaf to another. `PopupViewer` should reset its local selection when `target.path` or the target value changes, or be keyed by the selected leaf at the call site.
-2. **Turn-management R-001 and PRD Delta UI scope — Major:** traffic title editing is not exposed in the UI. The API/data-query function exists, but `TurnTree` only exposes turn rename and no traffic rename action.
-3. **UI R-006/R-022 — Major:** turn summary omits provider and execution environment display required by the approved UI contract. The server currently projects `execution_environment: null`; the UI should still display the defined null value rather than omit the field.
-4. **UI R-018 — Major test-coverage gap:** required browser interactions are not automatically reproduced. `npm run verify` passing is insufficient evidence for those interaction-level acceptance criteria.
+1. **UI R-018 — Major test-coverage gap:** required browser interactions are not automatically reproduced. `npm run verify` and the new source-level interaction inventory pass, but they do not constitute browser-level evidence for browser back/forward, rendered-view exclusivity, collapse/expand, popup open/close, or live mutation refresh.
 
 ## Undocumented ASRs (Specification Gaps)
 
@@ -70,7 +67,5 @@ None identified. The findings are implementation/test-coverage deviations from e
 
 ## Recommended Next Steps
 
-- Route the listed deviations through the feedback loop before declaring the UI Spec fully compliant.
-- First fix popup leaf state isolation and add a focused regression assertion.
-- Then add traffic title editing and turn summary provider/environment fields.
-- Add browser-level UI tests only if the user chooses to close the R-018 verification-coverage gap; the UI Spec does not currently mandate a specific browser test framework.
+- Product implementation deviations are closed by this remediation.
+- If full interaction-level evidence is required, add a browser test runner in a separately scoped verification task; the current Spec does not mandate a specific framework.

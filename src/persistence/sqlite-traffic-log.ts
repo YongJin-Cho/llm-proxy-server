@@ -42,6 +42,7 @@ function buildSummary(traffic: SummaryTraffic[], status: TrafficLog['status']): 
     start_user_input: extractUserInput(parseJson(first?.request_json ?? null)),
     end_ai_output: extractAiOutput(parseJson(lastCompleted?.response_json ?? null)),
     model: first?.model ?? null,
+    provider: first?.provider ?? null,
     execution_environment: null,
     status,
     traffic_count: traffic.length,
