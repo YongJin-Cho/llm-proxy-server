@@ -81,7 +81,9 @@
 | 10 | Turn grouping backend과 SSE aggregate 구현 | 2026-03-10 | [`TODO-10.md`](./scrum/TODO-10.md) |
 | 11 | Turn tree API·Sidebar UI·통합 검증 완성 | 2026-03-10 | [`TODO-11.md`](./scrum/TODO-11.md) |
 | 12 | Turn 관리·분석 UI 요구사항 및 구현 백로그 확정 | 2026-03-10 | [`TODO-12.md`](./scrum/TODO-12.md) |
+| 13 | Turn 관리·메타데이터·탐색·요약 구현 | 2026-03-10 | [`TODO-13.md`](./scrum/TODO-13.md) |
 
 ## Notes
 
 - 2026-03-10: Sprint 13 계획 승인 후 live implementation board를 seed했다. 제품 코드 Execute를 시작한다.
+- 2026-03-10: Sprint 13 완료 검토와 Boundary를 처리했다. Sprint 14 계획은 PB-028~PB-029 Scope로 작성했으며, plan approval 후 live board를 전환한다.

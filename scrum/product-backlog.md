@@ -173,21 +173,21 @@
   - Depends: PB-020, PB-021, PB-022, PB-023
   - Notes: Sprint 11에 커밋했다. 제품 코드 구현과 전체 검증·실행 문서를 이 Sprint에서 완료한다.
 
-- [ ] **PB-025** — Turn 관리 메타데이터와 turn cascade 삭제 구현
+- [x] **PB-025** — Turn 관리 메타데이터와 turn cascade 삭제 구현
   - Story: 운영자가 turn 제목·flag를 저장하고 turn을 삭제하면 관리 메타데이터와 모든 child traffic이 하나의 transaction에서 물리 삭제되며 traffic 단독 삭제·논리 삭제·복원은 제공되지 않는다.
   - Spec: `spec/llm-proxy-turn-management.md` §Requirements R-001–R-002; §Constraints C-003
   - Sprint: sprint-13
   - Depends: PB-022, PB-023
   - Notes: Sprint 13 후보 Scope. SQLite migration/schema, writer/query API, UI mutation과 cascade transaction 검증을 포함한다.
 
-- [ ] **PB-026** — Turn filter·pagination·mutation refresh 구현
+- [x] **PB-026** — Turn filter·pagination·mutation refresh 구현
   - Story: 전체/flagged 필터와 turn 단위 pagination을 서버가 제공하고 flag 변경·삭제 후 현재 query를 재조회하며 빈 page를 마지막 유효 page로 보정한다.
   - Spec: `spec/llm-proxy-turn-management.md` §Requirements R-003–R-004
   - Sprint: sprint-13
   - Depends: PB-025
   - Notes: Sprint 13 후보 Scope. Child traffic은 pagination하지 않는다.
 
-- [ ] **PB-027** — Turn summary·usage/cost projection 구현
+- [x] **PB-027** — Turn summary·usage/cost projection 구현
   - Story: turn summary가 시작 user input, 마지막 completed AI output, 모델·환경·상태·처리 시간·traffic 개수를 제공하고 usage/cost를 서버 규칙으로 합산하며 null/partial 상태를 표현한다.
   - Spec: `spec/llm-proxy-turn-management.md` §Requirements R-005–R-006
   - Sprint: sprint-13
@@ -225,3 +225,4 @@
 - 2026-03-10: Sprint 11 Boundary에서 PB-022·PB-023·PB-024를 종료했다. turn tree API, Sidebar UI, 통합 검증 및 실행 문서 DoD를 충족했다.
 - 2026-03-10: Sprint 12 Spec review를 통과한 승인 Spec을 PB-025~PB-029 구현 story로 append했다.
 - 2026-03-10: Sprint 12 Boundary에서 PB-025~PB-027을 Sprint 13 후보 Scope로 지정했다. PB-028~PB-029는 후속 implementation sprint 후보로 유지한다.
+- 2026-03-10: Sprint 13 Boundary에서 PB-025~PB-027의 DoD를 충족해 종료했다. PB-028~PB-029를 Sprint 14 후보 Scope로 유지한다.
