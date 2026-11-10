@@ -103,6 +103,53 @@ Codex와 유사한 LLM 클라이언트와 OpenAI Model Provider 사이에서 요
 - 민감한 인증 정보가 로그와 UI에 평문으로 노출되지 않는다.
 - 자동화된 검증 절차로 핵심 프록시, 저장, UI 조회 동작을 재현할 수 있다.
 
+## Delta: Turn 관리·분석 UI
+
+### Delta Summary
+기존 turn/traffic 탐색 UI를 확장해 운영자가 저장·분석할 가치가 있는 turn을 별도로 관리할 수 있게 한다. 운영자는 sidebar에서 turn을 접고 펼치며 선택·전체 선택·삭제하고, 제목을 편집하며, flag를 설정해 flagged turn만 별도로 탐색할 수 있다. main view에서는 turn 전체 요약과 traffic별 사용량을 확인하고, traffic view에서는 request/response 객체를 구조적으로 탐색하며 긴 문자열을 형식에 맞게 전체 보기할 수 있다.
+
+### Delta Goals
+- turn을 폴더처럼 접고 펼치며 제목·상태·flag를 한눈에 관리한다.
+- 전체·flagged 등 탭으로 turn을 필터링하고 선택·삭제 작업을 수행한다.
+- turn과 traffic에 사용자 지정 제목을 저장하며, 제목이 없으면 각각 turn ID·traffic ID를 표시한다.
+- turn 선택 시 시작 user input, 종료 AI output, 실행 환경, 전체 usage와 traffic별 usage를 요약한다.
+- traffic 선택 시 request/response JSON 객체를 접고 펼치며 긴 문자열의 전체 내용을 안전하게 확인한다.
+
+### Delta In Scope
+- turn tree sidebar의 접기/펼치기, 개별 선택, 전체 선택, 삭제 UI
+- turn flag 설정·해제 및 전체/flagged 등 필터 탭
+- turn·traffic 제목 편집과 기본 ID fallback
+- completed, failed, in_progress 등 lifecycle 상태의 아이콘 표시
+- turn summary의 시작 user input, 종료 AI output, 모델·실행 환경, usage/cost·처리 시간 표시
+- traffic별 usage summary table
+- traffic request/response JSON object의 접기/펼치기 탐색
+- 긴 문자열 축약 표시와 전체 문자열 modal/window 보기
+- Markdown, JSON, JavaScript 등 형식 추정에 따른 표시와 안전한 fallback
+- 기존 turn/traffic 선택·URL state·traffic detail 조회와의 호환
+
+### Delta Out of Scope
+- 자동 요약문 생성 또는 LLM 기반 형식 분류
+- 사용자·조직별 인증·권한과 다중 사용자 공유
+- 고급 분석 차트, 알림, 과금 기능
+- 기존 traffic의 소급 turn grouping
+- 실시간 streaming transcript 편집·주석
+- 이번 요구사항 확정 단계에서의 제품 코드 구현
+
+### Delta Constraints
+- 기존 `/api/v1` namespace, SQLite writer/reader 경계, secret redaction, bounded body 정책을 유지한다.
+- UI component는 API를 직접 호출하지 않고 기존 data-query/application 경계를 따른다.
+- 삭제·제목·flag 등 관리 메타데이터는 기존 traffic 본문과 lifecycle 원본을 임의로 덮어쓰지 않는다.
+- 긴 문자열과 코드·Markdown은 XSS 및 임의 실행 없이 읽기 전용으로 표시한다.
+- 구현·검증의 SSOT는 이 delta에 대한 별도 승인 Spec이다.
+
+### Delta Success Criteria
+- 사용자가 sidebar에서 turn을 접고 펼치고, 선택·전체 선택·삭제·flag 설정을 수행할 수 있다.
+- 전체·flagged 탭에서 원하는 turn을 재현 가능하게 탐색할 수 있고, 제목과 상태 아이콘을 확인할 수 있다.
+- turn summary가 시작/종료 메시지, 실행 환경, 전체 및 traffic별 usage를 표시한다.
+- traffic view가 request/response 객체를 접고 펼치며 긴 문자열을 축약/전체 보기로 전환한다.
+- 지원 가능한 형식은 읽기 쉬운 renderer로 표시하고, 불확실하거나 지원하지 않는 형식은 안전한 plain-text fallback을 사용한다.
+- 승인 Spec에서 저장·조회 API, UI, persistence, 검증 task를 독립적으로 계획할 수 있다.
+
 ## Delta: Turn 기반 traffic 그룹핑·탐색 UI
 
 ### Delta Summary

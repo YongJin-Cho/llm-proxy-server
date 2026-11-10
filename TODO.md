@@ -1,55 +1,67 @@
-# TODO: LLM Proxy Server — Turn tree API·Sidebar UI·통합 검증 완성
+# TODO: LLM Proxy Server — Turn 관리·분석 UI 요구사항 및 구현 백로그 확정
 
 > **Project root:** `llm-proxy-server`
-> **Current sprint:** sprint-11 — [Turn tree API·Sidebar UI·통합 검증 완성](./scrum/sprint-11.md)
+> **Current sprint:** sprint-12 — [Turn 관리·분석 UI 요구사항 및 구현 백로그 확정](./scrum/sprint-12.md)
 > **Product Backlog:** [`scrum/product-backlog.md`](./scrum/product-backlog.md)
 
 ## Snapshot
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 4 | 1 | 0 | 0 |
+| 1 | 7 | 0 | 0 |
 
-**Sprint goal:** turn tree query API와 sidebar UI를 구현하고 전체 turn grouping·SSE·기존 API 회귀 검증을 완료한다.
-**Current focus:** T-005
-**Recommended next:** T-005 — Sprint Boundary → sprint-12
+**Sprint goal:** 저장·분석할 가치가 있는 turn을 운영자가 별도로 관리할 수 있도록 요구사항을 확정하고 승인 Spec을 구현 backlog로 분해한다.
+**Current focus:** T-002
+**Recommended next:** T-002 — PRD delta 승인 게이트
 
 ## Tasks
 
-- [x] **T-001** — PB-022 turn tree query API와 legacy projection 구현
-  - Phase: implementation
-  - Artifact: `src/domain/turn.ts`, `src/application/log-query-service.ts`, `src/api/routes.ts`, `src/persistence/sqlite-traffic-log.ts`
+- [x] **T-001** — Turn 관리·분석 UI PRD delta 작성
+  - Phase: PRD
+  - Artifact: `spec/PRD.md`
   - Depends: —
-  - Notes: `GET /api/v1/turns`의 page/limit, deterministic ordering, child traffic summary, fallback metadata와 legacy synthetic node를 구현했다. `npm run build`와 `npm run verify` 통과. 승인 Spec R-004~R-005, C-003~C-005를 따른다.
+  - Notes: 기존 turn traffic 탐색 기능을 확장하는 이번 요구사항의 목표·범위·성공 기준을 추가했다. 사용자 승인 대기.
 
-- [x] **T-002** — PB-023 sidebar tree와 turn/traffic selection view 구현
-  - Phase: implementation
-  - Artifact: `src/ui/data-query/`, `src/ui/pages/`, `src/ui/components/`, `src/ui/types.ts`
+- [ ] **T-002** — PRD delta 승인
+  - Phase: gate
+  - Artifact: `spec/PRD.md`
   - Depends: T-001
-  - Notes: tree query, stable URL selection, turn summary, 기존 LogDetail, loading/empty/error와 독립 detail fetch failure를 구현했다. `npm run build`와 `npm run verify` 통과. 승인 Spec R-006~R-007을 따른다.
+  - Notes: 사용자 go-ahead 후 AC 식별을 같은 턴에 시작한다.
 
-- [x] **T-003** — PB-024 turn grouping 통합 검증과 실행 문서 갱신
-  - Phase: verification
-  - Artifact: `scripts/verify.mjs`, `scripts/verify-turn.mjs`, `verification/llm-proxy-turn-traffic.md`, `README.md`
-  - Depends: T-001, T-002
-  - Notes: `npm run build`와 `npm run verify` 통과. turn concurrency, out-of-order tool message, fallback isolation, completion, legacy projection, tree query, body-free child summary, SSE aggregate와 기존 API 회귀를 검증했다. URL selection contract는 `turn`/`traffic` query state와 `popstate` handling으로 기록했다.
+- [ ] **T-003** — Blocking AC 식별 및 의존 순서 확정
+  - Phase: AC identification
+  - Artifact: `spec/AC.md`
+  - Depends: T-002
 
-- [x] **T-004** — Sprint 11 Demo Checklist 실행 및 handoff
-  - Phase: demo
-  - Artifact: `verification/llm-proxy-turn-traffic.md`
+- [ ] **T-004** — AC별 설계 결정 및 ADR/Direct Input 정리
+  - Phase: AC review
+  - Artifact: `spec/AC.md`, `adr/`
   - Depends: T-003
-  - Notes: `/api/v1/turns` page/limit·metadata·body-free child summary, legacy projection, `turn`/`traffic` URL selection contract, browser `popstate`, loading/error 처리, `npm run build`와 `npm run verify` evidence를 기록했다.
 
-- [ ] **T-005** — Sprint Boundary → sprint-12
+- [ ] **T-005** — ASR 통합 및 승인
+  - Phase: ASR
+  - Artifact: `spec/ASR.md`
+  - Depends: T-004
+
+- [ ] **T-006** — Turn 관리·분석 UI Spec 작성 및 승인
+  - Phase: Spec
+  - Artifact: `spec/llm-proxy-turn-management.md`, `spec-review/llm-proxy-turn-management.md`
+  - Depends: T-005
+
+- [ ] **T-007** — 승인 Spec 기반 PB-025 이후 backlog encode 및 Demo Checklist
+  - Phase: backlog
+  - Artifact: `scrum/product-backlog.md`, `scrum/sprint-12.md`
+  - Depends: T-006
+
+- [ ] **T-008** — Sprint Boundary → next implementation sprint
   - Phase: cross-cutting
-  - Artifact: `scrum/TODO-11.md`
-  - Depends: T-001, T-002, T-003, T-004
-  - Notes: Sprint 11 completion 승인 후 archive하고 PB-022~PB-024 상태를 갱신한다.
+  - Artifact: `scrum/TODO-12.md`
+  - Depends: T-001, T-002, T-003, T-004, T-005, T-006, T-007
 
 ## Completed sprints
 
 | Sprint | Goal | Closed | Archive |
-|--------|------|---------|--------|
+|--------|------|--------|---------|
 | 00 | 초기 제품 백로그 정의 | 2026-03-10 | [`TODO-00.md`](./scrum/TODO-00.md) |
 | 01 | LLM Proxy MVP 구현 | 2026-03-10 | [`TODO-01.md`](./scrum/TODO-01.md) |
 | 02 | 확장 가능한 아키텍처 설계와 백로그 갱신 | 2026-03-10 | [`TODO-02.md`](./scrum/TODO-02.md) |
@@ -65,5 +77,5 @@
 
 ## Notes
 
-- 2026-03-10: Sprint 11 계획 승인. PB-022·PB-023·PB-024를 Scope로 커밋하고 T-001부터 실행한다.
-- 2026-03-10: Sprint 11 완료 승인 후 Boundary를 실행했다. PB-022·PB-023·PB-024를 종료하고 sprint-11을 보관했다. 다음 sprint-12 계획은 아직 없어 라이브 보드는 다음 계획 승인 후 재시드한다.
+- 2026-03-10: Sprint 11 Boundary 완료 상태를 반영해 Sprint 12 Spec→backlog 계획을 승인하고 실행 보드를 시드했다.
+- 2026-03-10: T-001 PRD delta 초안 작성 완료. 사용자 PRD 승인 후 AC 식별로 진행한다.

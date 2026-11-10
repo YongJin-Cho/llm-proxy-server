@@ -34,4 +34,4 @@
 - [ ] 제품 코드 변경 없이 Spec→backlog sprint의 산출물을 검토한다.
 
 ## Approval
-- 계획 승인 대기.
+- 2026-03-10: 사용자 go-ahead("ok")로 Sprint 12 계획을 승인하고 Spec→backlog 실행을 시작했다.
