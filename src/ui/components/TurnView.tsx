@@ -40,8 +40,8 @@ export function TurnView({ turn, loading, onTraffic }: Props) {
 
   const summary = turn.summary;
   const turnLabel = turn.title || turn.id.slice(0, 8);
-  return <section className="card turn-view" aria-label="Turn view">
-    <section className="turn-summary-section traffic-summary" aria-label="Turn summary">
+  return <>
+    <section className="card turn-view turn-summary-section traffic-summary" aria-label="Turn summary">
       <h2>Turn {turnLabel} summary</h2>
       <dl className="summary-grid">
         <div><dt>Status</dt><dd><span className={`status ${summary.status}`}>{summary.status}</span></dd></div>
@@ -54,14 +54,14 @@ export function TurnView({ turn, loading, onTraffic }: Props) {
         <div><dt>Elapsed time</dt><dd>{formattedNumber(summary.duration_ms)}{summary.duration_ms === null || summary.duration_ms === undefined ? '' : 'ms'}</dd></div>
       </dl>
     </section>
-    <section className="turn-content-section request-response-content" aria-label="Turn request and response">
+    <section className="card turn-view turn-content-section request-response-content" aria-label="Turn request and response">
       <ContentViewer key={`${turn.id}:request`} label="request" content={summary.start_user_input} hint="markdown" compactString />
       <ContentViewer key={`${turn.id}:response`} label="response" content={summary.end_ai_output} hint="markdown" compactString />
     </section>
-    <section className="turn-traffic-table-section" aria-label="Turn traffic table">
+    <section className="card turn-view turn-traffic-table-section" aria-label="Turn traffic table">
       <div className="table-scroll"><table><thead><tr><th>Traffic</th><th>Input tokens</th><th>Cached input tokens</th><th>Output tokens</th><th>Elapsed time</th><th>Cost</th></tr></thead><tbody>
         {turn.traffic.map((traffic, index) => <TrafficSummaryRow key={traffic.id} traffic={traffic} index={index} onSelect={() => onTraffic(turn.id, traffic.id)} />)}
       </tbody></table></div>
     </section>
-  </section>;
+  </>;
 }

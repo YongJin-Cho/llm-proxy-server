@@ -8,7 +8,7 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 15 | 1 | 0 | 0 |
+| 16 | 1 | 0 | 0 |
 
 **Sprint goal:** 승인된 Turn 관리·분석 Spec의 남은 viewer slice로 traffic content를 형식별로 안전하게 표시하고, mode override·fallback·보안 경계를 자동 검증한다.
 **Current focus:** T-004
@@ -106,10 +106,16 @@
   - Depends: T-015
   - Notes: request/response viewer의 `request:`/`response:` label을 유지하고 양쪽 긴 scalar preview/popup을 검증했다. `npm run build`와 `npm run verify` 통과.
 
+- [x] **T-017** — TurnView card separation·JSON scalar rendering defect closure
+  - Phase: implementation + verification
+  - Artifact: `src/ui/components/TurnView.tsx`, `src/ui/components/ContentViewer.tsx`, `scripts/verify-turn.mjs`, `scripts/verify-viewer.ts`, `spec/`, `verification/`
+  - Depends: T-016
+  - Notes: summary/request-response/table을 traffic view처럼 독립 card로 렌더링하고 request/response 단순 문자열을 JSON string scalar 및 긴 문자열 popup preview로 표시한다.
+
 - [ ] **T-004** — Sprint Boundary → next implementation sprint
   - Phase: cross-cutting
   - Artifact: `scrum/TODO-14.md`
-  - Depends: T-001, T-002, T-003, T-005, T-006, T-007, T-008, T-009, T-010, T-011, T-012, T-013, T-014, T-015
+  - Depends: T-001, T-002, T-003, T-005, T-006, T-007, T-008, T-009, T-010, T-011, T-012, T-013, T-014, T-015, T-017
   - Notes: archive board, update backlog, close PB-028~PB-029, plan next implementation slice
 
 ## Completed sprints
@@ -135,3 +141,4 @@
 
 - 2026-03-10: Sprint 14 계획 승인 후 live implementation board를 seed했다. PB-028 Execute를 시작한다.
 - 2026-03-10: 사용자 요청으로 Turn/Traffic summary 제목·필드 순서·숫자 표시와 Turn response viewer delta를 T-014로 현재 sprint에 추가했다.
+- 2026-03-10: 사용자 defect report로 TurnView 독립 card section과 request/response JSON string scalar 표시를 T-017로 추가했다.

@@ -86,15 +86,19 @@ export function ContentViewer({ label, content, hint, compactString = false, sho
   </section>;
 
   const scalarContent = typeof content === 'string' ? content : undefined;
+  const isRequestResponseScalar = (label === 'request' || label === 'response') && scalarContent !== undefined;
   const isLongScalar = compactString && scalarContent !== undefined && scalarContent.length > 160;
-  if (isLongScalar) return <section className="content-viewer" aria-label={`${label} content viewer`}>
-    {showLabel && <h4>{label}</h4>}
-    <div className="viewer-body">
-      <span className="json-string-preview">{scalarContent.slice(0, 160)}…</span>
-      <button type="button" className="link content-expand" onClick={() => setTarget({ path: '$', value: scalarContent, hint })}>전체 보기</button>
-    </div>
-    {target && <PopupViewer key={target.path} target={target} onClose={() => setTarget(undefined)} />}
-  </section>;
+  if (isRequestResponseScalar) {
+    const preview = isLongScalar ? `${scalarContent.slice(0, 160)}…` : scalarContent;
+    return <section className="content-viewer json-container-viewer" aria-label={`${label} JSON string`}>
+      <div className="viewer-body json-container-body">
+        <div className="json-container-row json-container-root-row">{showLabel && <strong>{label}: </strong>}<span className="json-string-preview">{JSON.stringify(preview)}</span>
+          {isLongScalar && <button type="button" className="link content-expand" onClick={() => setTarget({ path: '$', value: scalarContent, hint })}>전체 보기</button>}
+        </div>
+      </div>
+      {target && <PopupViewer key={target.path} target={target} onClose={() => setTarget(undefined)} />}
+    </section>;
+  }
 
   const changeMode = (mode: ViewerMode) => setSelection(mode === 'code' ? { mode, language: resolved.language ?? 'plaintext' } : { mode });
   const changeLanguage = (language: string) => setSelection({ mode: 'code', language });
