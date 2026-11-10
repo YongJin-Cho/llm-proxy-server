@@ -56,8 +56,8 @@ export function TurnTree({ nodes, selectedTurn, selectedTraffic, page, hasNext, 
           <div className="turn-menu-wrap">
             <button type="button" className="turn-menu icon-button" aria-label={`${node.title || node.id} 메뉴`} aria-haspopup="menu" aria-expanded={openMenu === node.id} onClick={() => setOpenMenu((current) => current === node.id ? undefined : node.id)}>•••</button>
             {openMenu === node.id && <div className="turn-menu-list" role="menu">
-              <button type="button" role="menuitem" onClick={() => { setOpenMenu(undefined); onRename(node.id, window.prompt('Turn 제목', node.title ?? '') || null); }}>이름 변경</button>
-              <button type="button" role="menuitem" onClick={() => { setOpenMenu(undefined); onDelete(node.id); }}>삭제</button>
+              <button type="button" role="menuitem" onClick={() => { setOpenMenu(undefined); onRename(node.id, window.prompt('Turn title', node.title ?? '') || null); }}>rename</button>
+              <button type="button" role="menuitem" onClick={() => { setOpenMenu(undefined); onDelete(node.id); }}>delete</button>
             </div>}
           </div>
         </div>

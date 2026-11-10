@@ -72,10 +72,12 @@ const turnTree = readFileSync(new URL('../src/ui/components/TurnTree.tsx', impor
 const trafficPage = readFileSync(new URL('../src/ui/pages/TrafficPage.tsx', import.meta.url), 'utf8');
 assert.match(turnTree, /turn-collapse[\s\S]*turn-flag[\s\S]*turn-title[\s\S]*turn-menu/);
 assert.match(turnTree, /pagination-arrow/);
+const styles = readFileSync(new URL('../src/ui/styles.css', import.meta.url), 'utf8');
+assert.match(styles, /\.pagination-arrow, \.pagination-trash[^\n]*border: 0 !important; background: transparent !important;/);
 assert.match(turnTree, /pagination-trash/);
 assert.match(turnTree, /onDeleteUnflaggedPage/);
-assert.match(turnTree, /이름 변경/);
-assert.match(turnTree, /삭제/);
+assert.match(turnTree, />rename<\//);
+assert.match(turnTree, />delete<\//);
 assert.equal(turnTree.includes('onRenameTraffic'), false);
 assert.equal(turnTree.includes('traffic-rename'), false);
 assert.match(turnTree, /nodes\.slice\(1\)/);
