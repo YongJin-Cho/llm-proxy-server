@@ -34,9 +34,9 @@ llm-proxy-server/
 - `src/application/proxy-service.ts`: common routing, auth, provider I/O, logging, and SSE orchestration; depends on `TrafficLogWriter`
 - `src/application/proxy-adapters/`: API-specific route path, traffic-log kind, provider endpoint mapping, streaming completion detectors, and usage/cost parsing; `ProxyAdapter` is the shared base for Responses, Chat Completions, and Messages
 - `src/application/log-query-service.ts`: UI/API log and turn-tree query use cases; depends on `TrafficLogReader`
-- `src/api/routes.ts`: HTTP route and payload adapter, including `/api/v1/turns`; depends on application services, not SQLite
+- `src/api/routes.ts`: HTTP route and payload adapter, including `/api/v1/turns`, turn/traffic metadata mutation, and turn deletion; depends on application services, not SQLite
 - `src/persistence/sqlite-traffic-log.ts`: SQLite schema, traffic turn metadata, turn store, and writer/reader adapter
-- `src/ui/data-query/`: browser-side HTTP query functions only; log and turn-tree API URL, query parameters, and response/error mapping live here
+- `src/ui/data-query/`: browser-side HTTP query functions only; log and turn-tree API URL, query parameters, metadata mutation, deletion, and response/error mapping live here
 - `src/ui/pages/`: page-level state and use-case composition; `TrafficPage` coordinates filters, turn selection, URL state, data-query, and presentational components
 - `src/ui/components/`: reusable presentation and user-input components, including `TurnTree`; components do not call the API directly
 - `src/ui/types.ts`: shared UI view-model and filter types
@@ -57,12 +57,13 @@ Application code depends on domain ports; the SQLite adapter is the concrete per
 
 ## Verification guide
 
-`npm run build` validates the Vite UI build and TypeScript server compilation. `npm run verify` creates a temporary config.json and secret environment values, starts mock Providers and a temporary proxy/SQLite instance, validates the UI entrypoint, routing, persistence, masking, model rejection, turn grouping/fallback fixtures, tree query projection, SSE aggregate persistence, and detail lookup. Verification records map evidence to `spec/llm-proxy-server.md` and `spec/llm-proxy-turn-traffic.md` requirement IDs.
+`npm run build` validates the Vite UI build and TypeScript server compilation. `npm run verify` creates a temporary config.json and secret environment values, starts mock Providers and a temporary proxy/SQLite instance, validates the UI entrypoint, routing, persistence, masking, model rejection, turn grouping/fallback fixtures, tree query projection, SSE aggregate persistence, detail lookup, and the standalone turn metadata/filter/cascade fixture in `verify-turn.mjs`. Verification records map evidence to `spec/llm-proxy-server.md`, `spec/llm-proxy-turn-traffic.md`, and the current approved feature Spec requirement IDs.
 
 ## Notes
 
 - `TurnGroupingService` creates a new turn for the first traffic, keeps open turns indexed by unresolved tool identity, and stores global observation sequence on each traffic row.
-- `SqliteTrafficLogStore.listTurns` projects stored turns plus metadata-free legacy traffic into deterministic, paginated tree nodes; request/response bodies remain available only through the existing log detail API.
+- `SqliteTrafficLogStore.listTurns` projects stored turns plus metadata-free legacy traffic into deterministic, paginated tree nodes; request/response bodies remain available only through the existing log detail API. Turn and traffic title/flag metadata are stored separately, and turn deletion cascades child traffic in one SQLite transaction.
 - `TrafficPage` stores turn and traffic selection in `turn`/`traffic` URL query parameters and listens for browser history changes; tree loading errors are surfaced without removing the existing flat log path.
 - `@fastify/static` serves `dist/ui`; the Vite input is root `ui/index.html`, which loads `src/ui/main.tsx`, and the SPA fallback uses the generated `ui/index.html` path.
 - `better-sqlite3` may require the repository's npm install-script approval/rebuild step in restricted npm environments.
+- Sprint 13 PB-025 added title/flag metadata migration, turn/traffic PATCH routes, turn DELETE cascade, and basic TurnTree metadata actions. PB-026 now adds server-side all/flagged turn filtering, turn pagination, and UI mutation refresh/page correction. PB-027 now projects server-side turn summary, usage/cost totals, null/partial state, and UI summary display; execution environment remains null when no stored source field exists.

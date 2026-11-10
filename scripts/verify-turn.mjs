@@ -1,5 +1,9 @@
 import { strict as assert } from 'node:assert';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { TurnGroupingService } from '../dist/domain/turn.js';
+import { SqliteTrafficLogStore } from '../dist/persistence/sqlite-traffic-log.js';
 
 const store = {
   turns: new Map(),
@@ -37,4 +41,25 @@ assert.equal(ambiguous.fallbackReason, 'ambiguous_tool_identity');
 assert.notEqual(ambiguous.turnId, openA.turnId);
 assert.notEqual(ambiguous.turnId, openB.turnId);
 assert.deepEqual(store.traffic.map((entry) => entry.sequence), [...store.traffic.keys()].map((_, index) => index + 1));
-console.log('Turn verification passed: unique match, missing/unmatched/ambiguous fallback isolation, sequence ordering, and lifecycle persistence.');
+
+const tempDir = mkdtempSync(join(tmpdir(), 'llm-proxy-turn-'));
+const sqlitePath = join(tempDir, 'turns.sqlite');
+const sqlite = new SqliteTrafficLogStore(sqlitePath);
+sqlite.createTurn({ id: 'managed-turn', startedAt: '2026-03-10T00:01:00.000Z', status: 'in_progress' });
+sqlite.insert({ id: 'managed-traffic', apiKind: 'responses', startedAt: '2026-03-10T00:01:01.000Z', model: 'test-model', streaming: 0, requestJson: '{"input":"hello"}' });
+sqlite.attachTraffic({ trafficId: 'managed-traffic', turnId: 'managed-turn', sequence: 1, fallbackReason: null });
+sqlite.finish({ id: 'managed-traffic', finishedAt: '2026-03-10T00:01:02.000Z', status: 'completed', httpStatus: 200, latencyMs: 1000, responseJson: '{"output_text":"world"}', error: null, inputTokens: 2, outputTokens: 3, totalTokens: 5, costUsd: 0.01 });
+sqlite.updateTurnMetadata('managed-turn', { title: 'Important turn', flag: true });
+sqlite.updateTrafficMetadata('managed-traffic', { title: 'Request title', flag: true });
+const managed = sqlite.listTurns(1, 20, 'flagged').data[0];
+assert.equal(managed.title, 'Important turn');
+assert.equal(managed.flag, 1);
+assert.equal(managed.traffic[0].title, 'Request title');
+assert.equal(managed.summary.start_user_input, 'hello');
+assert.equal(managed.summary.end_ai_output, 'world');
+assert.equal(managed.summary.usage.total_tokens, 5);
+sqlite.deleteTurn('managed-turn');
+assert.equal(sqlite.get('managed-traffic'), undefined);
+sqlite.close();
+rmSync(tempDir, { recursive: true, force: true });
+console.log('Turn verification passed: grouping fallbacks, sequence ordering, metadata persistence, flagged filtering, and cascade deletion.');

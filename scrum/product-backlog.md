@@ -173,6 +173,41 @@
   - Depends: PB-020, PB-021, PB-022, PB-023
   - Notes: Sprint 11에 커밋했다. 제품 코드 구현과 전체 검증·실행 문서를 이 Sprint에서 완료한다.
 
+- [ ] **PB-025** — Turn 관리 메타데이터와 turn cascade 삭제 구현
+  - Story: 운영자가 turn 제목·flag를 저장하고 turn을 삭제하면 관리 메타데이터와 모든 child traffic이 하나의 transaction에서 물리 삭제되며 traffic 단독 삭제·논리 삭제·복원은 제공되지 않는다.
+  - Spec: `spec/llm-proxy-turn-management.md` §Requirements R-001–R-002; §Constraints C-003
+  - Sprint: sprint-13
+  - Depends: PB-022, PB-023
+  - Notes: Sprint 13 후보 Scope. SQLite migration/schema, writer/query API, UI mutation과 cascade transaction 검증을 포함한다.
+
+- [ ] **PB-026** — Turn filter·pagination·mutation refresh 구현
+  - Story: 전체/flagged 필터와 turn 단위 pagination을 서버가 제공하고 flag 변경·삭제 후 현재 query를 재조회하며 빈 page를 마지막 유효 page로 보정한다.
+  - Spec: `spec/llm-proxy-turn-management.md` §Requirements R-003–R-004
+  - Sprint: sprint-13
+  - Depends: PB-025
+  - Notes: Sprint 13 후보 Scope. Child traffic은 pagination하지 않는다.
+
+- [ ] **PB-027** — Turn summary·usage/cost projection 구현
+  - Story: turn summary가 시작 user input, 마지막 completed AI output, 모델·환경·상태·처리 시간·traffic 개수를 제공하고 usage/cost를 서버 규칙으로 합산하며 null/partial 상태를 표현한다.
+  - Spec: `spec/llm-proxy-turn-management.md` §Requirements R-005–R-006
+  - Sprint: sprint-13
+  - Depends: PB-026
+  - Notes: Sprint 13 후보 Scope. UI가 summary 계산을 재구현하거나 provider 미보고 cost를 추정하지 않는다.
+
+- [ ] **PB-028** — 안전한 형식별 traffic content viewer 구현
+  - Story: JSON tree, sanitized Markdown, read-only Monaco와 `Auto`/사용자 mode override를 제공하고, detection 실패·지원 불가 형식은 plain text로 fallback하며 content를 실행하지 않는다.
+  - Spec: `spec/llm-proxy-turn-management.md` §Requirements R-007–R-012; §Constraints C-004–C-005
+  - Sprint: —
+  - Depends: PB-023
+  - Notes: 다음 Backlog→Implementation sprint 후보. 승인된 dependency stack을 설치 검증하고 1 MiB field 전문 표시·viewer 인스턴스 범위 state·보안 회귀를 포함한다.
+
+- [ ] **PB-029** — Turn 관리·분석 통합 검증과 실행 문서
+  - Story: 제목·flag·삭제 cascade, all/flagged filter, pagination 보정, summary/usage partial, viewer mode/fallback/1 MiB 전문 표시와 기존 turn tree·URL·traffic API 회귀를 자동 검증하고 실행 문서를 갱신한다.
+  - Spec: `spec/llm-proxy-turn-management.md` §Requirements R-001–R-012; §Constraints C-001–C-005
+  - Sprint: —
+  - Depends: PB-025, PB-026, PB-027, PB-028
+  - Notes: 다음 Backlog→Implementation sprint 후보. `npm run build`와 `npm run verify`를 검증 진입점으로 사용한다.
+
 ## Notes
 
 - 2026-03-10: Spec 승인 후 PB-002–PB-006을 초기 구현 백로그로 추가했다.
@@ -188,3 +223,5 @@
 - 2026-03-10: Sprint 09 Spec 승인 후 PB-019를 종료하고 승인 Spec의 구현 backlog PB-020~PB-024를 append했다.
 - 2026-03-10: Sprint 10 Boundary에서 PB-020·PB-021을 종료하고 PB-022~PB-024를 다음 구현 sprint 후보로 유지했다.
 - 2026-03-10: Sprint 11 Boundary에서 PB-022·PB-023·PB-024를 종료했다. turn tree API, Sidebar UI, 통합 검증 및 실행 문서 DoD를 충족했다.
+- 2026-03-10: Sprint 12 Spec review를 통과한 승인 Spec을 PB-025~PB-029 구현 story로 append했다.
+- 2026-03-10: Sprint 12 Boundary에서 PB-025~PB-027을 Sprint 13 후보 Scope로 지정했다. PB-028~PB-029는 후속 implementation sprint 후보로 유지한다.
