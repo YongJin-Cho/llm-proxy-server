@@ -25,10 +25,10 @@ LLM Proxy의 React 모니터링 UI가 turn/traffic tree를 탐색하고, 선택�
 TrafficPage
 ├── Sidebar
 │   ├── Turn filter: 전체 / Flagged
-│   ├── TurnTree
-│   │   ├── Turn node
-│   │   └── Child traffic node
-│   └── Turn pagination
+│   ├── TurnTree header: Turns + turn pagination
+│   └── TurnTree
+│       ├── Turn node: collapse/expand + flag + title/status/count
+│       └── Child traffic node (visible when expanded)
 └── Right content
     ├── TurnView       # turn이 선택된 경우
     └── TrafficView    # traffic이 선택된 경우
@@ -79,6 +79,18 @@ TrafficPage
 
 - R-018: UI 검증은 최소한 다음 동작을 재현해야 한다: turn tree 표시, all/flagged filter, turn pagination, URL turn/traffic selection, browser back/forward, `TurnView`/`TrafficView` exclusive rendering, initial traffic URL detail fetch, independent detail error, turn metadata action, summary null/partial 표시, content viewer mode/fallback/safety/1 MiB bound. `npm run build`와 `npm run verify`를 기본 진입점으로 유지해야 한다. ← ASR-009; ASR-015; ASR-027; ASR-031
 
+- R-019: 각 turn node는 탐색기처럼 접힘/펼침 상태를 가져야 한다. turn header에는 왼쪽부터 접힘/펼침 아이콘 버튼, flag 아이콘 버튼, turn title/status/count 정보를 표시해야 한다. 접힘 상태에서는 child traffic node를 숨기고, 펼침 상태에서는 해당 turn의 child traffic을 sequence 순서로 표시해야 한다. 접힘/펼침과 flag action은 서로 독립적으로 동작해야 한다.
+
+- R-020: TurnTree의 `Turns` title과 turn pagination control은 같은 header 행에 배치해야 한다. title은 왼쪽, pagination은 오른쪽에 위치하며, 좁은 화면에서는 pagination이 다음 줄로 내려가더라도 turn tree와 pagination의 의미가 유지되어야 한다.
+
+- R-021: `TurnView`는 turn summary 아래에 child traffic summary를 table 형태로 표시해야 한다. table의 각 row는 traffic sequence/title 또는 ID fallback을 식별할 수 있어야 하며, 다음 usage summary column을 표시해야 한다: model, model provider, input tokens, cached input tokens, output tokens, cost, 처리 시간. 서버가 값을 제공하지 않는 경우 UI는 `—` 또는 서버가 정의한 null 표시를 사용하고 값을 추정하지 않아야 한다.
+
+- R-022: `TurnView`의 turn summary는 turn을 시작하는 사용자 입력을 첫 traffic의 request 메시지에서 추출한 `start_user_input`으로, turn을 종료하는 AI 출력을 마지막 completed traffic의 response 메시지에서 추출한 `end_ai_output`으로 표시해야 한다. summary에는 model/model provider, input tokens, cached input tokens, output tokens, cost, 처리 시간을 포함해야 하며, UI가 request/response를 임의로 다시 선택하거나 usage/cost를 재계산하지 않아야 한다. ← ASR-030
+
+- R-023: `TrafficView`는 traffic summary를 content detail보다 먼저 표시해야 한다. summary에는 model, model provider, input tokens, cached input tokens, output tokens, cost, 처리 시간을 표시하며 서버 projection의 null/partial 의미를 유지해야 한다. TrafficView는 해당 값을 다른 traffic이나 turn의 값으로 보완하거나 추정하지 않아야 한다.
+
+- R-024: `TrafficView`의 request와 response content는 각각 read-only JSON tree view로 표시해야 한다. JSON parse가 성공한 request/response는 접을 수 있는 JSON tree로 탐색할 수 있어야 하며, JSON parse가 실패하거나 content가 JSON이 아닌 경우에는 기존 ContentViewer의 안전한 fallback 규칙을 사용한다. request와 response의 viewer state는 서로 독립이어야 한다.
+
 ## Constraints
 
 - C-001: 이 문서는 UI 계약만 소유한다. turn grouping semantic, turn lifecycle, tree projection schema, usage/cost 계산, legacy projection, content 저장·redaction policy의 원본 결정은 각각 `spec/llm-proxy-turn-traffic.md`, `spec/llm-proxy-turn-management.md`, `spec/llm-proxy-server.md`를 따른다. 상위 Spec과 충돌하는 UI 구현은 허용하지 않는다.
@@ -104,17 +116,25 @@ TrafficPage
 | UI contract | Current implementation | Status |
 |---|---|---|
 | Sidebar tree | `TurnTree` in `TrafficPage` | implemented |
+| Turn collapse/expand icon button | No collapse state or icon action in `TurnTree` | gap from this UI Spec |
+| Turn flag icon button | Star flag action in `TurnTree` | implemented |
+| `Turns` title with pagination on the right | Pagination is rendered below `TurnTree` | gap from this UI Spec |
 | All/Flagged filter and turn pagination | `fetchTurns(page, limit, filter)` | implemented |
 | URL selection | `turn` / `traffic` query parameters | implemented |
 | Exclusive right-side view | `TurnView` or `TrafficView` | implemented |
-| Turn summary and child selection | `TurnView` | implemented |
+| Turn summary and child selection | `TurnView` | partial: summary exists, table projection is not implemented |
+| Turn traffic usage summary table | No table; child traffic buttons only | gap from this UI Spec |
 | Lazy traffic detail | `TrafficView` → `LogDetail` → `ContentViewer` | implemented |
+| Traffic usage summary | `LogDetail` displays model/tokens/cost/latency; provider and dedicated summary layout are absent | partial |
+| Request/response JSON tree | `ContentViewer` supports JSON viewer through hint/detection | implemented |
+| Request/response dedicated JSON tree layout | `LogDetail` currently uses generic content viewer sections | partial |
 | Independent traffic detail loading/error | `TrafficPage` state + `TrafficView` | implemented |
 | Turn title/flag/delete actions | `TurnTree` callbacks | implemented |
 | Traffic title editing | No traffic rename action is exposed in `TurnTree` | gap against parent management Spec |
 | Safe content viewer | `ContentViewer` adapter | implemented |
 | Responsive sidebar/content layout | `styles.css` media query | implemented |
 | Automated UI-specific exclusive-view assertions | not yet isolated as a dedicated test inventory | follow-up verification |
+| Automated collapse/expand, summary-table, and traffic-summary assertions | not yet isolated as a dedicated test inventory | follow-up verification |
 
 ## Out of Scope
 
@@ -148,3 +168,4 @@ TrafficPage
 - 2026-03-10: 기존 base/turn/grouping/turn-management Spec과 현재 React UI 구현을 근거로 UI 전용 Spec 초안을 작성했다.
 - 2026-03-10: 오른쪽 콘텐츠 영역의 exclusive `TurnView`/`TrafficView` 계약과 traffic URL direct-load detail fetch를 현재 구현 기준으로 명시했다.
 - 2026-03-10: 상위 Turn 관리 Spec의 traffic title editing 요구와 현재 `TurnTree` 구현 사이의 gap을 baseline에 기록했다. 이 문서는 해당 기능을 구현 완료로 가장하지 않는다.
+- 2026-03-10: 사용자 UI 요구사항을 반영해 turn collapse/expand, sidebar header pagination, turn traffic summary table, traffic usage summary, request/response JSON tree view를 R-019~R-024로 추가했다. 현재 구현과의 차이는 Current Implementation Baseline에 기록했다.
