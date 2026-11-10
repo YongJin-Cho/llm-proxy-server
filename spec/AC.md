@@ -384,7 +384,7 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - **Related ADRs:**
   - `adr/long-string-safe-rendering.md` — approved
 - **Resolution path:** adr
-- **Resolution:** ADR Option D를 채택한다. JSON parse 성공 시 read-only JSON tree를 기본 표시하고, 명시적 Markdown hint 또는 제한된 Markdown 판별 시 sanitized Markdown viewer를 사용한다. 그 외 code/text는 `highlight.js` auto-detection을 초기 language 후보로 삼아 read-only Monaco에 표시하며, 감지 실패·불확실·지원 불가 언어는 escaped plain text로 fallback한다. 사용자는 `Auto`, `JSON`, `Markdown`, `Code`, `Plain text`와 curated code language를 다시 선택할 수 있고, 사용자 선택은 자동 감지보다 우선하며 현재 viewer 인스턴스의 field별 presentation 상태로만 유지한다. 모든 표시 경로는 저장된 content를 실행하지 않고, raw HTML·iframe·`eval`·`new Function`을 허용하지 않는다. 각 request/response/error content field가 1 MiB(1,048,576 UTF-8 bytes) 이하이면 별도 문자 수·줄 수 truncation 없이 전문을 제공한다. inline view는 접을 수 있지만 전체 보기에서는 해당 bounded content 전체를 표시하며, 1 MiB 초과분은 AC-004 저장 크기 제한에서 처리한다.
+- **Resolution:** 기존 ADR Option D를 UI 표현 구조에 맞게 수정한다. request/response 전체 content를 하나의 viewer 형식으로 감지하지 않고, JSON parse 성공 시 read-only JSON object/array tree를 container로 표시한다. object/array/number/boolean/null은 tree 탐색 대상으로 유지하고 문자열 leaf만 viewer 입력으로 취급한다. 문자열 leaf는 기본 축약 preview를 제공하며 전체 보기 요청 시 popup viewer window/dialog에서 해당 문자열만 표시한다. Popup viewer는 `Auto`, `JSON`, `Markdown`, `Code`, `Plain text`와 curated code language를 제공하고, 선택된 문자열에 대해 content hint → JSON parse → 제한된 Markdown 판별 → `highlight.js` 후보 → escaped plain text fallback 순서로 감지한다. 사용자 선택은 자동 감지보다 우선하며 문자열 leaf별 현재 viewer instance presentation 상태로만 유지한다. 모든 표시 경로는 저장된 content를 실행하지 않고 raw HTML·iframe·`eval`·`new Function`을 허용하지 않는다. 각 JSON 문자열 값이 1 MiB(1,048,576 UTF-8 bytes) 이하이면 별도 문자 수·줄 수 truncation 없이 popup에서 전문을 제공하며, 1 MiB 초과분은 AC-004 저장 크기 제한에서 처리한다.
 
 
 ## Notes
@@ -403,3 +403,4 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - 2026-03-10: 사용자 go-ahead("ok")로 AC-023의 Option B를 승인했다. 미완료 turn pool, tool-call ID 역색인, 관찰 순서 기반 traffic sequence를 사용한다.
 - 2026-03-10: 사용자 go-ahead("ok")로 후속 ADR `ambiguous-missing-tool-id-fallback.md`를 승인했다. 매칭 불가 traffic은 fallback reason과 함께 새 standalone turn으로 격리한다.
 - 2026-03-10: 사용자 go-ahead("D로 해줘")로 `adr/long-string-safe-rendering.md`의 Option D를 승인하고 AC-028을 designed 처리했다. viewer dependency selection, format mode contract, preview thresholds는 후속 쟁점으로 분류했다.
+- 2026-03-10: 사용자 변경 요청에 따라 request/response 전체 viewer 감지를 폐기하고 JSON tree 내부 문자열 leaf만 popup viewer 대상으로 삼는 UI 표현 계약으로 Resolution을 수정했다.

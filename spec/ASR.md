@@ -280,7 +280,7 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 
 ### ASR-031 — 안전한 긴 문자열 viewer 계약
 - **Source:** AC-028 — 긴 문자열 형식 표시와 안전한 전체 보기
-- **Statement:** Viewer adapter는 JSON parse 성공 시 read-only JSON tree, 명시적 Markdown hint 또는 제한된 Markdown 판별 시 sanitized Markdown, 그 외 code/text에는 read-only Monaco를 사용해야 한다. `Auto`는 content hint → JSON parse → 제한된 Markdown 판별 → `highlight.js` 후보 → plain text fallback 순서를 따른다. 사용자는 `Auto`, `JSON`, `Markdown`, `Code`, `Plain text`와 curated code language를 선택할 수 있으며 선택은 현재 viewer 인스턴스의 field별 presentation 상태로만 유지한다. 저장된 content는 실행하지 않고 raw HTML·iframe·`eval`·`new Function`을 허용하지 않는다. 각 request/response/error content field가 1 MiB(1,048,576 UTF-8 bytes) 이하이면 별도 문자 수·줄 수 truncation 없이 전문을 제공하며, inline 접기와 전체 보기만 표시 상태로 구분한다. 1 MiB 초과는 AC-004 저장 크기 제한을 따른다.
+- **Statement:** Viewer adapter는 JSON parse 성공 시 request/response를 read-only JSON object/array tree container로 표시해야 한다. object/array/number/boolean/null은 tree 탐색 대상으로 유지하고 문자열 leaf만 viewer 입력으로 취급해야 한다. 문자열 leaf는 기본 축약 preview를 제공하며 전체 보기 요청 시 popup viewer window/dialog에서 해당 문자열만 표시해야 한다. Popup viewer의 `Auto`는 선택된 문자열에 대해 content hint → JSON parse → 제한된 Markdown 판별 → `highlight.js` 후보 → plain text fallback 순서를 따른다. 사용자는 `Auto`, `JSON`, `Markdown`, `Code`, `Plain text`와 curated code language를 선택할 수 있고 선택은 현재 request/response field의 문자열 leaf viewer instance presentation 상태로만 유지해야 한다. 저장된 content는 실행하지 않고 raw HTML·iframe·`eval`·`new Function`을 허용하지 않는다. 각 JSON 문자열 값이 1 MiB(1,048,576 UTF-8 bytes) 이하이면 별도 문자 수·줄 수 truncation 없이 popup에서 전문을 제공하며, 1 MiB 초과는 AC-004 저장 크기 제한을 따른다.
 - **Decision summary:** Option D와 후속 Option A 결정들을 채택한다. 형식별 전문 viewer 조합, 제한된 mode contract, viewer 인스턴스 범위 선택 보존, 1 MiB 전문 표시 기준을 사용한다.
 - **Depends on:** ASR-027, ASR-028
 - **Related AC:** AC-028
@@ -301,3 +301,4 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 - 2026-03-10: 사용자 go-ahead("ok")로 Sprint 09 ASR registry를 승인했다. `spec/llm-proxy-turn-traffic.md` 작성으로 진행한다.
 - 2026-03-10: Sprint 12의 승인된 AC-025~AC-028과 관련 ADR/Direct Input을 ASR-028~ASR-031 초안으로 통합했다. 사용자 ASR 승인 대기.
 - 2026-03-10: 사용자 go-ahead("ok")로 ASR-028~ASR-031과 전체 Sprint 12 ASR delta를 승인했다. `spec/llm-proxy-turn-management.md` 작성으로 진행한다.
+- 2026-03-10: 사용자 변경 요청에 따라 ASR-031을 JSON container + 문자열 leaf popup viewer 계약으로 수정했다. 기존 승인 Spec과 ADR은 이 변경에 맞춰 재검토가 필요하다.

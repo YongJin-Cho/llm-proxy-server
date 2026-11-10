@@ -65,11 +65,11 @@ TrafficPage
 
 - R-011: TurnTree는 turn title 편집, flag 설정·해제, turn 삭제 action을 제공해야 한다. 삭제는 turn 단위만 가능하고 confirmation 이후 성공하면 현재 selection을 정리하며 현재 filter/page를 재조회해야 한다. legacy synthetic node에는 turn cascade 삭제 action을 제공하지 않아야 한다. ← ASR-028; R-001~R-004 of `spec/llm-proxy-turn-management.md`
 
-- R-012: Traffic detail의 request, response, error field는 공통 `ContentViewer` adapter를 통해 표시해야 한다. Auto mode는 content hint → JSON parse → 제한된 Markdown 판별 → curated code language 후보 → escaped plain text fallback 순서를 따르고, 사용자가 선택한 mode/language는 자동 감지 결과보다 우선해야 한다. ← ASR-031; R-007~R-012 of `spec/llm-proxy-turn-management.md`
+- R-012: Traffic detail의 `request`와 `response`는 전체 문자열을 하나의 표시 형식으로 감지하는 대상이 아니라 JSON object/array container로 처리해야 한다. JSON parse에 성공한 request/response는 read-only JSON tree로 표시하고, object/array/number/boolean/null node는 tree 탐색 대상으로 유지하며 문자열 leaf만 별도의 viewer 대상이 된다. JSON parse에 실패한 content는 안전한 plain text fallback으로 표시한다. ← ASR-031; R-007~R-012 of `spec/llm-proxy-turn-management.md`
 
-- R-013: Content viewer는 JSON을 read-only JSON tree, 허용된 Markdown을 sanitizer를 거친 Markdown, code/text를 read-only code viewer 또는 plain text로 표시해야 한다. raw HTML 실행, JavaScript 실행, iframe, `eval`, `new Function`, 동적 외부 content fetch를 허용하지 않아야 하며, 감지 실패·지원 불가 형식·viewer 오류는 안전한 plain text로 복구해야 한다. ← ASR-031; C-004~C-005 of `spec/llm-proxy-turn-management.md`
+- R-013: JSON tree의 문자열 leaf는 기본 상태에서 축약된 preview를 표시해야 한다. 사용자가 문자열 leaf의 전체 보기/확대를 요청하면 inline content를 확장하지 않고 popup viewer window를 열어 해당 문자열 값만 viewer로 표시해야 한다. Popup viewer는 문자열 단위로 열리고 닫혀야 하며, 다른 문자열 leaf나 request/response 전체를 viewer 대상으로 취급하지 않아야 한다.
 
-- R-014: Content viewer의 mode/language 선택 상태는 request/response/error field별 현재 viewer instance에만 유지해야 한다. traffic 변경, viewer unmount/close, 새로고침 시 자동 감지 상태로 초기화하며 URL, 서버, localStorage에 저장하지 않아야 한다. 각 field의 저장된 bounded content가 1 MiB 이하이면 별도 문자 수·줄 수 truncation 없이 전체를 확인할 수 있어야 한다. ← ASR-031; R-009~R-010 of `spec/llm-proxy-turn-management.md`
+- R-014: Popup viewer는 선택된 문자열 값에 대해서만 Auto, JSON, Markdown, Code, Plain text 표시 형식을 제공해야 한다. Auto mode는 해당 문자열 값에 대해 content hint → JSON parse → 제한된 Markdown 판별 → curated code language 후보 → escaped plain text fallback 순서를 따르고, 사용자가 선택한 mode/language는 자동 감지 결과보다 우선해야 한다. ← ASR-031; R-007~R-012 of `spec/llm-proxy-turn-management.md`
 
 - R-015: UI는 기존 `/api/v1` namespace와 `src/ui/data-query/` 경계를 사용해야 한다. page와 component는 SQLite connection/table 또는 server 내부 module을 import하지 않고, 모든 query/mutation은 browser-side data-query 함수와 API route를 통해 수행해야 한다. ← ASR-014; C-001/C-003 of `spec/llm-proxy-turn-management.md`
 
@@ -77,7 +77,7 @@ TrafficPage
 
 - R-017: UI layout은 desktop에서 sidebar와 right content를 나란히 표시하고, 폭이 좁은 화면에서는 sidebar가 위, right content가 아래로 배치되도록 responsive fallback을 제공해야 한다. 오른쪽 content는 horizontal overflow로 인해 tree와 detail의 식별 가능성을 잃지 않아야 한다.
 
-- R-018: UI 검증은 최소한 다음 동작을 재현해야 한다: turn tree 표시, all/flagged filter, turn pagination, URL turn/traffic selection, browser back/forward, `TurnView`/`TrafficView` exclusive rendering, initial traffic URL detail fetch, independent detail error, turn metadata action, summary null/partial 표시, content viewer mode/fallback/safety/1 MiB bound. `npm run build`와 `npm run verify`를 기본 진입점으로 유지해야 한다. ← ASR-009; ASR-015; ASR-027; ASR-031
+- R-018: UI 검증은 최소한 다음 동작을 재현해야 한다: turn tree 표시, all/flagged filter, turn pagination, URL turn/traffic selection, browser back/forward, `TurnView`/`TrafficView` exclusive rendering, initial traffic URL detail fetch, independent detail error, turn metadata action, summary null/partial 표시, JSON object tree rendering, string leaf preview, popup viewer open/close, string-scoped viewer mode/fallback/safety/1 MiB bound. `npm run build`와 `npm run verify`를 기본 진입점으로 유지해야 한다. ← ASR-009; ASR-015; ASR-027; ASR-031
 
 - R-019: 각 turn node는 탐색기처럼 접힘/펼침 상태를 가져야 한다. turn header에는 왼쪽부터 접힘/펼침 아이콘 버튼, flag 아이콘 버튼, turn title/status/count 정보를 표시해야 한다. 접힘 상태에서는 child traffic node를 숨기고, 펼침 상태에서는 해당 turn의 child traffic을 sequence 순서로 표시해야 한다. 접힘/펼침과 flag action은 서로 독립적으로 동작해야 한다.
 
@@ -90,6 +90,10 @@ TrafficPage
 - R-023: `TrafficView`는 traffic summary를 content detail보다 먼저 표시해야 한다. summary에는 model, model provider, input tokens, cached input tokens, output tokens, cost, 처리 시간을 표시하며 서버 projection의 null/partial 의미를 유지해야 한다. TrafficView는 해당 값을 다른 traffic이나 turn의 값으로 보완하거나 추정하지 않아야 한다.
 
 - R-024: `TrafficView`의 request와 response content는 각각 read-only JSON tree view로 표시해야 한다. JSON parse가 성공한 request/response는 접을 수 있는 JSON tree로 탐색할 수 있어야 하며, JSON parse가 실패하거나 content가 JSON이 아닌 경우에는 기존 ContentViewer의 안전한 fallback 규칙을 사용한다. request와 response의 viewer state는 서로 독립이어야 한다.
+
+- R-025: 문자열 preview에서 전체 보기/확대를 요청하면 popup viewer를 열고, popup을 닫으면 동일한 JSON tree 위치로 돌아가야 한다. Popup viewer는 read-only여야 하며 원본 request/response JSON이나 문자열 값을 변경하지 않아야 한다.
+
+- R-026: Popup viewer의 mode/language 선택 상태는 request/response field와 문자열 leaf 식별자별 현재 viewer instance에만 유지해야 한다. 다른 문자열 leaf 선택, traffic 변경, viewer close, 새로고침 시 자동 감지 상태로 초기화하며 URL, 서버, localStorage에 저장하지 않아야 한다. 저장된 각 문자열 값이 1 MiB 이하이면 별도 문자 수·줄 수 truncation 없이 popup에서 전체를 확인할 수 있어야 한다. ← ASR-031; R-009~R-010 of `spec/llm-proxy-turn-management.md`
 
 ## Constraints
 
@@ -105,11 +109,15 @@ TrafficPage
 
 - C-006: UI component는 API 호출 책임을 가지지 않는다. API 호출은 `src/ui/data-query/`에 두며, `TrafficPage`는 이를 조합하고 presentational component에는 data와 callback을 전달한다.
 
-- C-007: `TurnView`와 `TrafficView`는 서로의 상세 표시 책임을 중복 구현하지 않는다. TurnView는 turn projection과 child selection을, TrafficView는 lazy traffic detail과 content viewer를 소유한다.
+- C-007: `TurnView`와 `TrafficView`는 서로의 상세 표시 책임을 중복 구현하지 않는다. TurnView는 turn projection과 child selection을, TrafficView는 lazy traffic detail과 JSON tree/popup string viewer를 소유한다.
 
-- C-008: UI 상태에서 server projection 값과 presentation state를 구분한다. server projection에는 turn/traffic selection, summary, metadata가 포함되고, viewer mode/language 같은 presentation state는 현재 viewer instance 범위에만 둔다. ← ASR-031
+- C-008: UI 상태에서 server projection 값과 presentation state를 구분한다. server projection에는 turn/traffic selection, summary, metadata가 포함되고, JSON tree expansion과 popup viewer mode/language 같은 presentation state는 현재 viewer instance 범위에만 둔다. ← ASR-031
 
-- C-009: 화면의 텍스트와 상태 표시는 운영자가 loading/empty/error/completed/failed/in_progress를 식별할 수 있어야 하며, 상태 enum을 임의의 새로운 lifecycle 의미로 변환하지 않는다.
+- C-009: request/response 전체 content를 Markdown/code/plain-text viewer로 자동 감지하지 않는다. request/response는 JSON tree container가 우선이며, viewer detection은 JSON tree 내부의 선택된 문자열 leaf에 대해서만 수행한다.
+
+- C-010: 문자열 전체 보기 popup은 현재 UI 안의 독립 viewer window/dialog로 제공하며, popup close 시 JSON tree로 복귀할 수 있어야 한다. popup이 브라우저의 새 탭/새 창을 열어야 한다는 계약은 포함하지 않는다.
+
+- C-011: 화면의 텍스트와 상태 표시는 운영자가 loading/empty/error/completed/failed/in_progress를 식별할 수 있어야 하며, 상태 enum을 임의의 새로운 lifecycle 의미로 변환하지 않는다.
 
 ## Current Implementation Baseline
 
@@ -126,7 +134,10 @@ TrafficPage
 | Turn traffic usage summary table | No table; child traffic buttons only | gap from this UI Spec |
 | Lazy traffic detail | `TrafficView` → `LogDetail` → `ContentViewer` | implemented |
 | Traffic usage summary | `LogDetail` displays model/tokens/cost/latency; provider and dedicated summary layout are absent | partial |
-| Request/response JSON tree | `ContentViewer` supports JSON viewer through hint/detection | implemented |
+| Request/response JSON object tree | Current `ContentViewer` parses the entire content and renders a JSON tree | partial: string leaf popup behavior is absent |
+| String leaf collapsed preview | Current JSON viewer behavior only provides generic tree expansion | partial |
+| String leaf popup viewer | No popup viewer window/dialog exists | gap from this UI Spec |
+| Request/response whole-content viewer detection | Current implementation detects the entire request/response content | conflict: must be replaced by container-first behavior |
 | Request/response dedicated JSON tree layout | `LogDetail` currently uses generic content viewer sections | partial |
 | Independent traffic detail loading/error | `TrafficPage` state + `TrafficView` | implemented |
 | Turn title/flag/delete actions | `TurnTree` callbacks | implemented |
@@ -135,6 +146,7 @@ TrafficPage
 | Responsive sidebar/content layout | `styles.css` media query | implemented |
 | Automated UI-specific exclusive-view assertions | not yet isolated as a dedicated test inventory | follow-up verification |
 | Automated collapse/expand, summary-table, and traffic-summary assertions | not yet isolated as a dedicated test inventory | follow-up verification |
+| Automated JSON tree string-preview/popup-viewer assertions | not yet isolated as a dedicated test inventory | follow-up verification |
 
 ## Out of Scope
 
@@ -169,3 +181,4 @@ TrafficPage
 - 2026-03-10: 오른쪽 콘텐츠 영역의 exclusive `TurnView`/`TrafficView` 계약과 traffic URL direct-load detail fetch를 현재 구현 기준으로 명시했다.
 - 2026-03-10: 상위 Turn 관리 Spec의 traffic title editing 요구와 현재 `TurnTree` 구현 사이의 gap을 baseline에 기록했다. 이 문서는 해당 기능을 구현 완료로 가장하지 않는다.
 - 2026-03-10: 사용자 UI 요구사항을 반영해 turn collapse/expand, sidebar header pagination, turn traffic summary table, traffic usage summary, request/response JSON tree view를 R-019~R-024로 추가했다. 현재 구현과의 차이는 Current Implementation Baseline에 기록했다.
+- 2026-03-10: request/response 전체 content viewer 감지 방식을 폐기하고, JSON object tree 내부 문자열 leaf만 축약 preview와 popup viewer의 대상으로 변경했다. 관련 요구사항을 R-012~R-016 및 C-009~C-010으로 기록했다.
