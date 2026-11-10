@@ -51,12 +51,14 @@ function PopupViewer({ target, onClose }: { target: StringTarget; onClose: () =>
 
   return <div className="viewer-popup-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
     <section className="viewer-popup" role="dialog" aria-modal="true" aria-label={`문자열 viewer: ${target.path}`}>
-      <header className="viewer-popup-header"><div><h3>문자열 Viewer</h3><p>{target.path} · {byteLength(target.value)} bytes</p></div><button type="button" onClick={onClose} aria-label="문자열 viewer 닫기">닫기</button></header>
-      <div className="viewer-controls">
-        <label>표시 형식<select value={selection.mode} onChange={(event) => changeMode(event.target.value as ViewerMode)}>{modeLabels.map(([value, text]) => <option key={value} value={value}>{text}</option>)}</select></label>
-        {selection.mode === 'code' && <label>언어<select value={selection.language ?? 'plaintext'} onChange={(event) => changeLanguage(event.target.value)}>{curatedLanguages.map(({ id, label }) => <option key={id} value={id}>{label}</option>)}</select></label>}
-        <span className="viewer-meta">감지: {resolved.detectedMode}{resolved.fallbackReason ? ` · fallback: ${resolved.fallbackReason}` : ''}</span>
-      </div>
+      <header className="viewer-popup-header">
+        <div className="viewer-controls">
+          <label>표시 형식<select value={selection.mode} onChange={(event) => changeMode(event.target.value as ViewerMode)}>{modeLabels.map(([value, text]) => <option key={value} value={value}>{text}</option>)}</select></label>
+          {selection.mode === 'code' && <label>언어<select value={selection.language ?? 'plaintext'} onChange={(event) => changeLanguage(event.target.value)}>{curatedLanguages.map(({ id, label }) => <option key={id} value={id}>{label}</option>)}</select></label>}
+          <span className="viewer-size">{byteLength(target.value)} bytes</span>
+        </div>
+        <button type="button" className="viewer-popup-close" onClick={onClose} aria-label="문자열 viewer 닫기" title="닫기">×</button>
+      </header>
       <div className="viewer-body">
         {resolved.selectedMode === 'json' && resolved.parsedJson !== undefined && <JsonView value={resolved.parsedJson as object} displayDataTypes={false} enableClipboard={false} />}
         {resolved.selectedMode === 'markdown' && <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>{target.value}</ReactMarkdown>}
@@ -72,7 +74,7 @@ export function ContentViewer({ label, content, hint }: Props) {
   const [selection, setSelection] = useState<ViewerSelection>({ mode: 'auto' });
   const source = useMemo(() => serializeViewerContent(content), [content]);
   const parsed = useMemo(() => parseJsonContent(source), [source]);
-  const isJsonContainer = (label === '요청' || label === '응답') && parsed !== undefined && typeof parsed === 'object' && parsed !== null;
+  const isJsonContainer = (label === 'request' || label === 'response') && parsed !== undefined && typeof parsed === 'object' && parsed !== null;
   const resolved = useMemo(() => resolveSelection(source, selection, hint), [source, selection, hint]);
   if (!content) return <section className="content-viewer"><h4>{label}</h4><p>—</p></section>;
 

@@ -35,9 +35,9 @@ function filters() {
 function detailView(log) {
   return `<section class="card"><button id="back">← 목록</button><h2>Traffic ${esc(log.id)}</h2>
     <p><strong>상태:</strong> <span class="status ${esc(log.status)}">${esc(log.status)}</span> · <strong>모델:</strong> ${esc(log.model)} · <strong>지연:</strong> ${esc(log.latency_ms)}ms</p>
-    <h3>요청</h3><pre>${esc(pretty(log.request_json))}</pre>
-    <h3>응답</h3><pre>${esc(pretty(log.response_json))}</pre>
-    <h3>오류</h3><pre>${esc(log.error || '—')}</pre></section>`;
+    <h3>request</h3><pre>${esc(pretty(log.request_json))}</pre>
+    <h3>response</h3><pre>${esc(pretty(log.response_json))}</pre>
+    <h3>error</h3><pre>${esc(log.error || '—')}</pre></section>`;
 }
 function listView(payload) {
   const rows = payload.data.map((log) => `<tr><td><a data-id="${esc(log.id)}">${esc(log.id.slice(0, 8))}</a></td><td class="status ${esc(log.status)}">${esc(log.status)}</td><td>${esc(log.model)}</td><td>${esc(log.http_status)}</td><td>${esc(log.latency_ms)}ms</td><td>${esc(log.started_at)}</td></tr>`).join('');
