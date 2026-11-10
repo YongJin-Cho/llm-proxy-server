@@ -61,7 +61,9 @@
 | 08 | 다중 API 프록시 구현 | 2026-03-10 | [`TODO-08.md`](./scrum/TODO-08.md) |
 | 09 | Turn 기반 traffic 그룹핑·탐색 요구사항 확정 | 2026-03-10 | [`TODO-09.md`](./scrum/TODO-09.md) |
 | 10 | Turn grouping backend과 SSE aggregate 구현 | 2026-03-10 | [`TODO-10.md`](./scrum/TODO-10.md) |
+| 11 | Turn tree API·Sidebar UI·통합 검증 완성 | 2026-03-10 | [`TODO-11.md`](./scrum/TODO-11.md) |
 
 ## Notes
 
 - 2026-03-10: Sprint 11 계획 승인. PB-022·PB-023·PB-024를 Scope로 커밋하고 T-001부터 실행한다.
+- 2026-03-10: Sprint 11 완료 승인 후 Boundary를 실행했다. PB-022·PB-023·PB-024를 종료하고 sprint-11을 보관했다. 다음 sprint-12 계획은 아직 없어 라이브 보드는 다음 계획 승인 후 재시드한다.
