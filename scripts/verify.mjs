@@ -71,7 +71,7 @@ const providerA = createServer((req, res) => {
     providerRequests.push({ provider: 'a', path: req.url, headers: req.headers, body: payload });
     if (payload.stream === true) return streamResponse(req, res, payload);
     res.writeHead(200, { 'content-type': 'application/json' });
-    const usage = req.url === '/chat/completions' ? { prompt_tokens: 3, completion_tokens: 2 } : { input_tokens: 3, input_tokens_details: { cached_tokens: 2 }, output_tokens: 2, cost: 0.003 };
+    const usage = req.url === '/chat/completions' ? { prompt_tokens: 3, completion_tokens: 2, cost: 0.004 } : { input_tokens: 3, input_tokens_details: { cached_tokens: 2 }, output_tokens: 2, cost: 0.003 };
     res.end(JSON.stringify({ id: 'response-a', model: payload.model, output: [], choices: [], content: [], usage, cost_usd: 0.01, large_payload: 'r'.repeat(5000) }));
   });
 });
@@ -207,7 +207,7 @@ try {
   const chatLog = listed.find((entry) => entry.api_kind === 'chat_completions' && entry.streaming === 0);
   const messagesLog = listed.find((entry) => entry.api_kind === 'messages' && entry.streaming === 0);
   assert.equal(chatLog.input_tokens, 3);
-  assert.equal(chatLog.cost_usd, 0.01);
+  assert.equal(chatLog.cost_usd, 0.004);
   const responsesLog = listed.find((entry) => entry.api_kind === 'responses' && entry.streaming === 0 && entry.model === 'client-alpha');
   assert.equal(responsesLog.input_tokens, 3);
   assert.equal(responsesLog.cached_input_tokens, 2);

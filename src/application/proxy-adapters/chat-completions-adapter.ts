@@ -77,7 +77,7 @@ export class ChatCompletionsAdapter extends ProxyAdapter {
         cachedInputTokens: cached,
         outputTokens: output,
         totalTokens: input !== null && output !== null ? input + output : null,
-        costUsd: typeof body.cost_usd === 'number' ? body.cost_usd : null,
+        costUsd: typeof usage?.cost === 'number' ? usage.cost : null,
       };
     } catch {
       return emptyUsage();
