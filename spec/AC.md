@@ -33,7 +33,7 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 | AC-025 | Turn·traffic 관리 메타데이터 저장과 삭제 의미 | Structure & organization | reviewing | adr/turn-management-metadata-and-deletion.md (proposed) | — |
 | AC-026 | 전체·flagged 필터의 조회 책임과 pagination 계약 | Integration & dependencies | identified | — | — |
 | AC-027 | Turn summary와 traffic usage summary 데이터 계약 | Integration & dependencies | identified | adr/usage-and-cost-metadata.md (approved) | — |
-| AC-028 | 긴 문자열 형식 표시와 안전한 전체 보기 | Constraints (structural) | identified | — | — |
+| AC-028 | 긴 문자열 형식 표시와 안전한 전체 보기 | Constraints (structural) | designed | adr/long-string-safe-rendering.md (approved) | — |
 
 ## Dependency Order (recommended review path)
 
@@ -377,14 +377,14 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 ### AC-028 — 긴 문자열 형식 표시와 안전한 전체 보기
 
 - **Category:** Constraints (structural)
-- **Status:** reviewing
+- **Status:** designed
 - **Statement:** request/response의 긴 문자열을 언제 축약하고 어떤 기준으로 Markdown·JSON·JavaScript 등을 표시하며, 전체 보기와 불확실·지원 불가 형식의 fallback을 XSS·임의 실행 없이 어떻게 제공할 것인가?
 - **Why it matters:** renderer 선택은 읽기 편의성과 보안에 동시에 영향을 주며, 형식 오인식이나 실행 가능한 표시가 저장된 provider/client 데이터의 위험을 높일 수 있다.
 - **Depends on:** AC-004, AC-021, AC-025
 - **Related ADRs:**
-  - `adr/long-string-safe-rendering.md` — proposed
+  - `adr/long-string-safe-rendering.md` — approved
 - **Resolution path:** adr
-- **Resolution:** 아직 미정.
+- **Resolution:** ADR Option D를 채택한다. JSON parse 성공 시 read-only JSON tree를 기본 표시하고, 명시적 Markdown hint 또는 제한된 Markdown 판별 시 sanitized Markdown viewer를 사용한다. 그 외 code/text는 `highlight.js` auto-detection을 초기 language 후보로 삼아 read-only Monaco에 표시하며, 감지 실패·불확실·지원 불가 언어는 escaped plain text로 fallback한다. 사용자는 `Auto`, `JSON`, `Markdown`, `Code`, `Plain text`와 code language를 다시 선택할 수 있고, 사용자 선택은 자동 감지보다 우선하며 원본 content는 변경하지 않는다. 모든 표시 경로는 저장된 content를 실행하지 않고, raw HTML·iframe·`eval`·`new Function`을 허용하지 않는다. preview/전체 보기의 구체적 threshold와 실제 viewer 의존성은 별도 후속 결정으로 둔다.
 
 
 ## Notes
@@ -402,3 +402,4 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - 2026-03-10: 사용자 go-ahead("ok")로 AC-027의 Option A를 승인하고 designed 처리했다. summary extraction과 partial representation은 downstream ADR 후보로 남겼다. AC-028을 reviewing으로 전환하고 `adr/long-string-safe-rendering.md`를 proposed 상태로 연결했다.
 - 2026-03-10: 사용자 go-ahead("ok")로 AC-023의 Option B를 승인했다. 미완료 turn pool, tool-call ID 역색인, 관찰 순서 기반 traffic sequence를 사용한다.
 - 2026-03-10: 사용자 go-ahead("ok")로 후속 ADR `ambiguous-missing-tool-id-fallback.md`를 승인했다. 매칭 불가 traffic은 fallback reason과 함께 새 standalone turn으로 격리한다.
+- 2026-03-10: 사용자 go-ahead("D로 해줘")로 `adr/long-string-safe-rendering.md`의 Option D를 승인하고 AC-028을 designed 처리했다. viewer dependency selection, format mode contract, preview thresholds는 후속 쟁점으로 분류했다.

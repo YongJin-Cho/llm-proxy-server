@@ -44,7 +44,7 @@
   - Phase: AC review
   - Artifact: `spec/AC.md`, `adr/`
   - Depends: T-004
-  - Notes: AC-025를 reviewing으로 전환하고 proposed ADR을 작성했다. 사용자 입력으로 turn 단위 물리 삭제·child traffic cascade·논리 삭제/복원 제외를 반영했다. 사용자 go-ahead("B로 해줘")로 Option B ADR을 approved 처리하고 AC-025를 designed로 정리했다. AC-026 Option A와 AC-027 Option A를 승인 후 designed 처리했으며, AC-028 review를 시작했다.
+  - Notes: AC-025를 reviewing으로 전환하고 proposed ADR을 작성했다. 사용자 입력으로 turn 단위 물리 삭제·child traffic cascade·논리 삭제/복원 제외를 반영했다. 사용자 go-ahead("B로 해줘")로 Option B ADR을 approved 처리하고 AC-025를 designed로 정리했다. AC-026 Option A와 AC-027 Option A를 승인 후 designed 처리했으며, AC-028 review를 시작했다. AC-028 ADR에 `highlight.js` 감지 → Monaco read-only 표시와 viewer 내 사용자 형식 재선택을 포함한 Option B~D를 추가했다. 사용자 go-ahead("D로 해줘")로 Option D를 approved 처리하고 AC-028을 designed로 정리했다. 후속 쟁점은 viewer dependency selection, format mode contract, preview thresholds로 triage했다. `adr/viewer-dependency-selection.md`를 proposed 상태로 열어 Option A~C와 검증 기준을 기록했으며, 사용자 검토 대기.
 
   - [ ] **T-006** — ASR 통합 및 승인
   - Phase: ASR
