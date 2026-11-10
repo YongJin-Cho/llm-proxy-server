@@ -33,6 +33,10 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 | ASR-025 | Turn tree aggregate query API | AC-020 | AC-020 | adr/turn-traffic-query-tree-projection.md |
 | ASR-026 | Legacy traffic non-migration compatibility | AC-022 | AC-022 | adr/legacy-traffic-tree-compatibility.md |
 | ASR-027 | Sidebar selection and main-view contract | AC-021 | AC-021 | adr/sidebar-selection-main-view-contract.md |
+| ASR-028 | Turn 관리 메타데이터와 삭제 계약 | AC-025 | AC-025 | adr/turn-management-metadata-and-deletion.md |
+| ASR-029 | Turn 필터와 pagination query 계약 | AC-026 | AC-026 | adr/turn-filter-pagination-contract.md |
+| ASR-030 | Turn summary와 usage projection | AC-027 | AC-027 | adr/usage-and-cost-metadata.md; adr/turn-summary-usage-projection.md |
+| ASR-031 | 안전한 긴 문자열 viewer 계약 | AC-028 | AC-028 | adr/long-string-safe-rendering.md; adr/viewer-dependency-selection.md; adr/format-mode-contract.md |
 
 ## Dependency Order (recommended Spec encoding path)
 
@@ -40,6 +44,7 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 2. ASR-010 → ASR-011 → ASR-012 → ASR-013 → ASR-014 → ASR-015
 3. ASR-016 → ASR-017 → ASR-018 → ASR-019 → ASR-020
 4. ASR-021 → ASR-022 → ASR-023 → ASR-024 → ASR-025 → ASR-026 → ASR-027
+5. ASR-028 → ASR-029 → ASR-030 → ASR-031
 
 ## ASR Detail
 
@@ -249,6 +254,38 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 - **Related AC:** AC-021
 - **Related ADRs:** `adr/sidebar-selection-main-view-contract.md` — approved
 
+### ASR-028 — Turn 관리 메타데이터와 삭제 계약
+- **Source:** AC-025 — Turn·traffic 관리 메타데이터 저장과 삭제 의미
+- **Statement:** Turn과 traffic의 제목·flag 관리 메타데이터는 request/response JSON 및 lifecycle 원본과 분리해 저장해야 한다. 삭제 API는 turn 단위만 제공하고, turn 삭제 시 해당 turn row와 모든 child traffic을 하나의 transaction에서 물리 삭제해야 한다. traffic 단독 삭제, 논리 삭제, 복원, 삭제 이력은 제공하지 않는다.
+- **Decision summary:** ADR Option B를 채택한다. `turns`와 `traffic_logs`에 관리 컬럼을 추가하고 turn-child cascade 물리 삭제를 사용한다.
+- **Depends on:** ASR-025
+- **Related AC:** AC-025
+- **Related ADRs:** `adr/turn-management-metadata-and-deletion.md` — approved
+
+### ASR-029 — Turn 필터와 pagination query 계약
+- **Source:** AC-026 — 전체·flagged 필터의 조회 책임과 pagination 계약
+- **Statement:** `GET /api/v1/turns`가 전체·flagged 필터를 서버에서 적용하고, 필터 적용 후 top-level turn node 기준으로 `total`, `page`, `limit`, `has_next`를 계산해야 한다. Child traffic은 parent turn 안에 반환하고 child 자체는 pagination하지 않는다. flag 변경·turn 삭제 성공 후 UI는 현재 query를 재조회하며 빈 page는 마지막 유효 page로 보정한다.
+- **Decision summary:** ADR Option A를 채택한다. Sidebar 필터와 pagination 책임은 서버 query에 둔다.
+- **Depends on:** ASR-028
+- **Related AC:** AC-026
+- **Related ADRs:** `adr/turn-filter-pagination-contract.md` — approved
+
+### ASR-030 — Turn summary와 usage projection
+- **Source:** AC-027 — Turn summary와 traffic usage summary 데이터 계약
+- **Statement:** Server query service가 turn과 child traffic에서 summary DTO를 생성해야 한다. 시작 user input은 첫 traffic에서, 종료 AI output은 마지막 completed traffic에서 선택한다. Usage·cost는 child traffic의 non-null 값을 합산하고, 값이 없으면 `null`, 일부만 있으면 partial 상태와 함께 반환한다. UI는 이 계산 규칙을 재구현하거나 provider가 보고하지 않은 cost를 추정하지 않는다.
+- **Decision summary:** ADR Option A를 채택한다. Provider-reported cost와 server-owned summary projection을 사용한다.
+- **Depends on:** ASR-029
+- **Related AC:** AC-027
+- **Related ADRs:** `adr/usage-and-cost-metadata.md` — approved; `adr/turn-summary-usage-projection.md` — approved
+
+### ASR-031 — 안전한 긴 문자열 viewer 계약
+- **Source:** AC-028 — 긴 문자열 형식 표시와 안전한 전체 보기
+- **Statement:** Viewer adapter는 JSON parse 성공 시 read-only JSON tree, 명시적 Markdown hint 또는 제한된 Markdown 판별 시 sanitized Markdown, 그 외 code/text에는 read-only Monaco를 사용해야 한다. `Auto`는 content hint → JSON parse → 제한된 Markdown 판별 → `highlight.js` 후보 → plain text fallback 순서를 따른다. 사용자는 `Auto`, `JSON`, `Markdown`, `Code`, `Plain text`와 curated code language를 선택할 수 있으며 선택은 현재 viewer 인스턴스의 field별 presentation 상태로만 유지한다. 저장된 content는 실행하지 않고 raw HTML·iframe·`eval`·`new Function`을 허용하지 않는다. 각 request/response/error content field가 1 MiB(1,048,576 UTF-8 bytes) 이하이면 별도 문자 수·줄 수 truncation 없이 전문을 제공하며, inline 접기와 전체 보기만 표시 상태로 구분한다. 1 MiB 초과는 AC-004 저장 크기 제한을 따른다.
+- **Decision summary:** Option D와 후속 Option A 결정들을 채택한다. 형식별 전문 viewer 조합, 제한된 mode contract, viewer 인스턴스 범위 선택 보존, 1 MiB 전문 표시 기준을 사용한다.
+- **Depends on:** ASR-027, ASR-028
+- **Related AC:** AC-028
+- **Related ADRs:** `adr/long-string-safe-rendering.md` — approved; `adr/viewer-dependency-selection.md` — approved; `adr/format-mode-contract.md` — approved
+
 ## Approval
 
 - 2026-03-10: 기존 ASR-001~ASR-009 승인.
@@ -262,3 +299,5 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 - 2026-03-10: Sprint 07의 승인된 AC-014~AC-018과 관련 ADR 결과를 ASR-016~ASR-020으로 통합했고 사용자 승인을 받았다.
 - 2026-03-10: Sprint 09의 승인된 AC-019~AC-024와 관련 ADR 결과를 ASR-021~ASR-027로 통합했다. 기존 traffic migration 제외, proxy semantic grouping, API별 adapter aggregation, turn tree query, legacy compatibility, URL selection을 반영했다.
 - 2026-03-10: 사용자 go-ahead("ok")로 Sprint 09 ASR registry를 승인했다. `spec/llm-proxy-turn-traffic.md` 작성으로 진행한다.
+- 2026-03-10: Sprint 12의 승인된 AC-025~AC-028과 관련 ADR/Direct Input을 ASR-028~ASR-031 초안으로 통합했다. 사용자 ASR 승인 대기.
+- 2026-03-10: 사용자 go-ahead("ok")로 ASR-028~ASR-031과 전체 Sprint 12 ASR delta를 승인했다. `spec/llm-proxy-turn-management.md` 작성으로 진행한다.

@@ -8,11 +8,11 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 5 | 3 | 0 | 0 |
+| 6 | 2 | 0 | 0 |
 
 **Sprint goal:** 저장·분석할 가치가 있는 turn을 운영자가 별도로 관리할 수 있도록 요구사항을 확정하고 승인 Spec을 구현 backlog로 분해한다.
-**Current focus:** T-006
-**Recommended next:** T-006 — ASR 통합 및 승인 (모든 blocking AC와 후속 ADR 결정 완료)
+**Current focus:** T-007
+**Recommended next:** T-007 — Turn 관리·분석 UI Spec 작성 및 승인
 
 ## Tasks
 
@@ -46,17 +46,19 @@
   - Depends: T-004
   - Notes: AC-025를 reviewing으로 전환하고 proposed ADR을 작성했다. 사용자 입력으로 turn 단위 물리 삭제·child traffic cascade·논리 삭제/복원 제외를 반영했다. 사용자 go-ahead("B로 해줘")로 Option B ADR을 approved 처리하고 AC-025를 designed로 정리했다. AC-026 Option A와 AC-027 Option A를 승인 후 designed 처리했으며, AC-028 review를 시작했다. AC-028 ADR에 `highlight.js` 감지 → Monaco read-only 표시와 viewer 내 사용자 형식 재선택을 포함한 Option B~D를 추가했다. 사용자 go-ahead("D로 해줘")로 Option D를 approved 처리하고 AC-028을 designed로 정리했다. 후속 쟁점은 viewer dependency selection, format mode contract, preview thresholds로 triage했다. `adr/viewer-dependency-selection.md`를 proposed 상태로 열어 Option A~C와 검증 기준을 기록했다. 사용자 go-ahead("ok")로 Option A를 approved 처리했으며, `adr/format-mode-contract.md`를 proposed 상태로 열어 Option A~C를 비교했다. 사용자 go-ahead("ok")로 Option A를 approved 처리했으며, preview thresholds가 남은 후속 쟁점이다. 사용자 Direct Input으로 preview threshold를 확정했다: 각 request/response/error content field는 1 MiB까지 전문을 제공하고 별도 문자 수·줄 수 truncation은 두지 않으며, inline 접기와 전체 보기만 표시 상태로 구분한다. AC-028과 부모 ADR에 반영했고 모든 blocking AC·후속 ADR이 settled 상태가 되었다.
 
-  - [ ] **T-006** — ASR 통합 및 승인
+  - [x] **T-006** — ASR 통합 및 승인
   - Phase: ASR
   - Artifact: `spec/ASR.md`
   - Depends: T-005
+  - Notes: ASR-028~ASR-031 초안을 기존 registry에 append했다. 사용자 go-ahead("ok")로 Sprint 12 ASR delta와 전체 ASR registry를 승인했다.
 
 - [ ] **T-007** — Turn 관리·분석 UI Spec 작성 및 승인
   - Phase: Spec
   - Artifact: `spec/llm-proxy-turn-management.md`, `spec-review/llm-proxy-turn-management.md`
   - Depends: T-006
+  - Notes: `spec/llm-proxy-turn-management.md` 초안을 작성했다. formal Spec review 및 승인을 기다린다.
 
-- [ ] **T-008** — 승인 Spec 기반 PB-025 이후 backlog encode 및 Demo Checklist
+  - [ ] **T-008** — 승인 Spec 기반 PB-025 이후 backlog encode 및 Demo Checklist
   - Phase: backlog
   - Artifact: `scrum/product-backlog.md`, `scrum/sprint-12.md`
   - Depends: T-007

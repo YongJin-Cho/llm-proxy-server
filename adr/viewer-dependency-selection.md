@@ -64,7 +64,6 @@ approved
 ## Related
 - `adr/long-string-safe-rendering.md` — parent ADR, approved Option D
 - `spec/AC.md` — AC-028
-- `docs/turn-viewer-library-research.md`
 - `package.json`
 - `package-lock.json`
 

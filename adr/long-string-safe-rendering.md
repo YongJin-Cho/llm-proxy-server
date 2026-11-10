@@ -87,7 +87,6 @@ approved
 
 ## Related
 - `spec/AC.md` — AC-028
-- `docs/turn-viewer-library-research.md`
 - `adr/sensitive-data-retention.md`
 - `adr/ui-framework-and-monitoring-structure.md`
 - `adr/turn-summary-usage-projection.md`
