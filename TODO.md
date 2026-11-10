@@ -8,11 +8,11 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 3 | 5 | 0 | 0 |
+| 4 | 4 | 0 | 0 |
 
 **Sprint goal:** 저장·분석할 가치가 있는 turn을 운영자가 별도로 관리할 수 있도록 요구사항을 확정하고 승인 Spec을 구현 backlog로 분해한다.
-**Current focus:** T-004
-**Recommended next:** T-004 — AC 목록 승인 게이트
+**Current focus:** T-005
+**Recommended next:** T-005 — AC-025 설계 결정 및 ADR 검토
 
 ## Tasks
 
@@ -34,18 +34,19 @@
   - Depends: T-002
   - Notes: AC-025~AC-028을 identified로 append하고 AC-025 → AC-026 → AC-027 → AC-028 review 순서를 설정했다.
 
-- [ ] **T-004** — AC 목록 승인 게이트
+- [x] **T-004** — AC 목록 승인 게이트
   - Phase: gate
   - Artifact: `spec/AC.md`
   - Depends: T-003
-  - Notes: 사용자 go-ahead 후 AC review에서 의존 순서대로 한 건씩 결정한다.
+  - Notes: 사용자 go-ahead("ok")로 AC-025~AC-028과 의존 순서를 승인했다.
 
 - [ ] **T-005** — AC별 설계 결정 및 ADR/Direct Input 정리
   - Phase: AC review
   - Artifact: `spec/AC.md`, `adr/`
   - Depends: T-004
+  - Notes: AC-025를 reviewing으로 전환하고 proposed ADR을 작성했다. ADR 승인 후 AC-025를 designed로 정리한다.
 
-- [ ] **T-006** — ASR 통합 및 승인
+  - [ ] **T-006** — ASR 통합 및 승인
   - Phase: ASR
   - Artifact: `spec/ASR.md`
   - Depends: T-005

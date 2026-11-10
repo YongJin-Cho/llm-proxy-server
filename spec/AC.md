@@ -30,6 +30,10 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 | AC-022 | Non-migration legacy traffic 호환 표시 | Constraints (structural) | designed | adr/legacy-traffic-tree-compatibility.md (approved) | ASR-026 |
 | AC-023 | Turn grouping 순서·동시성·완료 판정 | Quality bar (architectural) | designed | adr/turn-order-concurrency-completion.md (approved) | ASR-022 |
 | AC-024 | SSE 최종 응답 통합 저장 | Structure & organization | designed | adr/sse-final-response-aggregation.md (approved) | ASR-023 |
+| AC-025 | Turn·traffic 관리 메타데이터 저장과 삭제 의미 | Structure & organization | reviewing | adr/turn-management-metadata-and-deletion.md (proposed) | — |
+| AC-026 | 전체·flagged 필터의 조회 책임과 pagination 계약 | Integration & dependencies | identified | — | — |
+| AC-027 | Turn summary와 traffic usage summary 데이터 계약 | Integration & dependencies | identified | adr/usage-and-cost-metadata.md (approved) | — |
+| AC-028 | 긴 문자열 형식 표시와 안전한 전체 보기 | Constraints (structural) | identified | — | — |
 
 ## Dependency Order (recommended review path)
 
@@ -336,13 +340,13 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 ### AC-025 — Turn·traffic 관리 메타데이터 저장과 삭제 의미
 
 - **Category:** Structure & organization
-- **Status:** identified
+- **Status:** reviewing
 - **Statement:** 사용자가 편집한 turn·traffic 제목, flag 상태, 삭제 상태를 기존 traffic 본문·lifecycle 원본과 분리해 어떤 저장 모델로 영구화하고, turn 삭제와 개별 traffic 삭제를 어떤 의미와 cascade 규칙으로 처리할 것인가?
 - **Why it matters:** 관리 메타데이터를 원본에 덮어쓰거나 삭제 의미를 암묵적으로 정하면 복구·감사·turn 관계·기존 상세 조회의 일관성이 깨질 수 있다.
 - **Depends on:** AC-019, AC-020
 - **Related ADRs:**
-  - 아직 없음
-- **Resolution path:** adr | direct-input
+  - `adr/turn-management-metadata-and-deletion.md` — proposed
+- **Resolution path:** adr
 - **Resolution:** 아직 미정.
 
 ### AC-026 — 전체·flagged 필터의 조회 책임과 pagination 계약
@@ -390,5 +394,6 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - 2026-03-10: SSE streaming 저장 응답을 최종 통합 응답 하나로 제한하기 위해 AC-024를 추가 식별했다.
 - 2026-03-10: 사용자 결정으로 AC-019를 designed 처리했다. client/harness 변경 없이 proxy semantic grouping을 사용하며, 복수 tool call/tool message는 ID 기준으로 매칭하고 순서는 보장하지 않는다.
 - 2026-03-10: Turn 관리·분석 UI PRD delta 승인에 따라 AC-025~AC-028을 identified로 추가했다. 관리 메타데이터 저장·삭제, 서버 필터·페이지네이션, summary/usage projection, 안전한 형식별 renderer가 이번 review의 blocking concern이다.
+- 2026-03-10: AC 목록 승인 후 AC-025를 reviewing으로 전환하고 `adr/turn-management-metadata-and-deletion.md`를 proposed 상태로 연결했다.
 - 2026-03-10: 사용자 go-ahead("ok")로 AC-023의 Option B를 승인했다. 미완료 turn pool, tool-call ID 역색인, 관찰 순서 기반 traffic sequence를 사용한다.
 - 2026-03-10: 사용자 go-ahead("ok")로 후속 ADR `ambiguous-missing-tool-id-fallback.md`를 승인했다. 매칭 불가 traffic은 fallback reason과 함께 새 standalone turn으로 격리한다.
