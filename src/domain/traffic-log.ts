@@ -4,6 +4,7 @@ export type TrafficLogApiKind = 'responses' | 'chat_completions' | 'messages';
 export type TrafficLog = {
   id: string;
   api_kind: TrafficLogApiKind;
+  provider?: string | null;
   started_at: string;
   finished_at?: string | null;
   status: TrafficLogStatus;
@@ -29,6 +30,7 @@ export type TrafficLog = {
 export type TrafficLogWrite = {
   id: string;
   apiKind: TrafficLogApiKind;
+  provider: string | null;
   startedAt: string;
   model: string | null;
   streaming: number;
@@ -52,7 +54,7 @@ export type TrafficLogFinish = {
 
 export type TrafficLogFilters = { status?: string; model?: string; from?: string; to?: string; limit: number; offset: number };
 
-export type TurnTrafficSummary = Pick<TrafficLog, 'id' | 'api_kind' | 'started_at' | 'finished_at' | 'status' | 'http_status' | 'model' | 'streaming' | 'latency_ms' | 'turn_sequence' | 'fallback_reason' | 'title' | 'flag'>;
+export type TurnTrafficSummary = Pick<TrafficLog, 'id' | 'api_kind' | 'provider' | 'started_at' | 'finished_at' | 'status' | 'http_status' | 'model' | 'streaming' | 'latency_ms' | 'input_tokens' | 'cached_input_tokens' | 'output_tokens' | 'total_tokens' | 'cost_usd' | 'turn_sequence' | 'fallback_reason' | 'title' | 'flag'>;
 export type TurnSummary = {
   start_user_input: unknown | null;
   end_ai_output: unknown | null;

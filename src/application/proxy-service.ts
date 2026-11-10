@@ -62,6 +62,7 @@ export class ProxyService {
       this.writer.insert({
         id,
         apiKind: adapter.apiKind,
+        provider: route.providerId,
         startedAt,
         model: clientModel ?? null,
         streaming: streaming ? 1 : 0,
@@ -112,14 +113,14 @@ export class ProxyService {
     }
   }
 
-  private resolveRoute(clientModel: string | undefined): { provider: ProviderConfig; providerModel: string } | undefined {
+  private resolveRoute(clientModel: string | undefined): { providerId: string; provider: ProviderConfig; providerModel: string } | undefined {
     if (Object.keys(this.config.models).length === 0) return undefined;
     if (!clientModel) throw new Error('model is required when CONFIG_PATH routing is enabled');
     const route = this.config.models[clientModel];
     if (!route) throw new Error(`model ${clientModel} is not registered`);
     const provider = this.config.providers[route.provider];
     if (!provider) throw new Error(`invalid provider route for model ${clientModel}`);
-    return { provider, providerModel: route.providerModel };
+    return { providerId: route.provider, provider, providerModel: route.providerModel };
   }
 
   private async stream(upstream: Response, res: ServerResponse, id: string, started: number, adapter: ProxyAdapter, turnId?: string) {

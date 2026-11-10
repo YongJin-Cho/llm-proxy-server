@@ -24,6 +24,7 @@
 - R-010: request/response JSON 안의 각 문자열 값이 1 MiB(1,048,576 UTF-8 bytes) 이하이면 별도 문자 수·줄 수 truncation 없이 popup viewer에서 bounded content 전문을 제공해야 한다. JSON tree의 inline preview와 popup 전체 보기는 표시 상태일 뿐 원본 JSON을 변경하지 않아야 한다. 1 MiB 초과분은 AC-004의 저장 크기 제한에서 처리한다. ← ASR-031; AC-028; Direct Input
 - R-011: Popup viewer의 Markdown raw HTML은 기본적으로 렌더링하지 않거나 sanitizer allowlist를 통과한 경우에만 처리해야 한다. 모든 viewer는 read-only여야 하며 JavaScript 실행, HTML 실행, iframe, `eval`, `new Function`, dynamic import를 허용하지 않아야 한다. Monaco language mode는 선택된 문자열의 syntax 표시만 변경해야 한다. ← ASR-031; AC-028; `adr/long-string-safe-rendering.md`
 - R-012: Viewer component는 raw request/response content를 임의 renderer에 직접 전달하지 않고 JSON tree adapter와 문자열 popup viewer adapter를 통해 표시해야 한다. Adapter는 `detectedMode`, `selectedMode`, `fallbackReason`을 구분하고 사용자 선택을 자동 감지 결과보다 우선해야 한다. Popup close는 기존 JSON tree 위치로 복귀시키며 원본 request/response와 문자열 값을 수정하지 않아야 한다. ← ASR-031; AC-028; `adr/long-string-safe-rendering.md`
+- R-013: `GET /api/v1/turns`의 각 child traffic summary는 본문 없이 다음 normalized display fields를 제공해야 한다: stable `provider` ID, client `model`, `input_tokens`, `cached_input_tokens`, `output_tokens`, `total_tokens`, `cost_usd`, `latency_ms`, status, sequence/title metadata. 값이 저장되지 않았으면 `null`을 반환해야 하며 UI는 값을 추정하거나 다른 traffic의 값으로 보완하지 않아야 한다. 동일한 provider/model/usage/cost/latency 필드는 기존 traffic detail API에서도 제공해야 한다. ← Direct Input; ASR-030; `adr/traffic-log-api-metadata.md`
 
 ## Constraints
 
@@ -32,6 +33,7 @@
 - C-003: Turn 관리 메타데이터 저장·flag/filter/query 변경은 API application service와 UI data-query 경계를 통해 수행해야 하며 UI component가 DB driver나 SQLite table에 직접 접근하지 않아야 한다. ← ASR-014; AC-012; `adr/api-log-write-ui-read-boundary.md`
 - C-004: 신규 viewer 의존성은 React 19 호환성, production bundle 증가량, Monaco worker 구성, license, 최근 security advisory, read-only·raw HTML 정책을 설치 전에 검증해야 한다. 검증 실패 시 package stack을 재선택하고 이 Spec을 갱신한 뒤 재승인해야 한다. ← ASR-031; `adr/viewer-dependency-selection.md`
 - C-005: 저장된 content는 bounded content로 취급한다. Viewer는 저장 한도를 우회해 원본 외부 데이터를 가져오거나 content를 서버에 재저장하지 않아야 한다. ← AC-004; ASR-004; ASR-031
+- C-006: `provider`는 provider endpoint URL이나 secret이 아니라 model routing에 사용된 stable provider configuration ID여야 한다. UI와 API는 provider URL, API key, 인증 header를 provider display field로 노출하지 않아야 한다.
 
 ## Out of Scope
 
@@ -46,6 +48,7 @@
 ## Open Questions
 
 - 실제 package 버전과 lockfile 조합은 구현 전 설치 검증에서 확정한다. React 19 호환성·bundle·worker·license·security 검증에 실패하면 구현 전에 Spec을 갱신하고 재승인한다.
+- 없음: provider는 stable routing ID로 표시하고, traffic summary 값은 `/api/v1/turns` child projection과 기존 detail API가 제공한다.
 
 ## Related
 

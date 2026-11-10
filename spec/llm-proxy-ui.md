@@ -83,11 +83,11 @@ TrafficPage
 
 - R-020: TurnTree의 `Turns` title과 turn pagination control은 같은 header 행에 배치해야 한다. title은 왼쪽, pagination은 오른쪽에 위치하며, 좁은 화면에서는 pagination이 다음 줄로 내려가더라도 turn tree와 pagination의 의미가 유지되어야 한다.
 
-- R-021: `TurnView`는 turn summary 아래에 child traffic summary를 table 형태로 표시해야 한다. table의 각 row는 traffic sequence/title 또는 ID fallback을 식별할 수 있어야 하며, 다음 usage summary column을 표시해야 한다: model, model provider, input tokens, cached input tokens, output tokens, cost, 처리 시간. 서버가 값을 제공하지 않는 경우 UI는 `—` 또는 서버가 정의한 null 표시를 사용하고 값을 추정하지 않아야 한다.
+- R-021: `TurnView`는 turn summary 아래에 child traffic summary를 table 형태로 표시해야 한다. table의 각 row는 traffic sequence/title 또는 ID fallback을 식별할 수 있어야 하며, 서버가 제공하는 stable provider ID와 다음 normalized usage summary column을 표시해야 한다: model, model provider, input tokens, cached input tokens, output tokens, cost, 처리 시간. 서버가 값을 제공하지 않는 경우 UI는 `—` 또는 서버가 정의한 null 표시를 사용하고 값을 추정하지 않아야 한다. ← R-013 of `spec/llm-proxy-turn-management.md`
 
 - R-022: `TurnView`의 turn summary는 turn을 시작하는 사용자 입력을 첫 traffic의 request 메시지에서 추출한 `start_user_input`으로, turn을 종료하는 AI 출력을 마지막 completed traffic의 response 메시지에서 추출한 `end_ai_output`으로 표시해야 한다. summary에는 model/model provider, input tokens, cached input tokens, output tokens, cost, 처리 시간을 포함해야 하며, UI가 request/response를 임의로 다시 선택하거나 usage/cost를 재계산하지 않아야 한다. ← ASR-030
 
-- R-023: `TrafficView`는 traffic summary를 content detail보다 먼저 표시해야 한다. summary에는 model, model provider, input tokens, cached input tokens, output tokens, cost, 처리 시간을 표시하며 서버 projection의 null/partial 의미를 유지해야 한다. TrafficView는 해당 값을 다른 traffic이나 turn의 값으로 보완하거나 추정하지 않아야 한다.
+- R-023: `TrafficView`는 traffic summary를 content detail보다 먼저 표시해야 한다. summary에는 detail API가 제공하는 stable provider ID, model, input tokens, cached input tokens, output tokens, cost, 처리 시간을 표시하며 서버 projection의 null/partial 의미를 유지해야 한다. TrafficView는 해당 값을 다른 traffic이나 turn의 값으로 보완하거나 추정하지 않아야 한다. ← R-013 of `spec/llm-proxy-turn-management.md`
 
 - R-024: `TrafficView`의 request와 response content는 각각 read-only JSON tree view로 표시해야 한다. JSON parse가 성공한 request/response는 접을 수 있는 JSON tree로 탐색할 수 있어야 하며, JSON parse가 실패하거나 content가 JSON이 아닌 경우에는 기존 ContentViewer의 안전한 fallback 규칙을 사용한다. request와 response의 viewer state는 서로 독립이어야 한다.
 
@@ -116,6 +116,8 @@ TrafficPage
 - C-009: request/response 전체 content를 Markdown/code/plain-text viewer로 자동 감지하지 않는다. request/response는 JSON tree container가 우선이며, viewer detection은 JSON tree 내부의 선택된 문자열 leaf에 대해서만 수행한다.
 
 - C-010: 문자열 전체 보기 popup은 현재 UI 안의 독립 viewer window/dialog로 제공하며, popup close 시 JSON tree로 복귀할 수 있어야 한다. popup이 브라우저의 새 탭/새 창을 열어야 한다는 계약은 포함하지 않는다.
+
+- C-012: provider와 traffic usage summary는 server projection 값만 표시한다. UI는 provider ID를 routing 설정이나 endpoint에서 추론하지 않고, usage/cost/latency를 child traffic 또는 detail 응답에서 재계산하지 않는다.
 
 - C-011: 화면의 텍스트와 상태 표시는 운영자가 loading/empty/error/completed/failed/in_progress를 식별할 수 있어야 하며, 상태 enum을 임의의 새로운 lifecycle 의미로 변환하지 않는다.
 

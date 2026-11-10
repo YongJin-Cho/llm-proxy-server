@@ -60,7 +60,7 @@ export class SqliteTrafficLogStore implements TrafficLogWriter, TrafficLogReader
       title TEXT, flag INTEGER NOT NULL DEFAULT 0
     )`);
     this.db.exec(`CREATE TABLE IF NOT EXISTS traffic_logs (
-      id TEXT PRIMARY KEY, api_kind TEXT NOT NULL DEFAULT 'responses', started_at TEXT NOT NULL, finished_at TEXT,
+      id TEXT PRIMARY KEY, api_kind TEXT NOT NULL DEFAULT 'responses', provider TEXT, started_at TEXT NOT NULL, finished_at TEXT,
       status TEXT NOT NULL, http_status INTEGER, model TEXT, streaming INTEGER NOT NULL,
       latency_ms INTEGER, request_json TEXT, response_json TEXT, error TEXT,
       input_tokens INTEGER, cached_input_tokens INTEGER, output_tokens INTEGER, total_tokens INTEGER, cost_usd REAL,
@@ -69,6 +69,9 @@ export class SqliteTrafficLogStore implements TrafficLogWriter, TrafficLogReader
     const columns = this.db.prepare('PRAGMA table_info(traffic_logs)').all() as Array<{ name: string }>;
     if (!columns.some((column) => column.name === 'api_kind')) {
       this.db.exec("ALTER TABLE traffic_logs ADD COLUMN api_kind TEXT NOT NULL DEFAULT 'responses'");
+    }
+    if (!columns.some((column) => column.name === 'provider')) {
+      this.db.exec('ALTER TABLE traffic_logs ADD COLUMN provider TEXT');
     }
     const refreshedColumns = this.db.prepare('PRAGMA table_info(traffic_logs)').all() as Array<{ name: string }>;
     for (const column of ['input_tokens', 'cached_input_tokens', 'output_tokens', 'total_tokens', 'turn_sequence', 'flag']) {
@@ -79,8 +82,8 @@ export class SqliteTrafficLogStore implements TrafficLogWriter, TrafficLogReader
     }
   }
   insert(entry: TrafficLogWrite) {
-    this.db.prepare(`INSERT INTO traffic_logs (id, api_kind, started_at, status, http_status, model, streaming, request_json)
-      VALUES (@id, @apiKind, @startedAt, 'pending', NULL, @model, @streaming, @requestJson)`).run(entry);
+    this.db.prepare(`INSERT INTO traffic_logs (id, api_kind, provider, started_at, status, http_status, model, streaming, request_json)
+      VALUES (@id, @apiKind, @provider, @startedAt, 'pending', NULL, @model, @streaming, @requestJson)`).run(entry);
   }
   finish(entry: TrafficLogFinish) {
     this.db.prepare(`UPDATE traffic_logs SET finished_at=@finishedAt, status=@status, http_status=@httpStatus, latency_ms=@latencyMs, response_json=@responseJson, error=@error, input_tokens=@inputTokens, cached_input_tokens=@cachedInputTokens, output_tokens=@outputTokens, total_tokens=@totalTokens, cost_usd=@costUsd WHERE id=@id`).run({
@@ -115,10 +118,10 @@ export class SqliteTrafficLogStore implements TrafficLogWriter, TrafficLogReader
       ORDER BY started_at DESC, id DESC LIMIT @limit OFFSET @offset`).all({ limit: safeLimit, offset: (safePage - 1) * safeLimit }) as Array<{ id: string; kind: 'turn' | 'legacy'; started_at: string; finished_at: string | null; status: TrafficLog['status']; traffic_count: number; title: string | null; flag: number }>;
     const data = rows.map((row) => {
       const traffic = (row.kind === 'turn'
-        ? this.db.prepare(`SELECT id, api_kind, started_at, finished_at, status, http_status, model, streaming, latency_ms, turn_sequence, fallback_reason, title, flag, request_json, response_json, input_tokens, cached_input_tokens, output_tokens, total_tokens, cost_usd FROM traffic_logs WHERE turn_id = ? ORDER BY turn_sequence ASC, id ASC`).all(row.id)
-        : this.db.prepare(`SELECT id, api_kind, started_at, finished_at, status, http_status, model, streaming, latency_ms, turn_sequence, fallback_reason, title, flag, request_json, response_json, input_tokens, cached_input_tokens, output_tokens, total_tokens, cost_usd FROM traffic_logs WHERE id = ?`).all(row.id)) as SummaryTraffic[];
+        ? this.db.prepare(`SELECT id, api_kind, provider, started_at, finished_at, status, http_status, model, streaming, latency_ms, turn_sequence, fallback_reason, title, flag, request_json, response_json, input_tokens, cached_input_tokens, output_tokens, total_tokens, cost_usd FROM traffic_logs WHERE turn_id = ? ORDER BY turn_sequence ASC, id ASC`).all(row.id)
+        : this.db.prepare(`SELECT id, api_kind, provider, started_at, finished_at, status, http_status, model, streaming, latency_ms, turn_sequence, fallback_reason, title, flag, request_json, response_json, input_tokens, cached_input_tokens, output_tokens, total_tokens, cost_usd FROM traffic_logs WHERE id = ?`).all(row.id)) as SummaryTraffic[];
       const fallbackReasons = [...new Set(traffic.map((item) => item.fallback_reason).filter((reason): reason is string => Boolean(reason)))];
-      return { ...row, fallback_reasons: fallbackReasons, summary: buildSummary(traffic, row.status), traffic: traffic.map(({ request_json: _request, response_json: _response, input_tokens: _input, cached_input_tokens: _cached, output_tokens: _output, total_tokens: _total, cost_usd: _cost, ...summary }) => summary) } satisfies TurnTreeNode;
+      return { ...row, fallback_reasons: fallbackReasons, summary: buildSummary(traffic, row.status), traffic: traffic.map(({ request_json: _request, response_json: _response, ...summary }) => summary) } satisfies TurnTreeNode;
     });
     return { data, page: safePage, limit: safeLimit, total: totalRow.count, has_next: safePage * safeLimit < totalRow.count };
   }

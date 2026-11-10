@@ -1,52 +1,97 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import JsonView from '@uiw/react-json-view';
 import Editor, { loader } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import ReactMarkdown from 'react-markdown';
 import rehypeSanitize from 'rehype-sanitize';
 import remarkGfm from 'remark-gfm';
-import { curatedLanguages, resolveSelection, type ViewerMode, type ViewerSelection } from '../data-query/content-viewer';
+import { curatedLanguages, parseJsonContent, resolveSelection, type ViewerMode, type ViewerSelection } from '../data-query/content-viewer';
 
 loader.config({ monaco });
 
 type Props = { label: string; content?: string | null; hint?: string };
+type StringTarget = { path: string; value: string };
 
 const modeLabels: Array<[ViewerMode, string]> = [
   ['auto', 'Auto'], ['json', 'JSON'], ['markdown', 'Markdown'], ['code', 'Code'], ['plain-text', 'Plain text'],
 ];
 
+function byteLength(content: string) {
+  return new TextEncoder().encode(content).byteLength.toLocaleString();
+}
+
+function StringLeaf({ path, value, onOpen }: { path: string; value: string; onOpen: (target: StringTarget) => void }) {
+  const preview = value.length > 160 ? `${value.slice(0, 160)}…` : value;
+  return <span className="json-string-leaf">
+    <span className="json-string-preview">&quot;{preview}&quot;</span>
+    <button type="button" className="link json-string-expand" onClick={() => onOpen({ path, value })} aria-label={`${path} 문자열 전체 보기`}>확대</button>
+  </span>;
+}
+
+function JsonContainerNode({ path, value, onOpen }: { path: string; value: unknown; onOpen: (target: StringTarget) => void }): ReactNode {
+  if (typeof value === 'string') return <StringLeaf path={path} value={value} onOpen={onOpen} />;
+  if (value === null || typeof value !== 'object') return <span>{String(value)}</span>;
+  const entries = Array.isArray(value) ? value.map((item, index) => [String(index), item] as const) : Object.entries(value);
+  return <details open>
+    <summary>{Array.isArray(value) ? `Array (${entries.length})` : `Object (${entries.length})`}</summary>
+    <div className="json-container-children">
+      {entries.map(([key, child]) => <div className="json-container-row" key={`${path}.${key}`}><strong>{key}: </strong>{JsonContainerNode(`${path}.${key}`, child, onOpen)}</div>)}
+    </div>
+  </details>;
+}
+
+function PopupViewer({ target, onClose }: { target: StringTarget; onClose: () => void }) {
+  const [selection, setSelection] = useState<ViewerSelection>({ mode: 'auto' });
+  const resolved = useMemo(() => resolveSelection(target.value, selection), [target.value, selection]);
+  const changeMode = (mode: ViewerMode) => setSelection(mode === 'code' ? { mode, language: resolved.language ?? 'plaintext' } : { mode });
+  const changeLanguage = (language: string) => setSelection({ mode: 'code', language });
+
+  return <div className="viewer-popup-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <section className="viewer-popup" role="dialog" aria-modal="true" aria-label={`문자열 viewer: ${target.path}`}>
+      <header className="viewer-popup-header"><div><h3>문자열 Viewer</h3><p>{target.path} · {byteLength(target.value)} bytes</p></div><button type="button" onClick={onClose} aria-label="문자열 viewer 닫기">닫기</button></header>
+      <div className="viewer-controls">
+        <label>표시 형식<select value={selection.mode} onChange={(event) => changeMode(event.target.value as ViewerMode)}>{modeLabels.map(([value, text]) => <option key={value} value={value}>{text}</option>)}</select></label>
+        {selection.mode === 'code' && <label>언어<select value={selection.language ?? 'plaintext'} onChange={(event) => changeLanguage(event.target.value)}>{curatedLanguages.map(({ id, label }) => <option key={id} value={id}>{label}</option>)}</select></label>}
+        <span className="viewer-meta">감지: {resolved.detectedMode}{resolved.fallbackReason ? ` · fallback: ${resolved.fallbackReason}` : ''}</span>
+      </div>
+      <div className="viewer-body">
+        {resolved.selectedMode === 'json' && resolved.parsedJson !== undefined && <JsonView value={resolved.parsedJson as object} displayDataTypes={false} enableClipboard={false} />}
+        {resolved.selectedMode === 'markdown' && <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>{target.value}</ReactMarkdown>}
+        {resolved.selectedMode === 'code' && <Editor height="420px" language={resolved.language ?? 'plaintext'} value={target.value} theme="light" options={{ readOnly: true, minimap: { enabled: false }, domReadOnly: true, contextmenu: false, wordWrap: 'on' }} />}
+        {resolved.selectedMode === 'plain-text' && <pre>{target.value}</pre>}
+      </div>
+    </section>
+  </div>;
+}
+
 export function ContentViewer({ label, content, hint }: Props) {
+  const [target, setTarget] = useState<StringTarget>();
   const [selection, setSelection] = useState<ViewerSelection>({ mode: 'auto' });
   const source = content ?? '';
+  const parsed = useMemo(() => parseJsonContent(source), [source]);
+  const isJsonContainer = (label === '요청' || label === '응답') && parsed !== undefined && typeof parsed === 'object' && parsed !== null;
   const resolved = useMemo(() => resolveSelection(source, selection, hint), [source, selection, hint]);
   if (!content) return <section className="content-viewer"><h4>{label}</h4><p>—</p></section>;
 
+  if (isJsonContainer) return <section className="content-viewer json-container-viewer" aria-label={`${label} JSON tree`}>
+    <div className="viewer-header"><h4>{label}</h4><span className="viewer-meta">JSON object tree · 문자열을 선택해 확대</span></div>
+    <div className="viewer-body"><JsonContainerNode path="$" value={parsed} onOpen={setTarget} /></div>
+    {target && <PopupViewer target={target} onClose={() => setTarget(undefined)} />}
+  </section>;
+
   const changeMode = (mode: ViewerMode) => setSelection(mode === 'code' ? { mode, language: resolved.language ?? 'plaintext' } : { mode });
   const changeLanguage = (language: string) => setSelection({ mode: 'code', language });
-  const common = <>
-    <label>표시 형식
-      <select value={selection.mode} onChange={(event) => changeMode(event.target.value as ViewerMode)} aria-label={`${label} 표시 형식`}>
-        {modeLabels.map(([value, text]) => <option key={value} value={value}>{text}</option>)}
-      </select>
-    </label>
-    {selection.mode === 'code' && <label>언어
-      <select value={selection.language ?? 'plaintext'} onChange={(event) => changeLanguage(event.target.value)} aria-label={`${label} 코드 언어`}>
-        {curatedLanguages.map(({ id, label: text }) => <option key={id} value={id}>{text}</option>)}
-      </select>
-    </label>}
-    <span className="viewer-meta">감지: {resolved.detectedMode}{resolved.fallbackReason ? ` · fallback: ${resolved.fallbackReason}` : ''}</span>
-  </>;
-
   return <section className="content-viewer" aria-label={`${label} content viewer`}>
-    <div className="viewer-header"><h4>{label}</h4><div className="viewer-controls">{common}</div></div>
-    <details open>
-      <summary>전체 보기 ({new TextEncoder().encode(source).byteLength.toLocaleString()} bytes)</summary>
-      <div className="viewer-body">
-        {resolved.selectedMode === 'json' && resolved.parsedJson !== undefined && <JsonView value={resolved.parsedJson as object} displayDataTypes={false} enableClipboard={false} />}
-        {resolved.selectedMode === 'markdown' && <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>{source}</ReactMarkdown>}
-        {resolved.selectedMode === 'code' && <Editor height="420px" language={resolved.language ?? 'plaintext'} value={source} theme="light" options={{ readOnly: true, minimap: { enabled: false }, domReadOnly: true, contextmenu: false, wordWrap: 'on' }} />}
-        {resolved.selectedMode === 'plain-text' && <pre>{source}</pre>}
-      </div>
-    </details>
+    <div className="viewer-header"><h4>{label}</h4><div className="viewer-controls">
+      <label>표시 형식<select value={selection.mode} onChange={(event) => changeMode(event.target.value as ViewerMode)} aria-label={`${label} 표시 형식`}>{modeLabels.map(([value, text]) => <option key={value} value={value}>{text}</option>)}</select></label>
+      {selection.mode === 'code' && <label>언어<select value={selection.language ?? 'plaintext'} onChange={(event) => changeLanguage(event.target.value)} aria-label={`${label} 코드 언어`}>{curatedLanguages.map(({ id, label: text }) => <option key={id} value={id}>{text}</option>)}</select></label>}
+      <span className="viewer-meta">감지: {resolved.detectedMode}{resolved.fallbackReason ? ` · fallback: ${resolved.fallbackReason}` : ''}</span>
+    </div></div>
+    <details open><summary>전체 보기 ({byteLength(source)} bytes)</summary><div className="viewer-body">
+      {resolved.selectedMode === 'json' && resolved.parsedJson !== undefined && <JsonView value={resolved.parsedJson as object} displayDataTypes={false} enableClipboard={false} />}
+      {resolved.selectedMode === 'markdown' && <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>{source}</ReactMarkdown>}
+      {resolved.selectedMode === 'code' && <Editor height="420px" language={resolved.language ?? 'plaintext'} value={source} theme="light" options={{ readOnly: true, minimap: { enabled: false }, domReadOnly: true, contextmenu: false, wordWrap: 'on' }} />}
+      {resolved.selectedMode === 'plain-text' && <pre>{source}</pre>}
+    </div></details>
   </section>;
 }

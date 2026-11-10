@@ -37,6 +37,7 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 | ASR-029 | Turn 필터와 pagination query 계약 | AC-026 | AC-026 | adr/turn-filter-pagination-contract.md |
 | ASR-030 | Turn summary와 usage projection | AC-027 | AC-027 | adr/usage-and-cost-metadata.md; adr/turn-summary-usage-projection.md |
 | ASR-031 | 안전한 긴 문자열 viewer 계약 | AC-028 | AC-028 | adr/long-string-safe-rendering.md; adr/viewer-dependency-selection.md; adr/format-mode-contract.md |
+| ASR-032 | Traffic summary provider·usage projection | Direct Input | — | — |
 
 ## Dependency Order (recommended Spec encoding path)
 
@@ -278,6 +279,14 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 - **Related AC:** AC-027
 - **Related ADRs:** `adr/usage-and-cost-metadata.md` — approved; `adr/turn-summary-usage-projection.md` — approved
 
+### ASR-032 — Traffic summary provider·usage projection
+- **Source:** 사용자 Direct Input — UI Spec review resolution
+- **Statement:** Traffic log는 model routing에 사용된 stable provider ID를 저장해야 한다. `GET /api/v1/turns`의 child traffic summary와 기존 traffic detail API는 request/response 본문 없이 provider, model, input_tokens, cached_input_tokens, output_tokens, total_tokens, cost_usd, latency_ms 및 기존 status/sequence/title metadata를 제공해야 한다. 값이 저장되지 않았으면 `null`을 반환하며 UI는 이를 추정하거나 재계산하지 않는다. Provider URL, API key, 인증 header는 provider display field로 노출하지 않는다.
+- **Decision summary:** Provider ID와 normalized traffic usage/cost/latency를 persistence와 query projection에 first-class display metadata로 추가한다.
+- **Depends on:** ASR-012, ASR-020, ASR-025, ASR-030
+- **Related AC:** —
+- **Related ADRs:** —
+
 ### ASR-031 — 안전한 긴 문자열 viewer 계약
 - **Source:** AC-028 — 긴 문자열 형식 표시와 안전한 전체 보기
 - **Statement:** Viewer adapter는 JSON parse 성공 시 request/response를 read-only JSON object/array tree container로 표시해야 한다. object/array/number/boolean/null은 tree 탐색 대상으로 유지하고 문자열 leaf만 viewer 입력으로 취급해야 한다. 문자열 leaf는 기본 축약 preview를 제공하며 전체 보기 요청 시 popup viewer window/dialog에서 해당 문자열만 표시해야 한다. Popup viewer의 `Auto`는 선택된 문자열에 대해 content hint → JSON parse → 제한된 Markdown 판별 → `highlight.js` 후보 → plain text fallback 순서를 따른다. 사용자는 `Auto`, `JSON`, `Markdown`, `Code`, `Plain text`와 curated code language를 선택할 수 있고 선택은 현재 request/response field의 문자열 leaf viewer instance presentation 상태로만 유지해야 한다. 저장된 content는 실행하지 않고 raw HTML·iframe·`eval`·`new Function`을 허용하지 않는다. 각 JSON 문자열 값이 1 MiB(1,048,576 UTF-8 bytes) 이하이면 별도 문자 수·줄 수 truncation 없이 popup에서 전문을 제공하며, 1 MiB 초과는 AC-004 저장 크기 제한을 따른다.
@@ -301,4 +310,5 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 - 2026-03-10: 사용자 go-ahead("ok")로 Sprint 09 ASR registry를 승인했다. `spec/llm-proxy-turn-traffic.md` 작성으로 진행한다.
 - 2026-03-10: Sprint 12의 승인된 AC-025~AC-028과 관련 ADR/Direct Input을 ASR-028~ASR-031 초안으로 통합했다. 사용자 ASR 승인 대기.
 - 2026-03-10: 사용자 go-ahead("ok")로 ASR-028~ASR-031과 전체 Sprint 12 ASR delta를 승인했다. `spec/llm-proxy-turn-management.md` 작성으로 진행한다.
+- 2026-03-10: UI Spec review의 blocking gap 해결을 위해 사용자 승인된 Direct Input으로 ASR-032를 추가했다. Provider는 stable routing ID로 저장하고 turn child/detail projection에 normalized traffic usage metadata를 제공한다.
 - 2026-03-10: 사용자 변경 요청에 따라 ASR-031을 JSON container + 문자열 leaf popup viewer 계약으로 수정했다. 기존 승인 Spec과 ADR은 이 변경에 맞춰 재검토가 필요하다.

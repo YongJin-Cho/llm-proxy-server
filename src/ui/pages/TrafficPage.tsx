@@ -86,12 +86,7 @@ export function TrafficPage() {
       <button type="button" className={turnFilter === 'all' ? 'selected' : ''} onClick={() => changeTurnFilter('all')}>전체</button>
       <button type="button" className={turnFilter === 'flagged' ? 'selected' : ''} onClick={() => changeTurnFilter('flagged')}>Flagged</button>
     </div>
-    <TurnTree nodes={turns} selectedTurn={selection.turn} selectedTraffic={selection.traffic} onTurn={selectTurn} onTraffic={selectTraffic} onRename={renameTurn} onToggleFlag={toggleTurnFlag} onDelete={removeTurn} />
-    <div className="turn-pagination">
-      <button type="button" disabled={turnPage <= 1} onClick={() => setTurnPage((page) => Math.max(1, page - 1))}>이전</button>
-      <span>Page {turnPage}</span>
-      <button type="button" disabled={!turnHasNext} onClick={() => setTurnPage((page) => page + 1)}>다음</button>
-    </div>
+    <TurnTree nodes={turns} selectedTurn={selection.turn} selectedTraffic={selection.traffic} page={turnPage} hasNext={turnHasNext} onPagePrevious={() => setTurnPage((page) => Math.max(1, page - 1))} onPageNext={() => setTurnPage((page) => page + 1)} onTurn={selectTurn} onTraffic={selectTraffic} onRename={renameTurn} onToggleFlag={toggleTurnFlag} onDelete={removeTurn} />
   </aside>;
 
   return <main className="traffic-layout">{sidebar}

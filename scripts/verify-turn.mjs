@@ -46,7 +46,7 @@ const tempDir = mkdtempSync(join(tmpdir(), 'llm-proxy-turn-'));
 const sqlitePath = join(tempDir, 'turns.sqlite');
 const sqlite = new SqliteTrafficLogStore(sqlitePath);
 sqlite.createTurn({ id: 'managed-turn', startedAt: '2026-03-10T00:01:00.000Z', status: 'in_progress' });
-sqlite.insert({ id: 'managed-traffic', apiKind: 'responses', startedAt: '2026-03-10T00:01:01.000Z', model: 'test-model', streaming: 0, requestJson: '{"input":"hello"}' });
+sqlite.insert({ id: 'managed-traffic', apiKind: 'responses', provider: null, startedAt: '2026-03-10T00:01:01.000Z', model: 'test-model', streaming: 0, requestJson: '{"input":"hello"}' });
 sqlite.attachTraffic({ trafficId: 'managed-traffic', turnId: 'managed-turn', sequence: 1, fallbackReason: null });
 sqlite.finish({ id: 'managed-traffic', finishedAt: '2026-03-10T00:01:02.000Z', status: 'completed', httpStatus: 200, latencyMs: 1000, responseJson: '{"output_text":"world"}', error: null, inputTokens: 2, outputTokens: 3, totalTokens: 5, costUsd: 0.01 });
 sqlite.updateTurnMetadata('managed-turn', { title: 'Important turn', flag: true });

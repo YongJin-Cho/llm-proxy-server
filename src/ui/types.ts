@@ -1,6 +1,7 @@
 export type Log = {
   id: string;
   api_kind?: 'responses' | 'chat_completions' | 'messages';
+  provider?: string | null;
   status: string;
   model?: string;
   http_status?: number;
@@ -16,7 +17,7 @@ export type Log = {
   cost_usd?: number;
 };
 
-export type TurnTraffic = Pick<Log, 'id' | 'api_kind' | 'started_at' | 'status' | 'model' | 'latency_ms'> & {
+export type TurnTraffic = Pick<Log, 'id' | 'api_kind' | 'provider' | 'started_at' | 'status' | 'model' | 'latency_ms' | 'input_tokens' | 'cached_input_tokens' | 'output_tokens' | 'total_tokens' | 'cost_usd'> & {
   finished_at?: string | null;
   http_status?: number | null;
   streaming?: number;
