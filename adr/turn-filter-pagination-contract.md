@@ -4,7 +4,7 @@
 전체·flagged sidebar 필터를 서버 query와 UI 중 어디에서 책임지고, flag 변경·turn 물리 삭제 및 pagination 경계에서 어떤 조회 계약을 제공할 것인가?
 
 ## Status
-proposed
+approved
 
 ## Context
 - sidebar의 목록 단위는 turn이며, legacy traffic은 synthetic single-traffic turn으로 표시된다.
@@ -14,6 +14,7 @@ proposed
 - 기존 `GET /api/v1/turns` tree aggregate endpoint와 turn 단위 pagination을 유지해야 한다.
 
 ## Decision
+**Option A — 서버 query 필터와 turn 단위 pagination.** `GET /api/v1/turns`가 전체와 flagged 필터를 서버에서 적용하고, 필터 적용 후의 top-level turn node를 기준으로 pagination·total·has_next를 계산한다. child traffic은 parent turn 내부에 반환한다. flag 변경 또는 turn 삭제 성공 후 UI는 현재 query를 재조회하고, 현재 page가 비면 마지막 유효 page로 보정한다.
 
 ## Options
 ### Option A — 서버 query 필터와 turn 단위 pagination
@@ -66,3 +67,4 @@ proposed
 
 ## Notes
 - 2026-03-10: AC-026 review를 위해 서버 필터·UI 필터·별도 endpoint 선택지를 비교하는 proposed ADR을 작성했다.
+- 2026-03-10: 사용자 go-ahead("ok")로 Option A를 승인하고 Status를 approved 처리했다. filter query shape은 별도 downstream ADR 후보로 남겼다.

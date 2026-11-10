@@ -352,25 +352,26 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 ### AC-026 — 전체·flagged 필터의 조회 책임과 pagination 계약
 
 - **Category:** Integration & dependencies
-- **Status:** reviewing
+- **Status:** designed
 - **Statement:** 전체·flagged 등 sidebar 필터를 서버 query가 책임질지 UI가 현재 page에서 필터링할지, flag 변경·삭제와 pagination 경계에서 어떤 일관성·정렬·page size 계약을 제공할 것인가?
 - **Why it matters:** UI 임의 필터링은 전체 결과를 누락할 수 있고, 서버 필터링의 계약이 없으면 flagged 탐색·페이지 이동·변경 직후 결과가 재현되지 않는다.
 - **Depends on:** AC-020, AC-025
 - **Related ADRs:**
-  - `adr/turn-filter-pagination-contract.md` — proposed
+  - `adr/turn-filter-pagination-contract.md` — approved
 - **Resolution path:** adr
-- **Resolution:** 아직 미정.
+- **Resolution:** ADR Option A를 채택한다. `GET /api/v1/turns`가 전체와 flagged 필터를 서버에서 적용하고, 필터 적용 후 top-level turn node를 기준으로 `total`, `page`, `limit`, `has_next`를 계산한다. child traffic은 parent turn 내부에 반환하며 child 자체는 pagination하지 않는다. flag 변경 또는 turn 삭제 성공 후 UI는 현재 query를 재조회하고, 빈 page는 마지막 유효 page로 보정한다.
 
 ### AC-027 — Turn summary와 traffic usage summary 데이터 계약
 
 - **Category:** Integration & dependencies
-- **Status:** identified
+- **Status:** reviewing
 - **Statement:** turn summary의 시작 user input·종료 AI output·모델·실행 환경·처리 시간과 전체/traffic별 usage·cost를 어떤 query projection과 null/partial 데이터 규칙으로 제공하고 표시할 것인가?
 - **Why it matters:** 여러 traffic의 값 선택·집계·누락 처리가 정해지지 않으면 summary가 서로 다른 화면에서 다르게 계산되거나 partial/in-progress turn을 오해하게 만든다.
 - **Depends on:** AC-018, AC-020, AC-023
 - **Related ADRs:**
   - `adr/usage-and-cost-metadata.md` — approved
-- **Resolution path:** adr | direct-input
+  - `adr/turn-summary-usage-projection.md` — proposed
+- **Resolution path:** adr
 - **Resolution:** 아직 미정.
 
 ### AC-028 — 긴 문자열 형식 표시와 안전한 전체 보기
@@ -397,5 +398,6 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - 2026-03-10: AC 목록 승인 후 AC-025를 reviewing으로 전환하고 `adr/turn-management-metadata-and-deletion.md`를 proposed 상태로 연결했다.
 - 2026-03-10: 사용자 입력으로 AC-025의 삭제 의미를 확정했다. traffic 단독 삭제는 지원하지 않고, turn 삭제는 모든 child traffic을 포함한 물리 삭제로 처리하며 논리 삭제·복원·삭제 이력은 제공하지 않는다. 제목·flag 저장 위치는 ADR Option A/B의 잔여 쟁점으로 남겼다.
 - 2026-03-10: 사용자 go-ahead("B로 해줘")로 AC-025를 designed 처리하고 Option B를 채택했다. AC-026을 reviewing으로 전환하고 `adr/turn-filter-pagination-contract.md`를 proposed 상태로 연결했다.
+- 2026-03-10: 사용자 go-ahead("ok")로 AC-026의 Option A를 승인하고 designed 처리했다. filter query shape은 downstream ADR 후보로 남겼다. AC-027을 reviewing으로 전환하고 `adr/turn-summary-usage-projection.md`를 proposed 상태로 연결했다.
 - 2026-03-10: 사용자 go-ahead("ok")로 AC-023의 Option B를 승인했다. 미완료 turn pool, tool-call ID 역색인, 관찰 순서 기반 traffic sequence를 사용한다.
 - 2026-03-10: 사용자 go-ahead("ok")로 후속 ADR `ambiguous-missing-tool-id-fallback.md`를 승인했다. 매칭 불가 traffic은 fallback reason과 함께 새 standalone turn으로 격리한다.
