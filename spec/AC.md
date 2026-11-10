@@ -384,7 +384,7 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - **Related ADRs:**
   - `adr/long-string-safe-rendering.md` — approved
 - **Resolution path:** adr
-- **Resolution:** ADR Option D를 채택한다. JSON parse 성공 시 read-only JSON tree를 기본 표시하고, 명시적 Markdown hint 또는 제한된 Markdown 판별 시 sanitized Markdown viewer를 사용한다. 그 외 code/text는 `highlight.js` auto-detection을 초기 language 후보로 삼아 read-only Monaco에 표시하며, 감지 실패·불확실·지원 불가 언어는 escaped plain text로 fallback한다. 사용자는 `Auto`, `JSON`, `Markdown`, `Code`, `Plain text`와 code language를 다시 선택할 수 있고, 사용자 선택은 자동 감지보다 우선하며 원본 content는 변경하지 않는다. 모든 표시 경로는 저장된 content를 실행하지 않고, raw HTML·iframe·`eval`·`new Function`을 허용하지 않는다. preview/전체 보기의 구체적 threshold와 실제 viewer 의존성은 별도 후속 결정으로 둔다.
+- **Resolution:** ADR Option D를 채택한다. JSON parse 성공 시 read-only JSON tree를 기본 표시하고, 명시적 Markdown hint 또는 제한된 Markdown 판별 시 sanitized Markdown viewer를 사용한다. 그 외 code/text는 `highlight.js` auto-detection을 초기 language 후보로 삼아 read-only Monaco에 표시하며, 감지 실패·불확실·지원 불가 언어는 escaped plain text로 fallback한다. 사용자는 `Auto`, `JSON`, `Markdown`, `Code`, `Plain text`와 curated code language를 다시 선택할 수 있고, 사용자 선택은 자동 감지보다 우선하며 현재 viewer 인스턴스의 field별 presentation 상태로만 유지한다. 모든 표시 경로는 저장된 content를 실행하지 않고, raw HTML·iframe·`eval`·`new Function`을 허용하지 않는다. 각 request/response/error content field가 1 MiB(1,048,576 UTF-8 bytes) 이하이면 별도 문자 수·줄 수 truncation 없이 전문을 제공한다. inline view는 접을 수 있지만 전체 보기에서는 해당 bounded content 전체를 표시하며, 1 MiB 초과분은 AC-004 저장 크기 제한에서 처리한다.
 
 
 ## Notes

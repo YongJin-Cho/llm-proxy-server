@@ -72,16 +72,16 @@ approved
 - 최소 사용자 선택지는 `Auto`, `JSON`, `Markdown`, `Code`, `Plain text`로 제공한다. Code 선택 시 지원 language 목록과 Monaco language mode를 선택할 수 있다.
 - `Auto`의 우선순위는 명시적 content hint → JSON parse → 제한된 Markdown 판별 → `highlight.js` 후보 → plain text fallback이다.
 - `highlight.js`가 반환한 언어 후보가 Monaco에서 지원되지 않거나 신뢰도가 낮으면 plain text로 표시하고, 사용자가 다른 language를 선택할 수 있게 한다.
-- preview/전체 보기의 문자 수·줄 수 제한과 선택 mode 상태는 공통 adapter에서 관리한다. 전체 보기에서도 원본 bounded content는 변경하지 않는다.
+- preview/전체 보기의 표시 상태는 공통 adapter에서 관리한다. 각 request/response/error content field는 1 MiB(1,048,576 UTF-8 bytes)까지 별도 문자 수·줄 수 truncation 없이 전문을 제공하며, inline view의 접기와 `전체 보기` 전환은 표시 상태일 뿐 원본 bounded content를 변경하지 않는다. 1 MiB 초과는 AC-004의 저장 크기 제한에서 처리한다.
 - Markdown raw HTML은 기본적으로 렌더링하지 않거나 sanitizer allowlist를 통과한 경우에만 처리한다.
 - JSON parse 실패, viewer 예외, 감지 실패는 escaped plain text로 복구한다.
 - Monaco 도입 전 React 19 호환성, bundle 크기, worker 구성, 라이선스, 보안 업데이트 가능성을 lockfile 기준으로 확인한다.
-- 이 ADR은 구체적인 패키지 버전과 preview threshold를 확정하지 않는다.
+- 이 ADR은 구체적인 패키지 버전을 확정하지 않는다. preview threshold는 Direct Input으로 1 MiB 전문 표시 기준을 사용한다.
 
 ## Downstream Concerns
 - [x] **ADR candidate → approved — Viewer dependency selection:** `adr/viewer-dependency-selection.md`의 Option A를 채택한다. 정확한 버전은 설치 검증 후 lockfile에 고정한다.
-- [ ] **ADR candidate — Format mode contract:** `Auto`·JSON·Markdown·Code·Plain text와 language selector의 지원 범위, 선택 상태의 보존 범위를 어떻게 정의할 것인가?
-- [ ] **ADR candidate — Preview thresholds:** preview의 최대 문자 수·줄 수와 전체 보기의 UI 상태를 확정해야 한다.
+- [x] **ADR candidate → approved — Format mode contract:** `adr/format-mode-contract.md`의 Option A를 채택한다. 지원 모드는 제한하고 선택 상태는 현재 viewer 인스턴스에만 보존한다.
+- [x] **directly resolved — Preview thresholds:** 저장된 각 request/response/error content field가 1 MiB(1,048,576 UTF-8 bytes) 이하이면 별도 문자 수·줄 수 truncation 없이 전문을 제공한다. inline view는 접을 수 있지만 `전체 보기`는 bounded content 전체를 표시하며, 초과분은 AC-004 저장 크기 제한에서 처리한다.
 - [x] **directly resolved — Execution safety:** 저장된 content는 실행하지 않고 Monaco read-only, allowlist viewer 또는 escaped/sanitized view로만 표시한다.
 - [x] **covered — Content size bound:** AC-004의 저장 시 최대 본문 크기와 잘라내기 정책을 따른다.
 
@@ -92,6 +92,7 @@ approved
 - `adr/ui-framework-and-monitoring-structure.md`
 - `adr/turn-summary-usage-projection.md`
 - `adr/viewer-dependency-selection.md` — follow-up, approved Option A
+- `adr/format-mode-contract.md` — follow-up, approved Option A
 
 ## Notes
 - 2026-03-10: AC-028 review를 위해 safe renderer·plain text·외부 renderer 선택지를 비교하는 proposed ADR을 작성했다.
@@ -99,3 +100,5 @@ approved
 - 2026-03-10: `highlight.js` 감지 후 Monaco read-only 표시와 viewer 내 사용자 형식 재선택 요구를 반영해 Option B~D를 추가하고 Option D를 권장했다. 감지 결과는 초기 표시 mode일 뿐이며 원본 content와 실행 권한을 변경하지 않는다.
 - 2026-03-10: 사용자 go-ahead("D로 해줘")로 Status를 approved로 변경하고 Option D를 Decision으로 확정했다. viewer dependency selection, format mode contract, preview thresholds는 구현 전 별도 후속 쟁점으로 triage한다.
 - 2026-03-10: 사용자 go-ahead("ok")로 후속 ADR `viewer-dependency-selection.md`의 Option A를 승인했다. format mode contract와 preview thresholds는 남은 후속 쟁점이다.
+- 2026-03-10: 사용자 go-ahead("ok")로 후속 ADR `format-mode-contract.md`의 Option A를 승인했다. preview thresholds는 남은 후속 쟁점이다.
+- 2026-03-10: 사용자 Direct Input으로 preview threshold를 확정했다. 각 content field는 1 MiB(1,048,576 UTF-8 bytes)까지 전문을 제공하고, inline 접기와 전체 보기만 표시 상태로 구분하며 별도 preview truncation은 두지 않는다. 초과분은 AC-004 저장 크기 제한을 따른다.
