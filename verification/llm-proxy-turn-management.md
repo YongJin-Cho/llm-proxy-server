@@ -3,7 +3,7 @@
 **Spec:** `spec/llm-proxy-turn-management.md` §R-007–R-015, Constraints C-004–C-007
 **Scope:** PB-028 안전한 형식별 traffic content viewer 및 PB-029 통합 검증·실행 문서
 **Verified:** 2026-03-10
-**Commands:** `npm run build`; `npm run verify`
+**Commands:** `npm run build`; `npm run verify`; `npm run dev`/`npm start` native binding hooks
 **Result:** pass
 
 ## Evidence
@@ -41,4 +41,5 @@ The local-worker Monaco configuration avoids a runtime CDN dependency, but incre
 ## Verification command output
 
 - `npm run build`: pass; Vite production build and TypeScript compilation completed.
-- `npm run verify`: pass; existing proxy regression, turn grouping/metadata/filter/summary regression, and viewer-specific checks completed.
+- `npm run verify`: pass; native binding approval/rebuild, existing proxy regression, turn grouping/metadata/filter/summary regression, and viewer-specific checks completed.
+- `npm run dev` and `npm start`: `predev`/`prestart` invoke the same native binding approval/rebuild before loading the server.
