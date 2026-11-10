@@ -4,7 +4,7 @@
 승인된 AC-028 Option D를 구현하기 위해 JSON tree, sanitized Markdown, read-only Monaco code viewer와 형식 감지에 사용할 실제 의존성 조합을 어떻게 선택할 것인가?
 
 ## Status
-proposed
+approved
 
 ## Context
 - AC-028은 JSON 전용 viewer, sanitized Markdown viewer, read-only Monaco code fallback, `highlight.js` 기반 초기 언어 후보와 사용자 override를 요구한다.
@@ -13,6 +13,7 @@ proposed
 - 잘못된 조합은 React 19 호환성 문제, 초기 bundle 증가, worker 설정 실패, raw HTML/XSS 경계 누락 또는 유지보수 비용을 만들 수 있다.
 
 ## Decision
+**Option A — 형식별 전문 viewer 조합**을 채택한다. JSON은 `@uiw/react-json-view`, Markdown은 `react-markdown` + `remark-gfm` + `rehype-sanitize`, code는 `@monaco-editor/react`, 감지는 `highlight.js`를 우선 검증 대상으로 삼고, 각 viewer는 공통 read-only adapter 뒤에 둔다. 실제 버전은 설치 검증 후 lockfile에 고정한다.
 
 ## Options
 ### Option A — 형식별 전문 viewer 조합
@@ -69,3 +70,4 @@ proposed
 
 ## Notes
 - 2026-03-10: AC-028 Option D 승인 후 viewer dependency selection 후속 ADR을 proposed 상태로 작성했다. 현재 React 19 + Vite 6 프로젝트와 기존 lockfile을 기준으로 전문 viewer 조합, 대체 JSON viewer, 자체 JSON tree를 비교했다.
+- 2026-03-10: 사용자 go-ahead("ok")로 Option A를 채택하고 Status를 approved로 변경했다. 정확한 패키지 버전은 설치·호환성·bundle·license·security 검증 후 lockfile에 고정한다.

@@ -79,7 +79,7 @@ approved
 - 이 ADR은 구체적인 패키지 버전과 preview threshold를 확정하지 않는다.
 
 ## Downstream Concerns
-- [x] **ADR candidate → proposed — Viewer dependency selection:** `adr/viewer-dependency-selection.md`에서 `@uiw/react-json-view`, `react-markdown` 계열, Monaco wrapper, `highlight.js`의 조합과 검증 기준을 비교한다.
+- [x] **ADR candidate → approved — Viewer dependency selection:** `adr/viewer-dependency-selection.md`의 Option A를 채택한다. 정확한 버전은 설치 검증 후 lockfile에 고정한다.
 - [ ] **ADR candidate — Format mode contract:** `Auto`·JSON·Markdown·Code·Plain text와 language selector의 지원 범위, 선택 상태의 보존 범위를 어떻게 정의할 것인가?
 - [ ] **ADR candidate — Preview thresholds:** preview의 최대 문자 수·줄 수와 전체 보기의 UI 상태를 확정해야 한다.
 - [x] **directly resolved — Execution safety:** 저장된 content는 실행하지 않고 Monaco read-only, allowlist viewer 또는 escaped/sanitized view로만 표시한다.
@@ -91,10 +91,11 @@ approved
 - `adr/sensitive-data-retention.md`
 - `adr/ui-framework-and-monitoring-structure.md`
 - `adr/turn-summary-usage-projection.md`
-- `adr/viewer-dependency-selection.md` — follow-up, proposed
+- `adr/viewer-dependency-selection.md` — follow-up, approved Option A
 
 ## Notes
 - 2026-03-10: AC-028 review를 위해 safe renderer·plain text·외부 renderer 선택지를 비교하는 proposed ADR을 작성했다.
 - 2026-03-10: 사용자 의견에 따라 외부 viewer 조합을 직접 renderer의 대안으로 구체화했다. 현재 프로젝트에는 viewer·format detection 의존성이 없음을 확인했다.
 - 2026-03-10: `highlight.js` 감지 후 Monaco read-only 표시와 viewer 내 사용자 형식 재선택 요구를 반영해 Option B~D를 추가하고 Option D를 권장했다. 감지 결과는 초기 표시 mode일 뿐이며 원본 content와 실행 권한을 변경하지 않는다.
 - 2026-03-10: 사용자 go-ahead("D로 해줘")로 Status를 approved로 변경하고 Option D를 Decision으로 확정했다. viewer dependency selection, format mode contract, preview thresholds는 구현 전 별도 후속 쟁점으로 triage한다.
+- 2026-03-10: 사용자 go-ahead("ok")로 후속 ADR `viewer-dependency-selection.md`의 Option A를 승인했다. format mode contract와 preview thresholds는 남은 후속 쟁점이다.
