@@ -54,7 +54,7 @@ function PopupViewer({ target, onClose }: { target: StringTarget; onClose: () =>
       <header className="viewer-popup-header">
         <div className="viewer-controls">
           <label><select aria-label="표시 형식" value={selection.mode} onChange={(event) => changeMode(event.target.value as ViewerMode)}>{modeLabels.map(([value, text]) => <option key={value} value={value}>{text}</option>)}</select></label>
-          {selection.mode === 'code' && <label>언어<select value={selection.language ?? 'plaintext'} onChange={(event) => changeLanguage(event.target.value)}>{curatedLanguages.map(({ id, label }) => <option key={id} value={id}>{label}</option>)}</select></label>}
+          {selection.mode === 'code' && <label><select aria-label="언어" value={selection.language ?? 'plaintext'} onChange={(event) => changeLanguage(event.target.value)}>{curatedLanguages.map(({ id, label }) => <option key={id} value={id}>{label}</option>)}</select></label>}
           <span className="viewer-size">{byteLength(target.value)} bytes</span>
         </div>
         <button type="button" className="viewer-popup-close" onClick={onClose} aria-label="문자열 viewer 닫기" title="닫기">×</button>
@@ -90,7 +90,7 @@ export function ContentViewer({ label, content, hint }: Props) {
   return <section className="content-viewer" aria-label={`${label} content viewer`}>
     <div className="viewer-header"><h4>{label}</h4><div className="viewer-controls">
       <label>표시 형식<select value={selection.mode} onChange={(event) => changeMode(event.target.value as ViewerMode)} aria-label={`${label} 표시 형식`}>{modeLabels.map(([value, text]) => <option key={value} value={value}>{text}</option>)}</select></label>
-      {selection.mode === 'code' && <label>언어<select value={selection.language ?? 'plaintext'} onChange={(event) => changeLanguage(event.target.value)} aria-label={`${label} 코드 언어`}>{curatedLanguages.map(({ id, label: text }) => <option key={id} value={id}>{text}</option>)}</select></label>}
+      {selection.mode === 'code' && <label><select aria-label={`${label} 코드 언어`} value={selection.language ?? 'plaintext'} onChange={(event) => changeLanguage(event.target.value)}>{curatedLanguages.map(({ id, label: text }) => <option key={id} value={id}>{text}</option>)}</select></label>}
       <span className="viewer-meta">감지: {resolved.detectedMode}{resolved.fallbackReason ? ` · fallback: ${resolved.fallbackReason}` : ''}</span>
     </div></div>
     <details open><summary>전체 보기 ({byteLength(source)} bytes)</summary><div className="viewer-body">
