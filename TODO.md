@@ -1,68 +1,44 @@
-# TODO: LLM Proxy Server — Turn 관리·메타데이터·탐색·요약 구현
+# TODO: LLM Proxy Server — 안전한 traffic content viewer 구현·검증
 
 > **Project root:** `llm-proxy-server`
-> **Current sprint:** sprint-13 — [Turn 관리·메타데이터·탐색·요약 구현](./scrum/sprint-13.md)
+> **Current sprint:** sprint-14 — [안전한 traffic content viewer 구현·검증](./scrum/sprint-14.md)
 > **Product Backlog:** [`scrum/product-backlog.md`](./scrum/product-backlog.md)
 
 ## Snapshot
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 7 | 1 | 0 | 0 |
+| 3 | 1 | 0 | 0 |
 
-**Sprint goal:** 승인된 Turn 관리·분석 UI Spec의 첫 구현 slice로 관리 메타데이터·삭제, filter/pagination, summary/usage projection을 구현·검증한다.
-**Current focus:** T-008
-**Recommended next:** T-008 — Sprint Boundary → next implementation sprint
+**Sprint goal:** 승인된 Turn 관리·분석 Spec의 남은 viewer slice로 traffic content를 형식별로 안전하게 표시하고, mode override·fallback·보안 경계를 자동 검증한다.
+**Current focus:** T-004
+**Recommended next:** T-004 — Sprint Boundary → next implementation sprint
 
 ## Tasks
 
-- [x] **T-001** — PB-025 관리 메타데이터·turn cascade 삭제 구현
+- [x] **T-001** — PB-028 안전한 형식별 traffic content viewer 구현
   - Phase: implementation
-  - Artifact: `src/domain/`, `src/persistence/`, `src/api/`, `src/ui/`
+  - Artifact: `src/ui/`
   - Depends: —
-  - Notes: Spec R-001~R-002, C-003. 제목·flag 저장, turn 단위 물리 삭제와 child cascade transaction, traffic 단독 삭제 금지를 구현했다. SQLite migration, PATCH/DELETE API와 TurnTree actions를 추가했다.
+  - Notes: JSON tree, sanitized Markdown, read-only Monaco, Auto/사용자 mode override, detection fallback, 1 MiB 전문 표시와 viewer state 격리를 구현했다. local Monaco workers are configured; production bundle trade-off is recorded in `verification/llm-proxy-turn-management.md`.
 
-- [x] **T-002** — PB-025 persistence/API/UI self-check
+- [x] **T-002** — PB-028 viewer 보안·상태 self-check
   - Phase: verification
-  - Artifact: `scripts/verify-turn.mjs`, `src/`
+  - Artifact: `scripts/verify-turn.mjs`, `src/ui/`
   - Depends: T-001
-  - Notes: migration/schema, writer/query API, UI mutation과 삭제 cascade를 `scripts/verify-turn.mjs` fixture로 검증했다. `npm run build`와 `npm run verify`가 통과했다.
+  - Notes: content 실행 방지, Markdown sanitization, unsupported/detection fallback, mode override, large content와 field-scoped state를 `scripts/verify-viewer.ts`로 검증했다.
 
-- [x] **T-003** — PB-026 서버 filter·pagination·mutation refresh 구현
-  - Phase: implementation
-  - Artifact: `src/application/`, `src/api/`, `src/ui/`
+- [x] **T-003** — PB-029 Turn 관리·분석 통합 검증과 실행 문서
+  - Phase: verification
+  - Artifact: `scripts/verify.mjs`, `scripts/verify-turn.mjs`, `AGENTS.md`, `verification/`
   - Depends: T-002
-  - Notes: Spec R-003~R-004. all/flagged 서버 filter, turn 단위 pagination, mutation 후 재조회와 빈 page 보정을 구현했다.
+  - Notes: Sprint 13 기능과 viewer 및 기존 turn tree/URL/traffic API 회귀를 `npm run build`/`npm run verify`로 검증하고 `verification/llm-proxy-turn-management.md`와 `AGENTS.md`에 evidence를 기록했다.
 
-- [x] **T-004** — PB-026 filter/pagination self-check
-  - Phase: verification
-  - Artifact: `scripts/verify-turn.mjs`, `src/`
-  - Depends: T-003
-  - Notes: filter/page metadata, child non-pagination, flag/delete mutation refresh를 `npm run build`와 `npm run verify`로 검증했다.
-
-- [x] **T-005** — PB-027 turn summary·usage/cost projection 구현
-  - Phase: implementation
-  - Artifact: `src/application/`, `src/api/`, `src/ui/`
-  - Depends: T-004
-  - Notes: Spec R-005~R-006. 서버 summary DTO와 UI summary card를 구현했다. 시작 input/종료 output 추출, usage/cost 합산, null/partial 상태를 포함하고 execution environment는 저장 source가 없어 null로 표시한다.
-
-- [x] **T-006** — PB-027 summary/usage self-check
-  - Phase: verification
-  - Artifact: `scripts/verify-turn.mjs`, `src/`
-  - Depends: T-005
-  - Notes: completed summary input/output, usage total, metadata persistence, flagged filter, cascade deletion과 기존 회귀를 `npm run build`/`npm run verify`로 검증했다.
-
-- [x] **T-007** — Sprint 13 regression demo
-  - Phase: demo
-  - Artifact: `scripts/verify.mjs`, `scripts/verify-turn.mjs`
-  - Depends: T-006
-  - Notes: 기존 API/UI entrypoint, tree grouping/fallback, metadata/filter/cascade, summary projection과 `npm run build`/`npm run verify`를 통과했다. `AGENTS.md` verification guide와 Notes를 갱신했다.
-
-- [ ] **T-008** — Sprint Boundary → next implementation sprint
+- [ ] **T-004** — Sprint Boundary → next implementation sprint
   - Phase: cross-cutting
-  - Artifact: `scrum/TODO-13.md`
-  - Depends: T-001, T-002, T-003, T-004, T-005, T-006, T-007
-  - Notes: archive board, update backlog, plan next implementation slice
+  - Artifact: `scrum/TODO-14.md`
+  - Depends: T-001, T-002, T-003
+  - Notes: archive board, update backlog, close PB-028~PB-029, plan next implementation slice
 
 ## Completed sprints
 
@@ -85,5 +61,4 @@
 
 ## Notes
 
-- 2026-03-10: Sprint 13 계획 승인 후 live implementation board를 seed했다. 제품 코드 Execute를 시작한다.
-- 2026-03-10: Sprint 13 완료 검토와 Boundary를 처리했다. Sprint 14 계획은 PB-028~PB-029 Scope로 작성했으며, plan approval 후 live board를 전환한다.
+- 2026-03-10: Sprint 14 계획 승인 후 live implementation board를 seed했다. PB-028 Execute를 시작한다.

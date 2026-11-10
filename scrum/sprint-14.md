@@ -31,4 +31,4 @@
 - [ ] `npm run build`와 `npm run verify` 및 실행 문서 갱신을 확인한다.
 
 ## Approval
-- Drafted 2026-03-10 after Sprint 13 Boundary; pending user Sprint 14 plan approval.
+- Drafted 2026-03-10 after Sprint 13 Boundary; user go-ahead("ok") approved the Sprint 14 plan. Live `TODO.md` was seeded and Execute started.

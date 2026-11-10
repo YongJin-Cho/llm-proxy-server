@@ -57,7 +57,7 @@ Application code depends on domain ports; the SQLite adapter is the concrete per
 
 ## Verification guide
 
-`npm run build` validates the Vite UI build and TypeScript server compilation. `npm run verify` creates a temporary config.json and secret environment values, starts mock Providers and a temporary proxy/SQLite instance, validates the UI entrypoint, routing, persistence, masking, model rejection, turn grouping/fallback fixtures, tree query projection, SSE aggregate persistence, detail lookup, and the standalone turn metadata/filter/cascade fixture in `verify-turn.mjs`. Verification records map evidence to `spec/llm-proxy-server.md`, `spec/llm-proxy-turn-traffic.md`, and the current approved feature Spec requirement IDs.
+`npm run build` validates the Vite UI build and TypeScript server compilation. `npm run verify` creates a temporary config.json and secret environment values, starts mock Providers and a temporary proxy/SQLite instance, validates the UI entrypoint, routing, persistence, masking, model rejection, turn grouping/fallback fixtures, tree query projection, SSE aggregate persistence, detail lookup, the standalone turn metadata/filter/cascade fixture in `verify-turn.mjs`, and the safe content viewer fixture in `verify-viewer.ts`. Verification records map evidence to `spec/llm-proxy-server.md`, `spec/llm-proxy-turn-traffic.md`, `spec/llm-proxy-turn-management.md`, and the current approved feature Spec requirement IDs.
 
 ## Notes
 
@@ -67,3 +67,4 @@ Application code depends on domain ports; the SQLite adapter is the concrete per
 - `@fastify/static` serves `dist/ui`; the Vite input is root `ui/index.html`, which loads `src/ui/main.tsx`, and the SPA fallback uses the generated `ui/index.html` path.
 - `better-sqlite3` may require the repository's npm install-script approval/rebuild step in restricted npm environments.
 - Sprint 13 PB-025 added title/flag metadata migration, turn/traffic PATCH routes, turn DELETE cascade, and basic TurnTree metadata actions. PB-026 now adds server-side all/flagged turn filtering, turn pagination, and UI mutation refresh/page correction. PB-027 now projects server-side turn summary, usage/cost totals, null/partial state, and UI summary display; execution environment remains null when no stored source field exists.
+- Sprint 14 PB-028 adds the shared safe content viewer adapter, JSON/Markdown/Monaco/plain-text viewers, curated mode/language override, local Monaco workers, and field-scoped presentation state. PB-029 adds `verify-viewer.ts` and `verification/llm-proxy-turn-management.md`; `npm run verify` now covers the viewer and the existing regression suite.
