@@ -8,7 +8,7 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 8 | 1 | 0 | 0 |
+| 9 | 1 | 0 | 0 |
 
 **Sprint goal:** 승인된 Turn 관리·분석 Spec의 남은 viewer slice로 traffic content를 형식별로 안전하게 표시하고, mode override·fallback·보안 경계를 자동 검증한다.
 **Current focus:** T-004
@@ -64,10 +64,16 @@
   - Depends: T-008
   - Notes: 전역 turn_sequence 대신 각 turn child 배열 순서로 1부터 표시하고 custom traffic title 우선, build/verify 통과
 
+  - [x] **T-010** — 개발용 watch와 조건부 native binding 준비 경로 추가
+  - Phase: implementation + verification
+  - Artifact: `package.json`, `scripts/dev-watch.mjs`, `AGENTS.md`
+  - Depends: T-009
+  - Notes: `src/` 서버는 `tsx watch`, UI는 `vite build --watch`로 감시한다. `better-sqlite3`는 로드 실패 시에만 승인/rebuild한다. `npm run build`와 `npm run verify` 통과.
+
   - [ ] **T-004** — Sprint Boundary → next implementation sprint
   - Phase: cross-cutting
   - Artifact: `scrum/TODO-14.md`
-  - Depends: T-001, T-002, T-003, T-005, T-006, T-007, T-008, T-009
+  - Depends: T-001, T-002, T-003, T-005, T-006, T-007, T-008, T-009, T-010
   - Notes: archive board, update backlog, close PB-028~PB-029, plan next implementation slice
 
 ## Completed sprints

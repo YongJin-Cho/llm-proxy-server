@@ -6,12 +6,15 @@
   "scripts": {
     "build": "npm run build:ui && tsc -p tsconfig.json",
     "build:ui": "vite build",
+    "native:check": "node -e \"import('better-sqlite3').then(() => process.exit(0)).catch(() => process.exit(1))\"",
     "native:rebuild": "npm install-scripts approve better-sqlite3 && npm rebuild better-sqlite3",
-    "prestart": "npm run native:rebuild",
+    "native:ensure": "npm run native:check || npm run native:rebuild",
+    "prestart": "npm run native:ensure",
     "start": "node dist/server.js",
-    "predev": "npm run native:rebuild",
+    "predev": "npm run native:ensure",
     "dev": "tsx src/server.ts",
-    "verify": "npm run native:rebuild && npm run build && node scripts/verify.mjs && node scripts/verify-turn.mjs && tsx scripts/verify-viewer.ts"
+    "dev:watch": "npm run native:ensure && node scripts/dev-watch.mjs",
+    "verify": "npm run native:ensure && npm run build && node scripts/verify.mjs && node scripts/verify-turn.mjs && tsx scripts/verify-viewer.ts"
   },
   "dependencies": {
     "@fastify/static": "^10.1.10",
