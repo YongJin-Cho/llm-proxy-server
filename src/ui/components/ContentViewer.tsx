@@ -76,7 +76,7 @@ export function ContentViewer({ label, content, hint }: Props) {
   const parsed = useMemo(() => parseJsonContent(source), [source]);
   const isJsonContainer = (label === 'request' || label === 'response') && parsed !== undefined && typeof parsed === 'object' && parsed !== null;
   const resolved = useMemo(() => resolveSelection(source, selection, hint), [source, selection, hint]);
-  if (!content) return <section className="content-viewer"><h4>{label}</h4><p>—</p></section>;
+  if (content === null || content === undefined) return <section className="content-viewer"><h4>{label}</h4><p>—</p></section>;
 
   if (isJsonContainer) return <section className="content-viewer json-container-viewer" aria-label={`${label} JSON tree`}>
     <div className="viewer-body json-container-body">

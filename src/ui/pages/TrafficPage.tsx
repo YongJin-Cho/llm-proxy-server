@@ -90,6 +90,9 @@ export function TrafficPage() {
       .catch((reason: Error) => setError(reason.message));
   };
   const selectedTurn = turns.find((turn) => turn.id === selection.turn);
+  const selectedTrafficIndex = selectedTurn?.traffic.findIndex((traffic) => traffic.id === selection.traffic) ?? -1;
+  const selectedTraffic = selectedTrafficIndex >= 0 ? selectedTurn?.traffic[selectedTrafficIndex] : undefined;
+  const selectedTrafficLabel = selectedTraffic ? selectedTraffic.title || String(selectedTrafficIndex + 1) : undefined;
 
   const sidebar = <aside>
     <div className="turn-filter" role="tablist" aria-label="Turn filter">
@@ -102,7 +105,7 @@ export function TrafficPage() {
   return <main className="traffic-layout">{sidebar}
     <section className="traffic-content">
       {selection.traffic
-        ? <TrafficView log={detail} loading={detailLoading} error={detailError} onBack={() => { writeSelection(selection.turn); setSelection({ turn: selection.turn }); }} />
+        ? <TrafficView log={detail} loading={detailLoading} error={detailError} turnTitle={selectedTurn?.title || selectedTurn?.id.slice(0, 8)} trafficLabel={selectedTrafficLabel} onBack={() => { writeSelection(selection.turn); setSelection({ turn: selection.turn }); }} />
         : <TurnView turn={selectedTurn} loading={treeLoading} onTraffic={selectTraffic} />}
       {error && <p className="error">{error}</p>}
     </section>

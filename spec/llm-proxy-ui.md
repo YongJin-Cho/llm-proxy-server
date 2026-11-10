@@ -83,7 +83,7 @@ TrafficPage
 
 - R-020: TurnTree의 `Turns` title과 turn pagination control은 같은 header 행에 배치해야 한다. title은 왼쪽, pagination은 오른쪽에 위치하며, 좁은 화면에서는 pagination이 다음 줄로 내려가더라도 turn tree와 pagination의 의미가 유지되어야 한다.
 
-- R-021: `TurnView`는 turn summary 아래에 child traffic summary를 table 형태로 표시해야 한다. table의 각 row는 sidebar child와 동일한 traffic 표시값을 사용해야 하며, column은 `Traffic`, `Input tokens`, `Cached tokens`, `Output tokens`, `Cost`, `Elapsed time`만 제공해야 한다. 서버가 값을 제공하지 않는 경우 UI는 `—` 또는 서버가 정의한 null 표시를 사용하고 값을 추정하지 않아야 한다. ← R-019 of `spec/llm-proxy-turn-management.md`
+- R-021: `TurnView`는 turn summary 아래에 child traffic summary를 table 형태로 표시해야 한다. table의 각 row는 sidebar child와 동일한 traffic 표시값을 사용해야 하며, column은 `Traffic`, `Input tokens`, `Cached input tokens`, `Output tokens`, `Elapsed time`, `Cost` 순서로 제공해야 한다. 서버가 값을 제공하지 않는 경우 UI는 `—` 또는 서버가 정의한 null 표시를 사용하고 값을 추정하지 않아야 한다. ← R-019 of `spec/llm-proxy-turn-management.md`
 
 - R-022: `TurnView`의 turn summary는 Traffic page와 동일한 summary 정보와 turn 전체 usage 합계를 표시해야 한다. request는 첫 traffic request의 마지막 user 메시지, response는 turn을 종료하는 마지막 traffic response의 최종 assistant 메시지를 서버 projection으로 표시해야 한다. API별 추출은 Responses API의 `input` 문자열 또는 마지막 user item의 마지막 `input_text`와 마지막 assistant output item의 마지막 `output_text`, Chat Completions API의 마지막 user `messages[].content`와 assistant `choices[0].message.content`, Messages API의 마지막 user `messages[].content`와 assistant `content[]`의 마지막 `text`를 따른다. UI는 request/response를 다시 선택하거나 usage/cost를 재계산하지 않아야 한다. ← R-005 of `spec/llm-proxy-turn-management.md`; Direct Input
 
@@ -94,6 +94,7 @@ TrafficPage
 - R-025: 문자열 preview에서 전체 보기/확대를 요청하면 popup viewer를 열고, popup을 닫으면 동일한 JSON tree 위치로 돌아가야 한다. Popup viewer는 read-only여야 하며 원본 request/response JSON이나 문자열 값을 변경하지 않아야 한다.
 
 - R-026: Popup viewer의 mode/language 선택 상태는 request/response field와 문자열 leaf 식별자별 현재 viewer instance에만 유지해야 한다. 다른 문자열 leaf 선택, traffic 변경, viewer close, 새로고침 시 자동 감지 상태로 초기화하며 URL, 서버, localStorage에 저장하지 않아야 한다. 저장된 각 문자열 값이 1 MiB 이하이면 별도 문자 수·줄 수 truncation 없이 popup에서 전체를 확인할 수 있어야 한다. ← ASR-031; R-009~R-010 of `spec/llm-proxy-turn-management.md`
+- R-027: TurnView는 별도 turn 제목 heading 없이 `Turn <turn 제목> summary` heading을 표시하고, TrafficView는 `Turn <turn 제목>/Traffic <traffic 표시값> summary` heading을 표시해야 한다. 두 summary는 `Status`, `Model`, `Provider`, `Cost`, `Input tokens`, `Cached input tokens`, `Output tokens`, `Elapsed time` 순서를 사용하며 cost는 소수점 4자리, token/time은 3자리 콤마로 표시한다. TurnView response는 `ContentViewer`의 plain text Markdown, JSON object/array tree, 긴 문자열 popup 동작을 재사용해야 한다. ← R-020~R-021 of `spec/llm-proxy-turn-management.md`
 
 ## Constraints
 
