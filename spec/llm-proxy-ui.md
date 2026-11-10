@@ -83,9 +83,9 @@ TrafficPage
 
 - R-020: TurnTree의 `Turns` title과 turn pagination control은 같은 header 행에 배치해야 한다. title은 왼쪽, pagination은 오른쪽에 위치하며, 좁은 화면에서는 pagination이 다음 줄로 내려가더라도 turn tree와 pagination의 의미가 유지되어야 한다.
 
-- R-021: `TurnView`는 turn summary 아래에 child traffic summary를 table 형태로 표시해야 한다. table의 각 row는 traffic sequence/title 또는 ID fallback을 식별할 수 있어야 하며, 서버가 제공하는 stable provider ID와 다음 normalized usage summary column을 표시해야 한다: model, model provider, input tokens, cached input tokens, output tokens, cost, 처리 시간. 서버가 값을 제공하지 않는 경우 UI는 `—` 또는 서버가 정의한 null 표시를 사용하고 값을 추정하지 않아야 한다. ← R-013 of `spec/llm-proxy-turn-management.md`
+- R-021: `TurnView`는 turn summary 아래에 child traffic summary를 table 형태로 표시해야 한다. table의 각 row는 sidebar child와 동일한 traffic 표시값을 사용해야 하며, column은 `Traffic`, `Input tokens`, `Cached tokens`, `Output tokens`, `Cost`, `Elapsed time`만 제공해야 한다. 서버가 값을 제공하지 않는 경우 UI는 `—` 또는 서버가 정의한 null 표시를 사용하고 값을 추정하지 않아야 한다. ← R-019 of `spec/llm-proxy-turn-management.md`
 
-- R-022: `TurnView`의 turn summary는 turn을 시작하는 사용자 입력을 첫 traffic의 request 메시지에서 추출한 `start_user_input`으로, turn을 종료하는 AI 출력을 마지막 completed traffic의 response 메시지에서 추출한 `end_ai_output`으로 표시해야 한다. summary에는 model/model provider, input tokens, cached input tokens, output tokens, cost, 처리 시간을 포함해야 하며, UI가 request/response를 임의로 다시 선택하거나 usage/cost를 재계산하지 않아야 한다. ← ASR-030
+- R-022: `TurnView`의 turn summary는 Traffic page와 동일한 summary 정보와 turn 전체 usage 합계를 표시해야 한다. request는 첫 traffic request의 마지막 user 메시지, response는 turn을 종료하는 마지막 traffic response의 최종 assistant 메시지를 서버 projection으로 표시해야 한다. API별 추출은 Responses API의 `input` 문자열 또는 마지막 user item의 마지막 `input_text`와 마지막 assistant output item의 마지막 `output_text`, Chat Completions API의 마지막 user `messages[].content`와 assistant `choices[0].message.content`, Messages API의 마지막 user `messages[].content`와 assistant `content[]`의 마지막 `text`를 따른다. UI는 request/response를 다시 선택하거나 usage/cost를 재계산하지 않아야 한다. ← R-005 of `spec/llm-proxy-turn-management.md`; Direct Input
 
 - R-023: `TrafficView`는 traffic summary를 content detail보다 먼저 표시해야 한다. summary에는 detail API가 제공하는 stable provider ID, model, input tokens, cached input tokens, output tokens, cost, 처리 시간을 표시하며 서버 projection의 null/partial 의미를 유지해야 한다. TrafficView는 해당 값을 다른 traffic이나 turn의 값으로 보완하거나 추정하지 않아야 한다. ← R-013 of `spec/llm-proxy-turn-management.md`
 
@@ -184,3 +184,4 @@ TrafficPage
 - 2026-03-10: 상위 Turn 관리 Spec의 traffic title editing 요구와 현재 `TurnTree` 구현 사이의 gap을 baseline에 기록했다. 이 문서는 해당 기능을 구현 완료로 가장하지 않는다.
 - 2026-03-10: 사용자 UI 요구사항을 반영해 turn collapse/expand, sidebar header pagination, turn traffic summary table, traffic usage summary, request/response JSON tree view를 R-019~R-024로 추가했다. 현재 구현과의 차이는 Current Implementation Baseline에 기록했다.
 - 2026-03-10: request/response 전체 content viewer 감지 방식을 폐기하고, JSON object tree 내부 문자열 leaf만 축약 preview와 popup viewer의 대상으로 변경했다. 관련 요구사항을 R-012~R-016 및 C-009~C-010으로 기록했다.
+- 2026-03-10: Turn page 변경 요청을 반영해 Traffic page와 동일한 turn summary, API별 request/response 메시지 추출, turn usage 합계, sidebar와 일치하는 traffic 식별값 및 간소화된 traffic table column을 R-021~R-022에 반영했다.

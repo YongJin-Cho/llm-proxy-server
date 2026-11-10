@@ -11,23 +11,47 @@ type SummaryTraffic = TurnTrafficSummary & {
   cost_usd: number | null;
 };
 
-function parseJson(value: string | null) {
+function parseJson(value: unknown): Record<string, unknown> | null {
   if (!value) return null;
+  if (typeof value === 'object') return value as Record<string, unknown>;
+  if (typeof value !== 'string') return null;
   try { return JSON.parse(value) as Record<string, unknown>; } catch { return null; }
 }
-function extractUserInput(value: Record<string, unknown> | null): unknown | null {
-  if (!value) return null;
-  if ('input' in value) return value.input ?? null;
-  const messages = value.messages;
-  if (Array.isArray(messages)) return (messages.find((message) => (message as { role?: string }).role === 'user') as { content?: unknown } | undefined)?.content ?? null;
-  return null;
+function lastUserMessage(messages: unknown): Record<string, unknown> | null {
+  if (!Array.isArray(messages)) return null;
+  const message = [...messages].reverse().find((item) => (item as { role?: string } | null)?.role === 'user');
+  return message && typeof message === 'object' ? message as Record<string, unknown> : null;
 }
-function extractAiOutput(value: Record<string, unknown> | null): unknown | null {
+function lastContentText(content: unknown, type: string): unknown | null {
+  if (!Array.isArray(content)) return null;
+  const item = [...content].reverse().find((part) => (part as { type?: string } | null)?.type === type);
+  return item && typeof item === 'object' && 'text' in item ? (item as { text?: unknown }).text ?? null : null;
+}
+function extractUserInput(value: Record<string, unknown> | null, apiKind: string | undefined): unknown | null {
   if (!value) return null;
-  if ('output_text' in value) return value.output_text ?? null;
-  if ('output' in value) return value.output ?? null;
-  const choices = value.choices;
-  if (Array.isArray(choices)) return (choices[0] as { message?: { content?: unknown }; text?: unknown } | undefined)?.message?.content ?? (choices[0] as { text?: unknown } | undefined)?.text ?? null;
+  if (typeof value.input === 'string') return value.input;
+  if (apiKind === 'responses') {
+    if (typeof value.input === 'string') return value.input;
+    const input = Array.isArray(value.input) ? value.input.at(-1) as { role?: string; content?: unknown } | undefined : undefined;
+    return input?.role === 'user' ? lastContentText(input.content, 'input_text') : null;
+  }
+  const message = lastUserMessage(value.messages);
+  return message?.content ?? null;
+}
+function extractAiOutput(value: Record<string, unknown> | null, apiKind: string | undefined): unknown | null {
+  if (!value) return null;
+  if (typeof value.output_text === 'string') return value.output_text;
+  if (apiKind === 'responses') {
+    const output = Array.isArray(value.output) ? value.output.at(-1) as { role?: string; content?: unknown } | undefined : undefined;
+    return output?.role === 'assistant' ? lastContentText(output.content, 'output_text') : null;
+  }
+  if (apiKind === 'chat_completions') {
+    const choice = Array.isArray(value.choices) ? value.choices[0] as { message?: { role?: string; content?: unknown } } | undefined : undefined;
+    return choice?.message?.role === 'assistant' ? choice.message.content ?? null : null;
+  }
+  if (apiKind === 'messages') {
+    return value.role === 'assistant' ? lastContentText(value.content, 'text') : null;
+  }
   return null;
 }
 function buildSummary(traffic: SummaryTraffic[], status: TrafficLog['status']): TurnSummary {
@@ -38,9 +62,14 @@ function buildSummary(traffic: SummaryTraffic[], status: TrafficLog['status']): 
   const usage = Object.fromEntries(values.map((field) => [field, traffic.some((item) => item[field] !== null && item[field] !== undefined) ? traffic.reduce((sum, item) => sum + (item[field] ?? 0), 0) : null])) as Record<typeof values[number], number | null>;
   const started = Date.parse(first?.started_at ?? '') || 0;
   const finished = Date.parse((lastCompleted ?? traffic.at(-1))?.finished_at ?? '') || 0;
+  const requestEnvelope = parseJson(first?.request_json ?? null);
+  const requestBody = requestEnvelope?.body && typeof requestEnvelope.body === 'object'
+    ? requestEnvelope.body as Record<string, unknown>
+    : requestEnvelope;
+  const finalTraffic = lastCompleted ?? traffic.at(-1);
   return {
-    start_user_input: extractUserInput(parseJson(first?.request_json ?? null)),
-    end_ai_output: extractAiOutput(parseJson(lastCompleted?.response_json ?? null)),
+    start_user_input: extractUserInput(requestBody, first?.api_kind),
+    end_ai_output: extractAiOutput(parseJson(finalTraffic?.response_json ?? null), finalTraffic?.api_kind),
     model: first?.model ?? null,
     provider: first?.provider ?? null,
     execution_environment: null,

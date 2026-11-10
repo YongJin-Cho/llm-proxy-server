@@ -8,7 +8,7 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 11 | 1 | 0 | 0 |
+| 12 | 1 | 0 | 0 |
 
 **Sprint goal:** 승인된 Turn 관리·분석 Spec의 남은 viewer slice로 traffic content를 형식별로 안전하게 표시하고, mode override·fallback·보안 경계를 자동 검증한다.
 **Current focus:** T-004
@@ -82,10 +82,16 @@
   - Depends: T-011
   - Notes: request/response 저장 시 truncation을 제거하고 request 수신 한도·오류 문자열 bound는 유지했다. `maxBodyBytes: 4096`보다 큰 JSON field 전체 parse/길이를 검증했으며 `npm run build`와 `npm run verify` 통과.
 
-  - [ ] **T-004** — Sprint Boundary → next implementation sprint
+  - [x] **T-013** — Turn page summary/request-response/traffic table delta 구현·검증
+  - Phase: implementation + verification
+  - Artifact: `spec/llm-proxy-turn-management.md`, `spec/llm-proxy-ui.md`, `src/ui/components/TurnView.tsx`, `scripts/verify-turn.mjs`, `verification/llm-proxy-turn-management.md`
+  - Depends: T-012
+  - Notes: Traffic page와 동일한 turn summary, API별 request/response 추출 규칙, turn usage 합계, sidebar와 일치하는 Traffic 번호 및 지정 column table을 구현하고 build/verify evidence를 갱신한다.
+
+- [ ] **T-004** — Sprint Boundary → next implementation sprint
   - Phase: cross-cutting
   - Artifact: `scrum/TODO-14.md`
-  - Depends: T-001, T-002, T-003, T-005, T-006, T-007, T-008, T-009, T-010, T-011, T-012
+  - Depends: T-001, T-002, T-003, T-005, T-006, T-007, T-008, T-009, T-010, T-011, T-012, T-013
   - Notes: archive board, update backlog, close PB-028~PB-029, plan next implementation slice
 
 ## Completed sprints

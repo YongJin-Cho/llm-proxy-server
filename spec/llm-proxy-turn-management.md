@@ -16,7 +16,7 @@
 - R-002: 삭제 API와 UI는 turn 단위 삭제만 제공해야 한다. Turn 삭제는 해당 turn row와 모든 child traffic을 하나의 transaction에서 물리 삭제해야 하며, traffic 단독 삭제·논리 삭제·복원·삭제 이력은 제공하지 않아야 한다. ← ASR-028; AC-025; `adr/turn-management-metadata-and-deletion.md`
 - R-003: `GET /api/v1/turns`는 `all`과 `flagged` 필터를 서버에서 적용하고, 필터 적용 후 top-level turn node 기준으로 `total`, `page`, `limit`, `has_next`를 계산해야 한다. Child traffic은 parent turn 안에 반환하며 child 자체는 pagination하지 않아야 한다. ← ASR-029; AC-026; `adr/turn-filter-pagination-contract.md`
 - R-004: flag 변경 또는 turn 삭제 성공 후 UI는 현재 filter·page query를 재조회해야 한다. 결과 page가 비면 마지막 유효 page로 보정해야 한다. ← ASR-029; AC-026; `adr/turn-filter-pagination-contract.md`
-- R-005: Server query service는 turn summary DTO를 생성해야 한다. 시작 user input은 첫 traffic에서, 종료 AI output은 마지막 completed traffic에서 선택하고, 모델·실행 환경·상태·traffic 개수·처리 시간을 함께 제공해야 한다. ← ASR-030; AC-027; `adr/turn-summary-usage-projection.md`
+- R-005: Server query service는 turn summary DTO를 생성해야 한다. 시작 user input은 첫 traffic request에서 API별 마지막 user 메시지를 추출하고, 종료 AI output은 마지막 traffic response에서 API별 최종 assistant 메시지를 추출해야 한다. Responses API는 request의 `body.input` 문자열 또는 마지막 user item의 마지막 `input_text`, response의 마지막 assistant output item의 마지막 `output_text`를 사용한다. Chat Completions API는 마지막 user message의 `content`와 첫 assistant choice의 `message.content`를 사용한다. Messages API는 마지막 user message의 `content`와 assistant response의 마지막 `text` content를 사용한다. 모델·실행 환경·상태·traffic 개수·처리 시간을 함께 제공해야 한다. ← Direct Input; ASR-030; AC-027; `adr/turn-summary-usage-projection.md`
 - R-006: Usage와 cost는 child traffic의 non-null 값을 서버에서 합산해야 한다. 값이 하나도 없으면 `null`, 일부 traffic에만 있으면 partial 상태를 반환해야 하며, UI는 계산 규칙을 재구현하거나 provider가 보고하지 않은 cost를 추정하지 않아야 한다. ← ASR-030; AC-027; `adr/usage-and-cost-metadata.md`; `adr/turn-summary-usage-projection.md`
 - R-007: 공통 viewer adapter는 request/response 전체 content를 하나의 viewer 형식으로 감지하지 않아야 한다. JSON parse에 성공한 request/response는 read-only JSON object/array tree container로 표시하고, object/array/number/boolean/null은 tree 탐색 대상으로 유지하며 문자열 leaf만 별도 viewer의 입력으로 취급해야 한다. JSON parse에 실패한 request/response는 안전한 escaped plain text fallback으로 표시해야 한다. Viewer dependency 조합은 `@uiw/react-json-view`, `react-markdown` + `remark-gfm` + `rehype-sanitize`, `@monaco-editor/react`, `highlight.js`를 우선 검증 대상으로 사용해야 하며 실제 버전은 설치 검증 후 lockfile에 고정한다. ← ASR-031; AC-028; `adr/long-string-safe-rendering.md`; `adr/viewer-dependency-selection.md`
 - R-008: JSON tree 안의 문자열 leaf는 기본적으로 축약 preview로 표시해야 한다. 사용자가 문자열의 전체 보기/확대를 요청하면 inline content를 펼치지 않고 해당 문자열만 popup viewer window/dialog에서 표시해야 한다. Auto detection 순서는 선택된 문자열 값에 대해 content hint → JSON parse → 제한된 Markdown 판별 → `highlight.js` language 후보 → escaped plain text fallback이어야 한다. Detection은 초기 표시 후보일 뿐 viewer 선택이나 실행 권한을 결정하지 않아야 하며, 감지 실패·불확실·지원 불가 언어·viewer 예외는 안전한 plain text fallback으로 복구해야 한다. ← ASR-031; AC-028; `adr/long-string-safe-rendering.md`
@@ -30,6 +30,8 @@
 - R-016: Sidebar turn row는 펼치기 아이콘, flag 아이콘, 왼쪽 정렬 title 사이의 간격을 최소화하고 `...` 메뉴를 오른쪽 끝에 정렬해야 한다. Filter label은 `All`과 `Stored`를 사용하며 현재 filter는 선택 상태와 접근성 상태(`aria-selected`)로 명확히 구별해야 한다. Pagination의 이전/다음 조작은 배경과 테두리 없는 왼쪽/오른쪽 삼각형 아이콘 버튼으로 제공하고 `Page N`은 보조 텍스트보다 작은 글꼴로 표시해야 한다. 휴지통도 배경 없는 아이콘 버튼으로 표시해야 하며, 펼치기/flag 버튼은 서로 붙여 배치하고 flag 아이콘은 작은 글꼴로 표시해야 한다. Turn 메뉴의 관리 항목은 `rename`과 `delete` 영문 label을 사용해야 한다.
 - R-017: Pagination 옆 휴지통 action은 현재 filter·page·limit로 서버가 계산한 현재 page의 표시 항목 중 flag=false인 turn/legacy 항목을 모두 삭제해야 한다. 삭제는 각 turn의 child traffic을 cascade하고, 단일 bulk operation으로 처리해야 하며, flag=true 항목은 보존해야 한다. 성공 후 현재 query를 재조회하고 빈 page는 마지막 유효 page로 보정해야 한다. 삭제 전에는 사용자 확인을 요구해야 한다. ← Direct Input
 - R-018: Sidebar의 traffic child는 저장된 전역 `turn_sequence`가 아니라 각 parent turn의 child 배열 순서를 기준으로 1부터 시작하는 표시 번호를 사용해야 한다. 사용자가 지정한 traffic title이 있으면 표시 번호보다 title을 우선해야 하며, 저장/API sequence 값 자체는 변경하지 않아야 한다. ← Direct Input (2026-03-10)
+
+- R-019: Turn page의 traffic table은 sidebar에 표시되는 child traffic 식별자와 동일한 표시값을 사용해야 하며, `Traffic`, `Input tokens`, `Cached tokens`, `Output tokens`, `Cost`, `Elapsed time` column만 제공해야 한다. Turn summary의 usage는 child traffic의 non-null 값을 field별로 합산하고, 합계가 없는 field는 `null`로 표시해야 하며 UI는 usage를 재계산하지 않아야 한다. ← Direct Input
 
 ## Constraints
 
@@ -58,6 +60,7 @@
 - 없음: provider는 stable routing ID로 표시하고, traffic summary 값은 `/api/v1/turns` child projection과 기존 detail API가 제공한다.
 - Direct Input (2026-03-10): 현재 page에 표시되는 legacy 노드도 사용자에게 표시된 unflagged 항목이므로 bulk 삭제 대상에 포함한다.
 - Direct Input (2026-03-10): traffic 번호는 데이터 식별자가 아니라 parent turn 내부의 sidebar 표시 순서이며, 사용자 지정 title과 전역 저장 sequence에는 영향을 주지 않는다.
+- Direct Input (2026-03-10): Turn page의 request/response는 첫 traffic request와 마지막 traffic response에서 API별 user/assistant 메시지 규칙으로 추출하고, usage는 turn 전체 traffic 합계를 사용한다.
 
 ## Related
 
