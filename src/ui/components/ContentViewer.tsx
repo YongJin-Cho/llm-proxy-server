@@ -53,7 +53,7 @@ function PopupViewer({ target, onClose }: { target: StringTarget; onClose: () =>
     <section className="viewer-popup" role="dialog" aria-modal="true" aria-label={`문자열 viewer: ${target.path}`}>
       <header className="viewer-popup-header">
         <div className="viewer-controls">
-          <label>표시 형식<select value={selection.mode} onChange={(event) => changeMode(event.target.value as ViewerMode)}>{modeLabels.map(([value, text]) => <option key={value} value={value}>{text}</option>)}</select></label>
+          <label><select aria-label="표시 형식" value={selection.mode} onChange={(event) => changeMode(event.target.value as ViewerMode)}>{modeLabels.map(([value, text]) => <option key={value} value={value}>{text}</option>)}</select></label>
           {selection.mode === 'code' && <label>언어<select value={selection.language ?? 'plaintext'} onChange={(event) => changeLanguage(event.target.value)}>{curatedLanguages.map(({ id, label }) => <option key={id} value={id}>{label}</option>)}</select></label>}
           <span className="viewer-size">{byteLength(target.value)} bytes</span>
         </div>
