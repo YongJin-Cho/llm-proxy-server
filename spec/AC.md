@@ -37,6 +37,7 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 2. AC-008 → AC-009 → AC-010 → AC-011 → AC-012 → AC-013
 3. AC-014 → AC-015 → AC-016 → AC-017 → AC-018
 4. AC-019 → AC-023 → AC-024 → AC-020 → AC-022 → AC-021
+5. AC-025 → AC-026 → AC-027 → AC-028
 
 ## AC Detail
 
@@ -332,6 +333,54 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - **Resolution path:** adr
 - **Resolution:** API별 adapter가 SSE event를 API별 규칙으로 누적한다. content delta는 순서대로 병합하고 복수 tool call delta는 tool call ID 기준으로 병합하며 usage와 finish metadata를 반영한다. 표준 adapter contract의 stream aggregator가 이 lifecycle을 제공한다. 정상 종료 시 provider API 계약에 맞는 최종 response JSON 하나를 저장하고 개별 `data` event 배열은 저장하지 않는다. client에는 원본 SSE bytes를 투명하게 전달한다. 정상 종료 전 upstream failure 또는 client disconnect가 발생하면 중단 시점의 partial aggregate를 `response_json`에 저장하고 status를 `failed`로 기록하며 원인은 `error`에 저장한다.
 
+### AC-025 — Turn·traffic 관리 메타데이터 저장과 삭제 의미
+
+- **Category:** Structure & organization
+- **Status:** identified
+- **Statement:** 사용자가 편집한 turn·traffic 제목, flag 상태, 삭제 상태를 기존 traffic 본문·lifecycle 원본과 분리해 어떤 저장 모델로 영구화하고, turn 삭제와 개별 traffic 삭제를 어떤 의미와 cascade 규칙으로 처리할 것인가?
+- **Why it matters:** 관리 메타데이터를 원본에 덮어쓰거나 삭제 의미를 암묵적으로 정하면 복구·감사·turn 관계·기존 상세 조회의 일관성이 깨질 수 있다.
+- **Depends on:** AC-019, AC-020
+- **Related ADRs:**
+  - 아직 없음
+- **Resolution path:** adr | direct-input
+- **Resolution:** 아직 미정.
+
+### AC-026 — 전체·flagged 필터의 조회 책임과 pagination 계약
+
+- **Category:** Integration & dependencies
+- **Status:** identified
+- **Statement:** 전체·flagged 등 sidebar 필터를 서버 query가 책임질지 UI가 현재 page에서 필터링할지, flag 변경·삭제와 pagination 경계에서 어떤 일관성·정렬·page size 계약을 제공할 것인가?
+- **Why it matters:** UI 임의 필터링은 전체 결과를 누락할 수 있고, 서버 필터링의 계약이 없으면 flagged 탐색·페이지 이동·변경 직후 결과가 재현되지 않는다.
+- **Depends on:** AC-020, AC-025
+- **Related ADRs:**
+  - 아직 없음
+- **Resolution path:** adr | direct-input
+- **Resolution:** 아직 미정.
+
+### AC-027 — Turn summary와 traffic usage summary 데이터 계약
+
+- **Category:** Integration & dependencies
+- **Status:** identified
+- **Statement:** turn summary의 시작 user input·종료 AI output·모델·실행 환경·처리 시간과 전체/traffic별 usage·cost를 어떤 query projection과 null/partial 데이터 규칙으로 제공하고 표시할 것인가?
+- **Why it matters:** 여러 traffic의 값 선택·집계·누락 처리가 정해지지 않으면 summary가 서로 다른 화면에서 다르게 계산되거나 partial/in-progress turn을 오해하게 만든다.
+- **Depends on:** AC-018, AC-020, AC-023
+- **Related ADRs:**
+  - `adr/usage-and-cost-metadata.md` — approved
+- **Resolution path:** adr | direct-input
+- **Resolution:** 아직 미정.
+
+### AC-028 — 긴 문자열 형식 표시와 안전한 전체 보기
+
+- **Category:** Constraints (structural)
+- **Status:** identified
+- **Statement:** request/response의 긴 문자열을 언제 축약하고 어떤 기준으로 Markdown·JSON·JavaScript 등을 표시하며, 전체 보기와 불확실·지원 불가 형식의 fallback을 XSS·임의 실행 없이 어떻게 제공할 것인가?
+- **Why it matters:** renderer 선택은 읽기 편의성과 보안에 동시에 영향을 주며, 형식 오인식이나 실행 가능한 표시가 저장된 provider/client 데이터의 위험을 높일 수 있다.
+- **Depends on:** AC-004, AC-021, AC-025
+- **Related ADRs:**
+  - 아직 없음
+- **Resolution path:** adr | direct-input
+- **Resolution:** 아직 미정.
+
 
 ## Notes
 
@@ -340,5 +389,6 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - 2026-03-10: Turn grouping·tree UI delta에 대해 AC-019~AC-023을 추가 식별했다.
 - 2026-03-10: SSE streaming 저장 응답을 최종 통합 응답 하나로 제한하기 위해 AC-024를 추가 식별했다.
 - 2026-03-10: 사용자 결정으로 AC-019를 designed 처리했다. client/harness 변경 없이 proxy semantic grouping을 사용하며, 복수 tool call/tool message는 ID 기준으로 매칭하고 순서는 보장하지 않는다.
+- 2026-03-10: Turn 관리·분석 UI PRD delta 승인에 따라 AC-025~AC-028을 identified로 추가했다. 관리 메타데이터 저장·삭제, 서버 필터·페이지네이션, summary/usage projection, 안전한 형식별 renderer가 이번 review의 blocking concern이다.
 - 2026-03-10: 사용자 go-ahead("ok")로 AC-023의 Option B를 승인했다. 미완료 turn pool, tool-call ID 역색인, 관찰 순서 기반 traffic sequence를 사용한다.
 - 2026-03-10: 사용자 go-ahead("ok")로 후속 ADR `ambiguous-missing-tool-id-fallback.md`를 승인했다. 매칭 불가 traffic은 fallback reason과 함께 새 standalone turn으로 격리한다.

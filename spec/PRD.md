@@ -52,6 +52,7 @@ Codex와 유사한 LLM 클라이언트와 OpenAI Model Provider 사이에서 요
 - 2026-03-10: 사용자 go-ahead(“ok”)로 PRD 승인.
 - 2026-03-10: Chat Completions·Claude Messages 지원 delta는 Sprint 07에서 별도 요구사항으로 확정하기로 했다.
 - 2026-03-10: 사용자 go-ahead("ok")로 Delta PRD를 승인했다. AC 식별 단계로 진행한다.
+- 2026-03-10: 사용자 go-ahead("ok")로 Turn 관리·분석 UI Delta PRD를 승인했다. AC-025~AC-028 식별 단계로 진행한다.
 - 2026-03-10: 사용자 지시에 따라 기존 traffic migration을 범위에서 제외하고, non-migration 호환 표시 정책을 AC로 분리했다.
 
 ## Delta: Chat Completions·Claude Messages API 지원
