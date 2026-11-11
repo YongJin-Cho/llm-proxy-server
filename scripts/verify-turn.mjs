@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { TurnGroupingService } from '../dist/domain/turn.js';
+import { ApiTurnSummaryProjector } from '../dist/application/turn-summary-projector.js';
 import { SqliteTrafficLogStore } from '../dist/persistence/sqlite-traffic-log.js';
 
 const store = {
@@ -44,7 +45,7 @@ assert.deepEqual(store.traffic.map((entry) => entry.sequence), [...store.traffic
 
 const tempDir = mkdtempSync(join(tmpdir(), 'llm-proxy-turn-'));
 const sqlitePath = join(tempDir, 'turns.sqlite');
-const sqlite = new SqliteTrafficLogStore(sqlitePath);
+const sqlite = new SqliteTrafficLogStore(sqlitePath, new ApiTurnSummaryProjector());
 sqlite.createTurn({ id: 'managed-turn', startedAt: '2026-03-10T00:01:00.000Z', status: 'in_progress' });
 sqlite.insert({ id: 'managed-traffic', apiKind: 'responses', provider: null, startedAt: '2026-03-10T00:01:01.000Z', model: 'test-model', streaming: 0, requestJson: '{"input":"hello"}' });
 sqlite.attachTraffic({ trafficId: 'managed-traffic', turnId: 'managed-turn', sequence: 1, fallbackReason: null });

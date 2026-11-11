@@ -1,31 +1,27 @@
 import type { FastifyInstance } from 'fastify';
+import { parseLogListQuery, parseMetadataUpdate, parseTurnListQuery } from './input-adapters.js';
 import type { AppConfig } from '../configuration.js';
 import { TrafficLogQueryService } from '../application/log-query-service.js';
+import { proxyApiPaths } from '../application/api-adapters.js';
 import { ProxyService } from '../application/proxy-service.js';
 
 export function registerRoutes(app: FastifyInstance, config: AppConfig, query: TrafficLogQueryService, proxy: ProxyService) {
-  const registerProxyRoute = (path: '/responses' | '/chat/completions' | '/messages') => {
+  const registerProxyRoute = (path: (typeof proxyApiPaths)[number]) => {
     app.post(`/api/v1${path}`, async (request, reply) => { reply.hijack(); await proxy.handle(request.raw, reply.raw, request.body, path); });
   };
-  registerProxyRoute('/responses');
-  registerProxyRoute('/chat/completions');
-  registerProxyRoute('/messages');
+  for (const path of proxyApiPaths) registerProxyRoute(path);
   app.get('/api/v1/turns', async (request, reply) => {
     const url = new URL(request.raw.url ?? '/', `http://${request.headers.host ?? config.host}`);
-    const page = Math.max(Number(url.searchParams.get('page') ?? 1), 1);
-    const limit = Math.min(Math.max(Number(url.searchParams.get('limit') ?? 20), 1), 100);
-    const filter = url.searchParams.get('filter') === 'flagged' ? 'flagged' : 'all';
+    const { page, limit, filter } = parseTurnListQuery(url);
     return reply.send(query.listTurns(page, limit, filter));
     });
     app.delete('/api/v1/turns/page', async (request, reply) => {
     const url = new URL(request.raw.url ?? '/', `http://${request.headers.host ?? config.host}`);
-    const page = Math.max(Number(url.searchParams.get('page') ?? 1), 1);
-    const limit = Math.min(Math.max(Number(url.searchParams.get('limit') ?? 20), 1), 100);
-    const filter = url.searchParams.get('filter') === 'flagged' ? 'flagged' : 'all';
+    const { page, limit, filter } = parseTurnListQuery(url);
     return reply.send({ deleted: query.deleteUnflaggedTurnsOnPage(page, limit, filter) });
     });
     app.patch('/api/v1/turns/:id', async (request, reply) => {
-    query.updateTurnMetadata((request.params as { id: string }).id, request.body as { title?: string | null; flag?: boolean });
+    query.updateTurnMetadata((request.params as { id: string }).id, parseMetadataUpdate(request.body));
     return reply.code(204).send();
     });
     app.delete('/api/v1/turns/:id', async (request, reply) => {
@@ -33,13 +29,12 @@ export function registerRoutes(app: FastifyInstance, config: AppConfig, query: T
     return reply.code(204).send();
     });
     app.patch('/api/v1/logs/:id', async (request, reply) => {
-    query.updateTrafficMetadata((request.params as { id: string }).id, request.body as { title?: string | null; flag?: boolean });
+    query.updateTrafficMetadata((request.params as { id: string }).id, parseMetadataUpdate(request.body));
     return reply.code(204).send();
   });
   app.get('/api/v1/logs', async (request, reply) => {
     const url = new URL(request.raw.url ?? '/', `http://${request.headers.host ?? config.host}`); const n = (name: string) => url.searchParams.get(name) || undefined;
-    const limit = Math.min(Math.max(Number(n('limit') ?? 20), 1), 100); const offset = Math.max(Number(n('offset') ?? 0), 0);
-    return reply.send(query.list({ status: n('status'), model: n('model'), from: n('from'), to: n('to'), limit, offset }));
+    return reply.send(query.list(parseLogListQuery(url)));
   });
   app.get('/api/v1/logs/:id', async (request, reply) => { const row = query.get((request.params as { id: string }).id); return row ? reply.send(row) : reply.code(404).send({ error: { message: 'log not found' } }); });
 }

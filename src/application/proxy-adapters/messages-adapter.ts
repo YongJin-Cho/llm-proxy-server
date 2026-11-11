@@ -1,4 +1,5 @@
 import { ProxyAdapter, type UsageMetadata } from './proxy-adapter.js';
+import { emptyUsage, parseSseJsonEvents, stringValues } from './shared.js';
 
 type MessagesEvent = Record<string, unknown>;
 type ContentBlock = { type: string; text?: string; id?: string; name?: string; input?: unknown; partialInput?: string };
@@ -17,8 +18,8 @@ export class MessagesAdapter extends ProxyAdapter {
   }
 
   aggregateResponse(response: string): string {
-    const events = parseSseEvents(response);
-    if (events.length === 0) return super.aggregateResponse(response);
+    const events = parseSseJsonEvents<MessagesEvent>(response);
+    if (events.length === 0) return this.aggregateSseFallback(response);
 
     let aggregate: Record<string, unknown> = {};
     const content = new Map<number, ContentBlock>();
@@ -99,21 +100,6 @@ export class MessagesAdapter extends ProxyAdapter {
   }
 }
 
-function parseSseEvents(response: string): MessagesEvent[] {
-  return response.split(/\r?\n/)
-    .filter((line) => line.startsWith('data: '))
-    .map((line) => line.slice(6).trim())
-    .filter((data) => data && data !== '[DONE]')
-    .flatMap((data) => {
-      try {
-        const parsed = JSON.parse(data);
-        return parsed && typeof parsed === 'object' ? [parsed as MessagesEvent] : [];
-      } catch {
-        return [];
-      }
-    });
-}
-
 function cloneBlock(block: Record<string, unknown>): ContentBlock {
   return JSON.parse(JSON.stringify(block)) as ContentBlock;
 }
@@ -121,5 +107,4 @@ function parseInput(value: string): unknown {
   try { return JSON.parse(value); } catch { return value; }
 }
 function numberValue(value: unknown): number | undefined { return typeof value === 'number' ? value : undefined; }
-function stringValues(values: unknown[] | undefined): string[] { return (values ?? []).filter((value): value is string => typeof value === 'string' && value.length > 0); }
-function emptyUsage(): UsageMetadata { return { inputTokens: null, cachedInputTokens: null, outputTokens: null, totalTokens: null, costUsd: null }; }
+

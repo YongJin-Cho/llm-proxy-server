@@ -2,11 +2,12 @@ import { strict as assert } from 'node:assert';
 import { readFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { ApiTurnSummaryProjector } from '../dist/application/turn-summary-projector.js';
 import { SqliteTrafficLogStore } from '../dist/persistence/sqlite-traffic-log.js';
 import { TurnAnalysisService } from '../dist/application/turn-analysis-service.js';
 
 const tempDir = mkdtempSync(join(tmpdir(), 'llm-proxy-turn-notes-'));
-const store = new SqliteTrafficLogStore(join(tempDir, 'notes.sqlite'));
+const store = new SqliteTrafficLogStore(join(tempDir, 'notes.sqlite'), new ApiTurnSummaryProjector());
 const seed = (turnId, trafficId, apiKind, request, response) => {
   store.createTurn({ id: turnId, startedAt: '2026-03-10T00:00:00.000Z', status: 'completed' });
   store.insert({ id: trafficId, apiKind, provider: 'test', startedAt: '2026-03-10T00:00:01.000Z', model: 'test-model', streaming: 0, requestJson: JSON.stringify({ body: request }) });

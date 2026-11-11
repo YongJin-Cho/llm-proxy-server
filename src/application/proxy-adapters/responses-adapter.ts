@@ -1,4 +1,5 @@
 import { ProxyAdapter, type UsageMetadata } from './proxy-adapter.js';
+import { emptyUsage, parseSseJsonEvents, stringValues } from './shared.js';
 
 type ResponsesEvent = Record<string, unknown>;
 type OutputItem = Record<string, unknown> & { content?: Array<Record<string, unknown>>; arguments?: string };
@@ -17,8 +18,8 @@ export class ResponsesAdapter extends ProxyAdapter {
   }
 
   aggregateResponse(response: string): string {
-    const events = parseSseEvents(response);
-    if (events.length === 0) return super.aggregateResponse(response);
+    const events = parseSseJsonEvents<ResponsesEvent>(response);
+    if (events.length === 0) return this.aggregateSseFallback(response);
 
     let aggregate: Record<string, unknown> = {};
     const output = new Map<number, OutputItem>();
@@ -102,21 +103,6 @@ export class ResponsesAdapter extends ProxyAdapter {
   }
 }
 
-function parseSseEvents(response: string): ResponsesEvent[] {
-  return response.split(/\r?\n/)
-    .filter((line) => line.startsWith('data: '))
-    .map((line) => line.slice(6).trim())
-    .filter((data) => data && data !== '[DONE]')
-    .flatMap((data) => {
-      try {
-        const parsed = JSON.parse(data);
-        return parsed && typeof parsed === 'object' ? [parsed as ResponsesEvent] : [];
-      } catch {
-        return [];
-      }
-    });
-}
-
 function cloneOutputItem(item: Record<string, unknown>): OutputItem {
   return JSON.parse(JSON.stringify(item)) as OutputItem;
 }
@@ -129,5 +115,3 @@ function outputIndex(event: ResponsesEvent, byId: Map<string, number>, output: M
 }
 
 function numberValue(value: unknown): number | undefined { return typeof value === 'number' ? value : undefined; }
-function stringValues(values: unknown[] | undefined): string[] { return (values ?? []).filter((value): value is string => typeof value === 'string' && value.length > 0); }
-function emptyUsage(): UsageMetadata { return { inputTokens: null, cachedInputTokens: null, outputTokens: null, totalTokens: null, costUsd: null }; }

@@ -33,12 +33,15 @@ llm-proxy-server/
 - `src/configuration.ts`: config.json loading, validation, apiKeyEnv secret resolution, and provider auth mode validation
 - `src/domain/`: traffic log types, turn grouping lifecycle and semantic contract, turn note contract, writer/reader ports, redaction and size policies
 - `src/application/proxy-service.ts`: common routing, auth, provider I/O, logging, and SSE orchestration; depends on `TrafficLogWriter`
-- `src/application/proxy-adapters/`: API-specific route path, traffic-log kind, provider endpoint mapping, streaming completion detectors, and usage/cost parsing; `ProxyAdapter` is the shared base for Responses, Chat Completions, and Messages
+- `src/application/proxy-adapters/`: API-specific route path, traffic-log kind, provider endpoint mapping, streaming completion detectors, usage/cost parsing, and API-owned response aggregation; `ProxyAdapter` contains only shared provider endpoint/transport fallback behavior for Responses, Chat Completions, and Messages
+- `src/application/api-adapters.ts`: composition registry pairing proxy and turn-analysis adapters; route registration and application services consume the same registry
+- `src/application/turn-summary-projector.ts`: API-specific turn summary projection; persistence receives the `TurnSummaryProjector` port and does not interpret API payloads
+- `src/application/turn-note-renderer.ts`: Markdown rendering of API-neutral tool interactions; domain turn-note contracts do not own presentation formatting
 - `src/application/turn-analysis-adapters/`: API-specific completed-turn analysis adapters; these consume turn data and return note analysis without direct SQLite access
 - `src/application/turn-analysis-service.ts`: completion-triggered asynchronous analysis orchestration, adapter selection, pending recovery, idempotency, and note result persistence
 - `src/application/log-query-service.ts`: UI/API log and turn-tree query use cases; depends on `TrafficLogReader`
 - `src/api/routes.ts`: HTTP route and payload adapter, including `/api/v1/turns`, turn/traffic metadata mutation, and turn deletion; depends on application services, not SQLite
-- `src/persistence/sqlite-traffic-log.ts`: SQLite schema, traffic turn metadata, `turn_notes` projection, turn store, and writer/reader adapter
+- `src/persistence/sqlite-traffic-log.ts`: SQLite schema, traffic turn metadata, `turn_notes` projection, turn store, and writer/reader adapter; turn summary interpretation is injected through `TurnSummaryProjector`
 - `src/ui/data-query/`: browser-side HTTP query functions only; log and turn-tree API URL, query parameters, metadata mutation, deletion, and response/error mapping live here
 - `src/ui/pages/`: page-level state and use-case composition; `TrafficPage` coordinates filters, turn selection, URL state, data-query, and presentational components
 - `src/ui/components/`: reusable presentation and user-input components, including `TurnTree` and the safe Markdown `NoteCard`; components do not call the API directly
@@ -48,7 +51,7 @@ llm-proxy-server/
 
 The current Traffic page is split into `pages/TrafficPage.tsx`, `components/Filters.tsx`, `components/LogTable.tsx`, `components/LogDetail.tsx`, `components/TurnTree.tsx`, and `data-query/log-api.ts`. `ui/index.html` is the Vite entry document and loads `src/ui/main.tsx`; it is not a second UI implementation. Add future analysis/report/chart features as separate page or feature modules; do not place their data fetching or state into `TrafficPage` or `main.tsx`.
 
-Application code depends on domain ports; the SQLite adapter is the concrete persistence implementation. The proxy application service depends on `TrafficLogWriter`, `TurnStore`, and the generic `ProxyAdapter` contract; turn grouping lifecycle and the `TurnSemantic` contract live in `src/domain/turn.ts`, while API-specific semantic implementations and SSE aggregation remain isolated in `src/application/proxy-adapters/`. Traffic rows carry turn ID, observation sequence, and fallback metadata; the turn table carries lifecycle state and traffic count. `TrafficLogQueryService` depends only on `TrafficLogReader`. Route handlers contain no SQL statements or SQLite imports.
+Application code depends on domain ports; the SQLite adapter is the concrete persistence implementation. The proxy application service receives explicit writer, turn lifecycle, and analysis dependencies; turn grouping lifecycle and the `TurnSemantic` contract live in `src/domain/turn.ts`, while API-specific semantic implementations and SSE aggregation remain isolated in `src/application/proxy-adapters/`. `src/api/input-adapters.ts` owns HTTP query/body normalization before application services are called. Traffic rows carry turn ID, observation sequence, and fallback metadata; the turn table carries lifecycle state and traffic count. `TrafficLogQueryService` depends only on `TrafficLogReader`. Route handlers contain no SQL statements or SQLite imports.
 
 ### How to implement
 

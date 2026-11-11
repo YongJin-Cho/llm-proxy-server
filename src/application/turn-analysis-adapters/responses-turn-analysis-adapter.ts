@@ -1,5 +1,6 @@
 import type { TrafficLogApiKind } from '../../domain/traffic-log.js';
 import { asArray, asObject, BaseTurnAnalysisAdapter, parseJson, resultFromInteractions, type ToolInteraction, type TurnAnalysisInput, type TurnAnalysisResult } from '../../domain/turn-notes.js';
+import { renderToolNotes } from '../turn-note-renderer.js';
 
 export class ResponsesTurnAnalysisAdapter extends BaseTurnAnalysisAdapter {
   readonly apiKind: TrafficLogApiKind = 'responses';
@@ -28,6 +29,6 @@ export class ResponsesTurnAnalysisAdapter extends BaseTurnAnalysisAdapter {
         interactions.push({ id, functionName: typeof value.name === 'string' ? value.name : 'tool', parameters: value.arguments ?? {}, call: value, result: result?.result, failed: result?.failed ?? false, error: result?.error });
       }
     }
-    return resultFromInteractions(interactions);
+    return resultFromInteractions(interactions, renderToolNotes);
   }
 }

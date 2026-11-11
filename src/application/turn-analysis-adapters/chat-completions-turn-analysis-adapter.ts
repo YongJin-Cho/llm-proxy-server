@@ -1,5 +1,6 @@
 import type { TrafficLogApiKind } from '../../domain/traffic-log.js';
 import { asArray, asObject, BaseTurnAnalysisAdapter, parseJson, resultFromInteractions, type ToolInteraction, type TurnAnalysisInput, type TurnAnalysisResult } from '../../domain/turn-notes.js';
+import { renderToolNotes } from '../turn-note-renderer.js';
 
 export class ChatCompletionsTurnAnalysisAdapter extends BaseTurnAnalysisAdapter {
   readonly apiKind: TrafficLogApiKind = 'chat_completions';
@@ -31,6 +32,6 @@ export class ChatCompletionsTurnAnalysisAdapter extends BaseTurnAnalysisAdapter 
         }
       }
     }
-    return resultFromInteractions(interactions);
+    return resultFromInteractions(interactions, renderToolNotes);
   }
 }

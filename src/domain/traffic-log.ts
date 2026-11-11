@@ -57,6 +57,20 @@ export type TrafficLogFinish = {
 export type TrafficLogFilters = { status?: string; model?: string; from?: string; to?: string; limit: number; offset: number };
 
 export type TurnTrafficSummary = Pick<TrafficLog, 'id' | 'api_kind' | 'provider' | 'started_at' | 'finished_at' | 'status' | 'http_status' | 'model' | 'streaming' | 'latency_ms' | 'input_tokens' | 'cached_input_tokens' | 'output_tokens' | 'total_tokens' | 'cost_usd' | 'turn_sequence' | 'fallback_reason' | 'title' | 'flag'>;
+export type TurnSummaryTraffic = TurnTrafficSummary & {
+  request_json: string | null;
+  response_json: string | null;
+  input_tokens: number | null;
+  cached_input_tokens: number | null;
+  output_tokens: number | null;
+  total_tokens: number | null;
+  cost_usd: number | null;
+};
+
+export interface TurnSummaryProjector {
+  project(traffic: TurnSummaryTraffic[], status: TrafficLogStatus): TurnSummary;
+}
+
 export type TurnSummary = {
   start_user_input: unknown | null;
   end_ai_output: unknown | null;

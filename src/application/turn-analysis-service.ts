@@ -1,15 +1,12 @@
 import type { TrafficLogApiKind } from '../domain/traffic-log.js';
 import type { TurnAnalysisAdapter, TurnAnalysisPersistence } from '../domain/turn-notes.js';
-import { ChatCompletionsTurnAnalysisAdapter } from './turn-analysis-adapters/chat-completions-turn-analysis-adapter.js';
-import { MessagesTurnAnalysisAdapter } from './turn-analysis-adapters/messages-turn-analysis-adapter.js';
-import { ResponsesTurnAnalysisAdapter } from './turn-analysis-adapters/responses-turn-analysis-adapter.js';
+import { apiAdapters } from './api-adapters.js';
 
 export class TurnAnalysisService {
   private readonly adapters: ReadonlyMap<TrafficLogApiKind, TurnAnalysisAdapter>;
   private readonly analysisVersion = 1;
   constructor(private readonly persistence: TurnAnalysisPersistence) {
-    const adapters = [new ResponsesTurnAnalysisAdapter(), new ChatCompletionsTurnAnalysisAdapter(), new MessagesTurnAnalysisAdapter()];
-    this.adapters = new Map(adapters.map((adapter) => [adapter.apiKind, adapter]));
+    this.adapters = new Map<TrafficLogApiKind, TurnAnalysisAdapter>([...apiAdapters.byKind.entries()].map(([kind, definition]) => [kind, definition.analysis]));
     for (const pending of persistence.listPendingTurnAnalyses()) this.schedule(pending.turnId, pending.analysisVersion);
   }
   enqueue(turnId: string) {

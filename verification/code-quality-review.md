@@ -4,7 +4,7 @@
 **검토일:** 2026-03-10
 **검토 범위:** 중복/반복 코드, API 유형 의존성 누수, adapter 경계, 기능·역할별 분할, 의존성 방향, 테스트 가능성
 **검증 명령:** `npm run build`, `npm run verify`
-**검증 결과:** 두 명령 모두 통과. Vite의 Monaco 대형 chunk 경고만 있었으며 컴파일 오류는 없었다.
+**검증 결과:** 구조 개선 후 `npm run build`, `npm run verify` 모두 통과. Vite의 Monaco 대형 chunk 경고만 있었으며 컴파일 오류나 통합 검증 실패는 없었다.
 
 ## 1. 총평
 
@@ -295,4 +295,22 @@ route handler가 `request.params`와 `request.body`를 타입 assertion으로 �
 - 중복: **중간 수준** — 일부는 안전하게 공통화 가능
 - API 유형 독립성: **부분 충족** — proxy adapter 내부는 양호하나 base/persistence 누수 존재
 - 역할 분할: **대체로 양호** — projection/presentation 책임이 일부 과집중
-- 개선 우선순위: **P1 두 항목(API shape 누수, persistence API 분기)부터 처리 권장**
+- 개선 우선순위: **P1 두 항목(API shape 누수, persistence API 분기) 처리 완료. 후속 P2/P3 개선은 Sprint 17 범위에서 함께 반영**
+
+## Sprint 17 반영 결과
+
+- `src/application/proxy-adapters/proxy-adapter.ts`: 공통 base의 API별 payload shape 추측을 제거하고 transport fallback만 유지했다.
+- `src/application/proxy-adapters/shared.ts`: SSE JSON event parsing, 문자열 ID filtering, empty usage를 공통화했다.
+- `src/application/api-adapters.ts`: proxy/analysis adapter를 하나의 registry에서 조립하고 route/proxy/analysis 선택에 공유했다.
+- `src/application/turn-summary-projector.ts`: API별 turn summary 해석을 application projector로 이동했다.
+- `src/persistence/sqlite-traffic-log.ts`: API별 summary 해석을 제거하고 `TurnSummaryProjector`를 주입받도록 변경했다.
+- `src/application/proxy-service.ts`: writer, turn grouping, analysis service 의존성을 명시적인 dependency 객체로 분리했다.
+- `src/api/input-adapters.ts`: turn/log query와 metadata body 정규화를 HTTP 경계로 이동했다.
+- `src/application/turn-note-renderer.ts`: Markdown note rendering을 domain semantic model에서 분리했다.
+- `npm run verify`: 세 API route, routing, usage/cost, persistence, turn, notes, viewer 회귀 통과.
+
+### Residual considerations
+
+- API kind/path union과 registry 정의 자체는 타입 안정성을 위해 유지한다. 완전한 동적 plugin discovery는 현재 범위 밖이다.
+- API별 turn-analysis correlation의 두 번 순회 구조는 schema 차이를 숨기지 않기 위해 유지했다. 공통화하면 오히려 API 의존성이 helper로 재집중될 위험이 있다.
+- `ProxyService`의 provider I/O와 stream lifecycle을 별도 `ProviderClient`로 분리하는 것은 현재 스프린트 범위 밖이며, 새 provider capability가 추가될 때 재검토한다.

@@ -257,6 +257,41 @@
   - Depends: PB-030, PB-034
   - Notes: Chat Completions·Responses·Messages tool result 오류 계약을 사용한다.
 
+- [x] **PB-037** — 공통 ProxyAdapter의 API schema 누수 제거
+  - Story: 공통 `ProxyAdapter`가 API별 payload field를 추측하지 않고 concrete adapter가 aggregate 결과를 책임지도록 하며, 세 API의 streaming/non-streaming 동작을 보존한다.
+  - Spec: `verification/code-quality-review.md` §P1 — 공통 ProxyAdapter API payload shape 의존성
+  - Sprint: sprint-17
+  - Depends: PB-013, PB-015, PB-017
+  - Notes: 공통 base에는 transport-level 동작만 남기고 API별 aggregate/usage/semantic 처리는 adapter에 유지한다.
+
+- [x] **PB-038** — API별 turn summary projector와 persistence 경계 분리
+  - Story: SQLite persistence가 API별 request/response schema를 직접 해석하지 않고 API별 projector 또는 application projection 경계를 사용해 turn summary를 생성·조회한다.
+  - Spec: `verification/code-quality-review.md` §P1 — persistence API별 summary 해석
+  - Sprint: sprint-17
+  - Depends: PB-020, PB-027, PB-037
+  - Notes: 새 API 추가 시 SQLite adapter 자체를 수정하지 않는 구조를 목표로 한다.
+
+- [x] **PB-039** — API adapter registry 및 공통 transport helper 정리
+  - Story: proxy route/adapter/analysis adapter 선택을 일관된 registry/composition 경계로 통합하고 SSE parser·string filtering·empty usage 중복을 안전하게 제거한다.
+  - Spec: `verification/code-quality-review.md` §P1/P2 — API 등록 분산 및 adapter 보조 코드 중복
+  - Sprint: sprint-17
+  - Depends: PB-037
+  - Notes: API별 aggregate 알고리즘과 semantic extraction은 concrete adapter에 남긴다.
+
+- [x] **PB-040** — 분석·주입·HTTP 입력 경계 개선
+  - Story: turn analysis 결과와 Markdown rendering을 분리하거나 근거를 기록하고, ProxyService port 의존성을 명시적으로 분리하며, route query/body 정규화와 입력 검증을 HTTP 경계에 둔다.
+  - Spec: `verification/code-quality-review.md` §P2/P3 — domain/presentation 혼합, DI 결합, route 입력 검증
+  - Sprint: sprint-17
+  - Depends: PB-038, PB-039
+  - Notes: 현재 제품 범위에서 불필요한 ProviderClient 대규모 분리는 제외한다.
+
+- [x] **PB-041** — 구조 개선 회귀 검증 및 문서 갱신
+  - Story: adapter boundary, registry completeness, summary projector, 입력 정규화와 기존 proxy/turn/note/viewer 회귀를 자동 검증하고 품질 검토 문서와 AGENTS.md를 실제 구조에 맞게 갱신한다.
+  - Spec: `verification/code-quality-review.md` §권장 개선 순서
+  - Sprint: sprint-17
+  - Depends: PB-037, PB-038, PB-039, PB-040
+  - Notes: `npm run build`와 `npm run verify`를 최종 검증 진입점으로 사용한다.
+
 ## Notes
 
 - 2026-03-10: Spec 승인 후 PB-002–PB-006을 초기 구현 백로그로 추가했다.
@@ -278,3 +313,4 @@
 - 2026-03-10: Sprint 14 Boundary에서 PB-028~PB-029의 DoD를 충족해 종료했다. 현재 제품 backlog의 모든 story가 완료되었다.
 - 2026-03-10: Sprint 15 Spec 승인 후 PB-030을 종료하고 승인 Spec 기반 구현 stories PB-031~PB-035를 append했다. 제품 구현은 후속 Backlog→Implementation sprint에서 수행한다.
 - 2026-03-10: Sprint 16 Boundary에서 PB-031~PB-036의 DoD를 충족해 종료했다. T-010은 PB-036의 일부로 귀속했으며 carry-over/skip은 없다.
+- 2026-03-10: Sprint 17 implementation에서 PB-037~PB-041의 DoD를 충족했다. API schema 누수, summary projector 경계, adapter registry/transport helper, DI/HTTP input boundary, note renderer를 반영하고 `npm run build`·`npm run verify`를 통과했다.

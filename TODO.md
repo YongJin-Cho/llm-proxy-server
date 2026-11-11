@@ -1,80 +1,56 @@
-# TODO: LLM Proxy Server — Turn analysis pipeline implementation and verification
+# TODO: LLM Proxy Server — API adapter boundary and code quality improvement
 
 > **Project root:** `llm-proxy-server`
-> **Current sprint:** sprint-16 — [Turn analysis pipeline implementation and verification](./scrum/sprint-16.md)
+> **Current sprint:** sprint-17 — [API adapter 경계와 코드 품질 개선](./scrum/sprint-17.md)
 > **Product Backlog:** [`scrum/product-backlog.md`](./scrum/product-backlog.md)
 
 ## Snapshot
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 9 | 1 | 0 | 0 |
+| 5 | 1 | 0 | 0 |
 
-**Sprint goal:** 승인된 turn note Spec의 전체 구현을 완료한다. 완료 turn을 분석·저장·조회하고 Turn view에 note card를 표시하며 세 API의 lifecycle·persistence·query·UI·통합 검증을 완료한다.
-**Current focus:** T-009
-**Recommended next:** T-009 — Sprint Boundary → sprint-17
+**Sprint goal:** API schema 의존성을 adapter 경계 안에 가두고 persistence·domain·route의 역할을 정리하면서 기존 동작과 회귀 검증을 보존한다.
+**Current focus:** T-006
+**Recommended next:** T-006 — Sprint Boundary → sprint-18
 
 ## Tasks
 
-- [x] **T-001** — PB-031 TurnAnalysisService와 API별 TurnAnalysisAdapter 구현
+- [x] **T-001** — 공통 ProxyAdapter schema 누수 제거
   - Phase: implementation
-  - Artifact: `src/application/turn-analysis-service.ts`, `src/application/turn-analysis-adapters/`, `src/domain/turn-notes.ts`
+  - Artifact: `src/application/proxy-adapters/proxy-adapter.ts`, `src/application/proxy-adapters/*-adapter.ts`
   - Depends: —
-  - Notes: Spec R-001–R-005, C-001–C-003. `TurnAnalysisService`, API별 adapter와 deterministic Markdown `TurnNote[]`를 구현했다. `npm run verify`의 turn note fixture 통과.
+  - Notes: PB-037. 공통 base에서 API별 payload shape 추측을 제거하고 concrete adapter가 aggregate 결과를 책임지도록 했다. Build 통과.
 
-- [x] **T-002** — PB-032 비동기 lifecycle·idempotent persistence 구현
+- [x] **T-002** — API별 turn summary projector와 persistence 경계 분리
   - Phase: implementation
-  - Artifact: `src/persistence/sqlite-traffic-log.ts`, `src/application/turn-analysis-service.ts`, `src/domain/turn-notes.ts`
+  - Artifact: `src/application/proxy-adapters/`, `src/application/turn-summary-projectors/`, `src/persistence/sqlite-traffic-log.ts`
   - Depends: T-001
-  - Notes: Spec R-006–R-009, C-004–C-005. `turn_notes` schema, pending/ready/empty/failed, versioned upsert, startup pending recovery와 completed turn 독립성을 구현했다. Build/verify 통과.
+  - Notes: PB-038. `ApiTurnSummaryProjector`를 application에 도입하고 SQLite store에 port로 주입했다. Build/verify 통과.
 
-- [x] **T-003** — PB-033 Turn note query projection API 구현
+- [x] **T-003** — Adapter registry 및 transport helper 정리
   - Phase: implementation
-  - Artifact: `src/application/log-query-service.ts`, `src/api/routes.ts`, `src/persistence/sqlite-traffic-log.ts`, `src/ui/data-query/log-api.ts`
-  - Depends: T-002
-  - Notes: Spec R-010. 기존 `GET /api/v1/turns` aggregate에 note projection을 조합하고 기존 tree/detail regression을 유지했다. Build/verify 통과.
+  - Artifact: `src/application/api-adapters.ts`, `src/application/proxy-adapters/shared.ts`, `src/api/routes.ts`, `src/application/proxy-service.ts`, `src/application/turn-analysis-service.ts`
+  - Depends: T-001
+  - Notes: PB-039. `api-adapters.ts` registry를 route/proxy/analysis에 공유하고 SSE parser·utility 중복을 `shared.ts`로 통합했다. Build/verify 통과.
 
-- [x] **T-004** — PB-034 Turn view note card UI 구현
+- [x] **T-004** — 분석·주입·HTTP 입력 경계 개선
   - Phase: implementation
-  - Artifact: `src/ui/components/TurnView.tsx`, `src/ui/components/NoteCard.tsx`, `src/ui/types.ts`, `src/ui/styles.css`
-  - Depends: T-003
-  - Notes: Spec R-011–R-012, C-005–C-006. usage table 다음 `NoteCard`, 네 상태, sanitized read-only Markdown과 non-blocking error를 구현했다. UI build/verify 통과.
+  - Artifact: `src/domain/turn-notes.ts`, `src/application/proxy-service.ts`, `src/api/routes.ts`, `src/api/input-adapters.ts`
+  - Depends: T-002, T-003
+  - Notes: PB-040. Markdown renderer, ProxyService dependencies, route input adapter를 분리했다. Build/verify 통과.
 
-- [x] **T-005** — PB-035 통합·회귀 검증과 실행 문서
+- [x] **T-005** — 구조 개선 회귀 검증 추가
   - Phase: verification
-  - Artifact: `scripts/verify-turn-notes.mjs`, `scripts/verify.mjs`, `verification/llm-proxy-turn-notes.md`
+  - Artifact: `scripts/verify.mjs`, `scripts/verify-turn.mjs`, `scripts/verify-turn-notes.mjs`, `verification/code-quality-review.md`
   - Depends: T-001, T-002, T-003, T-004
-  - Notes: Spec R-013 전체. `scripts/verify-turn-notes.mjs`를 추가하고 세 API adapter, empty, projection, idempotency와 기존 proxy/turn/viewer 회귀를 `npm run verify`로 검증했다. `verification/llm-proxy-turn-notes.md`에 19 pass, 0 fail, 0 partial, 0 not-verifiable를 기록했다.
+  - Notes: PB-041. `npm run build`와 `npm run verify` 통과. 세 API, turn, note, viewer 회귀와 summary projector/route boundary를 검증했다.
 
-- [x] **T-006** — Sprint 16 Demo Checklist 실행
-  - Phase: demo
-  - Artifact: `scrum/sprint-16.md`
-  - Depends: T-005
-  - Notes: 각 API note 생성, lifecycle/idempotency, query projection, note card 상태 표시와 `npm run build`·`npm run verify` evidence를 `scrum/sprint-16.md`에 기록했다.
-
-- [x] **T-007** — Tool history table·API별 오류 note·note별 card 구현
-  - Phase: implementation
-  - Artifact: `src/domain/turn-notes.ts`, `src/application/turn-analysis-adapters/`, `src/ui/components/NoteCard.tsx`, `src/ui/components/TurnView.tsx`
-  - Depends: T-001, T-002, T-004
-  - Notes: PB-036. API별 call/result extraction, parameter 축약, 오류 interaction 분리, note별 독립 card를 구현했다. note status/header는 UI에 표시하지 않는다.
-
-- [x] **T-008** — Tool history/card 변경 통합·회귀 검증
-  - Phase: verification
-  - Artifact: `scripts/verify-turn-notes.mjs`, `verification/llm-proxy-turn-notes.md`
-  - Depends: T-007
-  - Notes: PB-035, PB-036. 세 API table/error fixture, no-note card, multi-card rendering, full-width layout과 기존 proxy/turn/viewer 회귀를 `npm run build`·`npm run verify`로 검증했다. 오류 interaction별 call/result JSON 보존과 viewer 확대 동작도 검증했다.
-
-- [x] **T-010** — 도구 사용 오류 card를 Traffic request/response 형식으로 표시
-  - Phase: implementation
-  - Artifact: `src/domain/turn-notes.ts`, `src/ui/components/NoteCard.tsx`, `scripts/verify-turn-notes.mjs`
-  - Depends: T-008
-  - Notes: 오류 note 제목을 `도구 사용 오류: {순번}. {함수명}`으로 표시하고 원본 tool_use/tool_result를 Traffic과 동일한 `request`/`response` viewer로 렌더링한다. `npm run build` 및 `npm run verify` 통과.
-
-- [ ] **T-009** — Sprint Boundary → sprint-17
+- [ ] **T-006** — Sprint Boundary → sprint-18
   - Phase: cross-cutting
-  - Artifact: `scrum/TODO-16.md`
-  - Depends: T-001, T-002, T-003, T-004, T-005, T-006, T-007, T-008, T-010
-  - Notes: Sprint completion 승인 후 board archive, PB-031~PB-036 DoD 갱신, 다음 sprint 계획을 처리한다.
+  - Artifact: `scrum/TODO-17.md`
+  - Depends: T-001, T-002, T-003, T-004, T-005
+  - Notes: Sprint completion 승인 후 board archive, PB-037~PB-041 DoD 갱신, 다음 sprint 계획을 처리한다.
 
 ## Completed sprints
 
@@ -96,10 +72,10 @@
 | 13 | Turn 관리·메타데이터·탐색·요약 구현 | 2026-03-10 | [`TODO-13.md`](./scrum/TODO-13.md) |
 | 14 | 안전한 traffic content viewer 구현·검증 | 2026-03-10 | [`TODO-14.md`](./scrum/TODO-14.md) |
 | 15 | Turn 완료 후 API별 분석 note 파이프라인 요구사항·구현 backlog 확정 | 2026-03-10 | [`TODO-15.md`](./scrum/TODO-15.md) |
-| 16 | Turn analysis pipeline implementation and verification | 2026-03-10 | [`TODO-16.md`](./scrum/TODO-16.md) |
+| 16 | Turn analysis pipeline implementation and verification | 2026-03-10 | [`scrum/TODO-16.md`](./scrum/TODO-16.md) |
 
 ## Notes
 
-- 2026-03-10: Chat Completions 오류 interaction defect closure re-verification에서 `npm run verify` 전체 통과. R-005/R-013 scoped re-verification pass.
-- 2026-03-10: Sprint 16 plan approval을 사용자 go-ahead("ok")로 받고 PB-031~PB-035 전체 Scope로 execution board를 seed했다.
-- 2026-03-10: Implementation은 승인 Spec `spec/llm-proxy-turn-notes.md`와 Sprint 16 Scope만 사용한다.
+- 2026-03-10: Sprint 16 completion approval received from user; its archived board is `scrum/TODO-16.md`.
+- 2026-03-10: Sprint 17 plan approved by user go-ahead("ok"); live execution board seeded and T-001 selected as Current focus.
+- 2026-03-10: Sprint scope is limited to PB-037~PB-041. New API support and large ProviderClient extraction are explicitly out of scope.

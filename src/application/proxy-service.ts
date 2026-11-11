@@ -7,10 +7,8 @@ import { TurnGroupingService } from '../domain/turn.js';
 import type { TurnAnalysisPersistence } from '../domain/turn-notes.js';
 import { TurnAnalysisService } from './turn-analysis-service.js';
 import type { TurnStore } from '../domain/turn.js';
-import { ChatCompletionsAdapter } from './proxy-adapters/chat-completions-adapter.js';
-import { MessagesAdapter } from './proxy-adapters/messages-adapter.js';
-import { ProxyAdapter, type ProxyApiPath } from './proxy-adapters/proxy-adapter.js';
-import { ResponsesAdapter } from './proxy-adapters/responses-adapter.js';
+import { apiAdapters } from './api-adapters.js';
+import type { ProxyAdapter, ProxyApiPath } from './proxy-adapters/proxy-adapter.js';
 
 function json(res: ServerResponse, status: number, body: unknown) {
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8' });
@@ -28,17 +26,17 @@ async function readBody(req: IncomingMessage, max: number) {
   return Buffer.concat(chunks).toString('utf8');
 }
 
+export type ProxyServiceDependencies = {
+  writer: TrafficLogWriter;
+  turns: TurnGroupingService;
+  analysis: TurnAnalysisService;
+};
+
 export class ProxyService {
   private readonly adapters: ReadonlyMap<ProxyApiPath, ProxyAdapter>;
 
-  private readonly turns: TurnGroupingService;
-  private readonly analysis: TurnAnalysisService;
-
-  constructor(private readonly config: AppConfig, private readonly writer: TrafficLogWriter & TurnStore & TurnAnalysisPersistence) {
-    this.turns = new TurnGroupingService(writer);
-    this.analysis = new TurnAnalysisService(writer);
-    const adapters = [new ResponsesAdapter(), new ChatCompletionsAdapter(), new MessagesAdapter()];
-    this.adapters = new Map(adapters.map((adapter) => [adapter.apiPath, adapter]));
+  constructor(private readonly config: AppConfig, private readonly deps: ProxyServiceDependencies) {
+    this.adapters = new Map([...apiAdapters.byPath.entries()].map(([path, definition]) => [path, definition.proxy]));
   }
 
   async handle(req: IncomingMessage, res: ServerResponse, parsedBody?: unknown, apiPath: ProxyApiPath = '/responses') {
@@ -63,7 +61,7 @@ export class ProxyService {
       const upstreamBody = JSON.stringify({ ...input, model: route.providerModel });
       const streaming = input.stream === true;
 
-      this.writer.insert({
+      this.deps.writer.insert({
         id,
         apiKind: adapter.apiKind,
         provider: route.providerId,
@@ -73,7 +71,7 @@ export class ProxyService {
         requestJson: JSON.stringify({ headers: maskedHeaders(req.headers), body: input }),
       });
       inserted = true;
-      const turn = this.turns.startTraffic({ trafficId: id, semantic: adapter.turnSemantic, request: input, now: startedAt });
+      const turn = this.deps.turns.startTraffic({ trafficId: id, semantic: adapter.turnSemantic, request: input, now: startedAt });
       turnId = turn.turnId;
 
       const headers: Record<string, string> = { 'content-type': 'application/json' };
@@ -91,7 +89,7 @@ export class ProxyService {
       if (streaming && upstream.body) return await this.stream(upstream, res, id, started, adapter, turnId);
 
       const response = await upstream.text();
-      this.writer.finish({
+      this.deps.writer.finish({
         id,
         finishedAt: new Date().toISOString(),
         status: upstream.ok ? 'completed' : 'failed',
@@ -102,8 +100,8 @@ export class ProxyService {
         ...adapter.usageMetadata(response),
         });
         if (turnId) {
-          const finishedTurn = this.turns.finishTraffic({ turnId, semantic: adapter.turnSemantic, response: safeJson(adapter.aggregateResponse(response)), finishedAt: new Date().toISOString(), succeeded: upstream.ok });
-          if (finishedTurn.status === 'completed') this.analysis.enqueue(finishedTurn.turnId);
+          const finishedTurn = this.deps.turns.finishTraffic({ turnId, semantic: adapter.turnSemantic, response: safeJson(adapter.aggregateResponse(response)), finishedAt: new Date().toISOString(), succeeded: upstream.ok });
+          if (finishedTurn.status === 'completed') this.deps.analysis.enqueue(finishedTurn.turnId);
         }
         res.writeHead(upstream.status, { 'content-type': upstream.headers.get('content-type') ?? 'application/json' });
       res.end(response);
@@ -111,10 +109,10 @@ export class ProxyService {
       const message = error instanceof Error ? error.message : 'proxy request failed';
       const status = message.includes('body exceeds') ? 413 : message.startsWith('model ') ? 400 : message.startsWith('invalid provider') ? 500 : 502;
       if (inserted) {
-        this.writer.finish({ id, finishedAt: new Date().toISOString(), status: 'failed', httpStatus: status, latencyMs: Date.now() - started, responseJson: null, error: bounded(message, this.config.maxBodyBytes), inputTokens: null, cachedInputTokens: null, outputTokens: null, totalTokens: null, costUsd: null });
+        this.deps.writer.finish({ id, finishedAt: new Date().toISOString(), status: 'failed', httpStatus: status, latencyMs: Date.now() - started, responseJson: null, error: bounded(message, this.config.maxBodyBytes), inputTokens: null, cachedInputTokens: null, outputTokens: null, totalTokens: null, costUsd: null });
       }
       if (turnId) {
-        this.turns.finishTraffic({ turnId, semantic: adapter.turnSemantic, response: {}, finishedAt: new Date().toISOString(), succeeded: false });
+        this.deps.turns.finishTraffic({ turnId, semantic: adapter.turnSemantic, response: {}, finishedAt: new Date().toISOString(), succeeded: false });
       }
       json(res, status, { error: { message, type: status === 400 ? 'model_error' : status === 500 ? 'configuration_error' : 'proxy_error' } });
     }
@@ -149,10 +147,10 @@ export class ProxyService {
     }
     const response = Buffer.concat(chunks).toString('utf8');
     const completed = upstream.ok && adapter.isComplete(response) && !disconnected;
-    this.writer.finish({ id, finishedAt: new Date().toISOString(), status: completed ? 'completed' : 'failed', httpStatus: upstream.status, latencyMs: Date.now() - started, responseJson: adapter.aggregateResponse(response), error: completed ? null : bounded(disconnected ? 'client disconnected before stream completion' : response || 'stream ended before completion', this.config.maxBodyBytes), ...adapter.usageMetadata(response) });
+    this.deps.writer.finish({ id, finishedAt: new Date().toISOString(), status: completed ? 'completed' : 'failed', httpStatus: upstream.status, latencyMs: Date.now() - started, responseJson: adapter.aggregateResponse(response), error: completed ? null : bounded(disconnected ? 'client disconnected before stream completion' : response || 'stream ended before completion', this.config.maxBodyBytes), ...adapter.usageMetadata(response) });
     if (turnId) {
-      const finishedTurn = this.turns.finishTraffic({ turnId, semantic: adapter.turnSemantic, response: safeJson(adapter.aggregateResponse(response)), finishedAt: new Date().toISOString(), succeeded: completed });
-      if (finishedTurn.status === 'completed') this.analysis.enqueue(finishedTurn.turnId);
+      const finishedTurn = this.deps.turns.finishTraffic({ turnId, semantic: adapter.turnSemantic, response: safeJson(adapter.aggregateResponse(response)), finishedAt: new Date().toISOString(), succeeded: completed });
+      if (finishedTurn.status === 'completed') this.deps.analysis.enqueue(finishedTurn.turnId);
     }
     if (!disconnected) res.end();
     }

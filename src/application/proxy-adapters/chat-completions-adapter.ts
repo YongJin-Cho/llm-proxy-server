@@ -1,4 +1,5 @@
 import { ProxyAdapter, type UsageMetadata } from './proxy-adapter.js';
+import { emptyUsage, parseSseJsonEvents, stringValues } from './shared.js';
 
 export class ChatCompletionsAdapter extends ProxyAdapter {
   readonly turnSemantic = {
@@ -14,8 +15,8 @@ export class ChatCompletionsAdapter extends ProxyAdapter {
   }
 
   aggregateResponse(response: string): string {
-    const events = parseSseEvents(response);
-    if (events.length === 0) return super.aggregateResponse(response);
+    const events = parseSseJsonEvents(response);
+    if (events.length === 0) return this.aggregateSseFallback(response);
 
     const choices = new Map<number, AggregatedChoice>();
     let id: string | undefined;
@@ -88,21 +89,6 @@ export class ChatCompletionsAdapter extends ProxyAdapter {
 type AggregatedChoice = { role: string; content: string; toolCalls: Map<number, AggregatedToolCall>; finishReason: string | null };
 type AggregatedToolCall = { id?: string; type?: string; function: { name?: string; arguments: string } };
 
-function parseSseEvents(response: string): Record<string, unknown>[] {
-  return response.split(/\r?\n/)
-    .filter((line) => line.startsWith('data: '))
-    .map((line) => line.slice(6).trim())
-    .filter((data) => data && data !== '[DONE]')
-    .flatMap((data) => {
-      try {
-        const parsed = JSON.parse(data);
-        return parsed && typeof parsed === 'object' ? [parsed as Record<string, unknown>] : [];
-      } catch {
-        return [];
-      }
-    });
-}
-
 function mergeToolCalls(target: Map<number, AggregatedToolCall>, rawCalls: unknown[]) {
   for (const rawCall of rawCalls) {
     if (!rawCall || typeof rawCall !== 'object') continue;
@@ -120,8 +106,4 @@ function mergeToolCalls(target: Map<number, AggregatedToolCall>, rawCalls: unkno
   }
 }
 
-function stringValues(values: unknown[] | undefined): string[] { return (values ?? []).filter((value): value is string => typeof value === 'string' && value.length > 0); }
 
-function emptyUsage(): UsageMetadata {
-  return { inputTokens: null, cachedInputTokens: null, outputTokens: null, totalTokens: null, costUsd: null };
-}
