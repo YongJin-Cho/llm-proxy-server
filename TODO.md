@@ -56,7 +56,7 @@
   - Phase: implementation
   - Artifact: `src/domain/turn-notes.ts`, `src/application/turn-analysis-adapters/`, `src/ui/components/NoteCard.tsx`, `src/ui/components/TurnView.tsx`
   - Depends: T-001, T-002, T-004
-  - Notes: PB-036. `tmp/api-ref.md` 기준 API별 call/result extraction, parameter 축약, 오류 interaction 분리, note별 독립 card를 구현했다. note status/header는 UI에 표시하지 않는다.
+  - Notes: PB-036. API별 call/result extraction, parameter 축약, 오류 interaction 분리, note별 독립 card를 구현했다. note status/header는 UI에 표시하지 않는다.
 
 - [x] **T-008** — Tool history/card 변경 통합·회귀 검증
   - Phase: verification
@@ -96,6 +96,7 @@
 | 13 | Turn 관리·메타데이터·탐색·요약 구현 | 2026-03-10 | [`TODO-13.md`](./scrum/TODO-13.md) |
 | 14 | 안전한 traffic content viewer 구현·검증 | 2026-03-10 | [`TODO-14.md`](./scrum/TODO-14.md) |
 | 15 | Turn 완료 후 API별 분석 note 파이프라인 요구사항·구현 backlog 확정 | 2026-03-10 | [`TODO-15.md`](./scrum/TODO-15.md) |
+| 16 | Turn analysis pipeline implementation and verification | 2026-03-10 | [`TODO-16.md`](./scrum/TODO-16.md) |
 
 ## Notes
 

@@ -215,47 +215,47 @@
   - Depends: PB-020, PB-022, PB-023, PB-027
   - Notes: Sprint 15 Spec→backlog DoD 충족. 제품 코드는 후속 Backlog→Implementation sprint에서 구현한다.
 
-- [ ] **PB-031** — TurnAnalysisService와 API별 TurnAnalysisAdapter 구현
+- [x] **PB-031** — TurnAnalysisService와 API별 TurnAnalysisAdapter 구현
   - Story: 완료 turn을 `TurnReader`로 읽고 `api_kind`에 따라 Responses·Chat Completions·Claude Messages용 `TurnAnalysisAdapter`를 선택해 공통 semantic 분석과 deterministic Markdown `TurnNote[]`를 생성한다.
   - Spec: `spec/llm-proxy-turn-notes.md` §R-001–R-005; §C-001–C-003
   - Sprint: sprint-16
   - Depends: PB-020, PB-013, PB-030
   - Notes: API별 tool call/result fixture와 공통 adapter contract 검증을 포함한다.
 
-- [ ] **PB-032** — 비동기 note lifecycle·idempotent persistence 구현
+- [x] **PB-032** — 비동기 note lifecycle·idempotent persistence 구현
   - Story: turn completion 후 비동기 analysis job을 실행하고 `turn_id + analysis_version`으로 중복 event·재시작·retry를 안전하게 처리하며, 별도 `turn_notes` projection에 pending/ready/empty/failed 결과를 upsert한다.
   - Spec: `spec/llm-proxy-turn-notes.md` §R-006–R-009; §C-004–C-005
   - Sprint: sprint-16
   - Depends: PB-031
   - Notes: durable pending/retryable recovery, error redaction, completed turn 독립성 검증을 포함한다.
 
-- [ ] **PB-033** — Turn note query projection API 구현
+- [x] **PB-033** — Turn note query projection API 구현
   - Story: 기존 turn query가 `turn_notes` projection의 status, notes, error/retry metadata를 기존 turn aggregate와 함께 반환하고 note read failure가 turn summary·traffic tree를 차단하지 않도록 한다.
   - Spec: `spec/llm-proxy-turn-notes.md` §R-010
   - Sprint: sprint-16
   - Depends: PB-032, PB-022, PB-027
   - Notes: 기존 turn/traffic fields와 detail API 회귀를 포함한다.
 
-- [ ] **PB-034** — Turn view note card UI 구현
+- [x] **PB-034** — Turn view note card UI 구현
   - Story: traffic usage summary table 다음에 note card를 배치하고 pending/ready/empty/failed 상태, title/Markdown content, safe read-only rendering과 non-blocking error display를 구현한다.
   - Spec: `spec/llm-proxy-turn-notes.md` §R-011–R-012; §C-005–C-006
   - Sprint: sprint-16
   - Depends: PB-033, PB-028
   - Notes: 수동 retry는 제공하지 않고 worker 결과 재조회로 갱신한다.
 
-- [ ] **PB-035** — API별 turn note 통합·회귀 검증과 실행 문서
+- [x] **PB-035** — API별 turn note 통합·회귀 검증과 실행 문서
   - Story: 세 API payload, 정상·empty·pending·failed, duplicate completion, retry/restart recovery, query projection, UI note card와 기존 proxy/turn/traffic 회귀를 자동 검증하고 실행 문서를 갱신한다.
   - Spec: `spec/llm-proxy-turn-notes.md` §R-013; 전체 §Constraints
   - Sprint: sprint-16
   - Depends: PB-031, PB-032, PB-033, PB-034
   - Notes: `npm run build`와 `npm run verify`를 검증 진입점으로 사용한다.
 
-- [ ] **PB-036** — Tool history table·오류 note·note별 card 표시 개선
+- [x] **PB-036** — Tool history table·오류 note·note별 card 표시 개선
   - Story: Turn 분석 결과가 `Sequence / Function / Parameters / Status` table로 도구 사용 이력을 표시하고 API별 오류 도구를 별도 note로 제공하며, UI는 note별 독립 card만 표시한다.
   - Spec: `spec/llm-proxy-turn-notes.md` §R-004–R-005, R-011, R-013, C-007
   - Sprint: sprint-16
   - Depends: PB-030, PB-034
-  - Notes: `tmp/api-ref.md`의 Chat Completions·Responses·Messages tool result 오류 계약을 사용한다.
+  - Notes: Chat Completions·Responses·Messages tool result 오류 계약을 사용한다.
 
 ## Notes
 
@@ -277,3 +277,4 @@
 - 2026-03-10: Sprint 13 Boundary에서 PB-025~PB-027의 DoD를 충족해 종료했다. PB-028~PB-029를 Sprint 14 후보 Scope로 유지한다.
 - 2026-03-10: Sprint 14 Boundary에서 PB-028~PB-029의 DoD를 충족해 종료했다. 현재 제품 backlog의 모든 story가 완료되었다.
 - 2026-03-10: Sprint 15 Spec 승인 후 PB-030을 종료하고 승인 Spec 기반 구현 stories PB-031~PB-035를 append했다. 제품 구현은 후속 Backlog→Implementation sprint에서 수행한다.
+- 2026-03-10: Sprint 16 Boundary에서 PB-031~PB-036의 DoD를 충족해 종료했다. T-010은 PB-036의 일부로 귀속했으며 carry-over/skip은 없다.

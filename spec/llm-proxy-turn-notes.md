@@ -28,7 +28,7 @@
 - C-004: `analysis_version`은 note 생성 규칙의 schema/contract version이며 초기 구현은 하나의 version으로 시작한다. Version이 같은 `turn_id` 결과는 한 번만 존재해야 하고 규칙 변경 시 새 version을 사용해야 한다. ← ASR-035; adr/turn-note-analysis-lifecycle.md
 - C-005: error code/message와 note Markdown은 API key, Authorization, cookie 등 secret 및 원본 민감정보를 의도하지 않게 노출하지 않아야 하며 기존 redaction·bounded error 정책을 따른다. ← ASR-037; AC-004, AC-033
 - C-006: 이번 Spec은 제품 코드 구현, note 분석을 위한 LLM 호출, tool 품질 평가, 비용 예측, 실시간 streaming 중간 note, 과거 traffic 무제한 소급 재분석, note 검색·편집·댓글·공유, UI 수동 retry를 포함하지 않는다. ← PRD Delta Out of Scope; AC-029~AC-034
-- C-007: API별 오류 판정은 `tmp/api-ref.md` 계약을 따른다. tool result의 JSON object에 `error` field가 있을 때만 해당 interaction의 Status를 `Failed`로 표시하며, API별 call/result identity와 payload 위치를 adapter가 해석한다. ← Direct Input; tmp/api-ref.md
+- C-007: tool result의 JSON object에 `error` field가 있을 때만 해당 interaction의 Status를 `Failed`로 표시하며, API별 call/result identity와 payload 위치를 adapter가 해석한다. ← Direct Input
 
 ## Out of Scope
 - 제품 코드 구현 자체. 이 Spec은 후속 Backlog→Implementation sprint의 SSOT다.

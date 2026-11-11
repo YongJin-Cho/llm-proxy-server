@@ -39,12 +39,11 @@
 - [x] Turn query가 note projection을 기존 turn aggregate와 함께 반환하고 note read failure가 non-blocking으로 처리된다.
 - [x] usage table 다음 note card가 네 가지 상태와 안전한 Markdown을 표시한다.
 - [x] `npm run build`와 `npm run verify`가 통과한다.
-- [x] `tmp/api-ref.md`의 세 API tool call/result fixture와 error 판정이 table 및 오류 note에 반영된다.
+- [x] 세 API tool call/result fixture와 error 판정이 table 및 오류 note에 반영된다.
 - [x] note가 note별 독립 card로 표시되고 빈 note projection에서는 card가 표시되지 않는다.
 - [x] note 공통 header/status를 표시하지 않고, Turn/Traffic view 카드가 윈도우 가용 폭을 사용한다.
 
 ## Approval
 - Drafted 2026-03-10; revised 2026-03-10 per user request to include PB-031~PB-035; approved by user go-ahead("ok") on 2026-03-10.
 - Implementation evidence: `npm run verify` passed, including `scripts/verify-turn-notes.mjs`.
-- 2026-03-10: 사용자 요청으로 PB-036을 Sprint 16 Scope에 추가하고, 승인된 `tmp/api-ref.md` 기반 tool history/error note/card 표시 변경을 반영했다.
 - 2026-03-10: note 공통 header/status 제거, 빈 note projection card 미표시, note별 독립 card, full-width Turn/Traffic view를 구현하고 `npm run verify`를 통과했다.

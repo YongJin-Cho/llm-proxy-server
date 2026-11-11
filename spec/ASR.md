@@ -344,7 +344,7 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 
 ### ASR-039 — Tool history table and note card split
 - **Source:** AC-035 — 도구 이력 table·오류 note·note card 표시 계약
-- **Statement:** 첫 번째 note는 API별 adapter가 해석한 모든 tool interaction을 `Sequence / Function / Parameters / Status` Markdown table로 렌더링한다. Parameters는 key/value를 유지하고 긴 문자열 value는 축약하며, `tmp/api-ref.md`의 API별 tool result JSON `error` field가 있는 interaction만 `Failed`로 표시한다. 오류 interaction만 별도 다음 note로 렌더링하고, Turn View는 비어 있지 않은 각 note를 독립 card로 표시하며 공통 title/status와 빈 카드를 제거한다.
+- **Statement:** 첫 번째 note는 API별 adapter가 해석한 모든 tool interaction을 `Sequence / Function / Parameters / Status` Markdown table로 렌더링한다. Parameters는 key/value를 유지하고 긴 문자열 value는 축약하며, API별 tool result JSON `error` field가 있는 interaction만 `Failed`로 표시한다. 오류 interaction만 별도 다음 note로 렌더링하고, Turn View는 비어 있지 않은 각 note를 독립 card로 표시하며 공통 title/status와 빈 카드를 제거한다.
 - **Decision summary:** API별 extraction은 adapter 내부에 유지하고 공통 renderer는 semantic interaction과 note 배열을 deterministic하게 렌더링한다.
 - **Depends on:** ASR-033, ASR-038
 - **Related AC:** AC-035
@@ -360,7 +360,7 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 
 - 2026-03-10: 기존 ASR-001~ASR-009 승인.
 - 2026-03-10: Sprint 15 ASR-033~ASR-038 통합 초안 작성 완료. 사용자 승인 대기.
-- 2026-03-10: 사용자 요청과 `tmp/api-ref.md`를 반영해 ASR-039를 추가하고 tool history table, API별 오류 판정, 오류 note 분리, note별 독립 card 계약을 승인했다.
+- 2026-03-10: 사용자 요청을 반영해 ASR-039를 추가하고 tool history table, API별 오류 판정, 오류 note 분리, note별 독립 card 계약을 승인했다.
 - 2026-03-10: 사용자 go-ahead("ok")로 Sprint 15 ASR-033~ASR-038과 전체 ASR delta를 승인했다. `spec/llm-proxy-turn-notes.md` 작성으로 진행한다.
 - 2026-03-10: 사용자 go-ahead(“ok”)로 ASR-010~ASR-015 및 전체 ASR registry 승인. 다음 단계에서 `spec/llm-proxy-server.md`를 갱신한다.
 - 2026-03-10: 사용자 go-ahead(“ok”)로 ASR-016~ASR-020 및 전체 Sprint 07 ASR delta 승인. `spec/llm-proxy-server.md`에 반영한다.

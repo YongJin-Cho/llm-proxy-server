@@ -509,4 +509,4 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - 2026-03-10: 사용자 go-ahead("ok")로 AC-033을 designed 처리했다. pending/ready/empty/failed 네 상태, note_unavailable error code, completed turn과의 독립성을 확정했다.
 - 2026-03-10: AC-034를 reviewing으로 전환했다. 기존 turn summary의 traffic usage table 다음에 note card를 배치하고 상태별 표시 계약을 direct-input으로 확정할 예정이다.
 - 2026-03-10: 사용자 go-ahead("ok")로 AC-034를 designed 처리했다. usage table 다음 note card의 위치와 pending/ready/empty/failed 표시, 안전한 Markdown read-only rendering을 확정했다.
-- 2026-03-10: 사용자 요청으로 AC-035를 추가하고 direct-input으로 designed 처리했다. `tmp/api-ref.md`의 API별 tool result 오류 계약, tool history table, 오류 note 분리, note별 독립 card와 빈 note 미표시를 확정했다.
+- 2026-03-10: 사용자 요청으로 AC-035를 추가하고 direct-input으로 designed 처리했다. API별 tool result 오류 계약, tool history table, 오류 note 분리, note별 독립 card와 빈 note 미표시를 확정했다.
