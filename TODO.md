@@ -8,11 +8,11 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 3 | 5 | 0 | 0 |
+| 4 | 4 | 0 | 0 |
 
 **Sprint goal:** Turn 종료 후 API별 request/response 분석으로 도구 사용 이력을 note로 남기고 Turn view에서 확인하는 기능의 사용자 승인 요구사항, 설계 결정, 구현·검증 backlog를 확정한다.
-**Current focus:** T-004
-**Recommended next:** T-004 — ASR consolidation 및 승인 대기
+**Current focus:** T-005
+**Recommended next:** T-005 — API별 turn note Spec 작성 완료 및 review 대기
 
 ## Tasks
 
@@ -34,17 +34,17 @@
   - Depends: T-002
   - Notes: AC-029~AC-034와 관련 ADR을 모두 승인·designed 처리했다. 2026-03-10 stage-exit go-ahead로 ASR consolidation을 시작했다.
 
-- [ ] **T-004** — ASR consolidation 및 승인
+- [x] **T-004** — ASR consolidation 및 승인
   - Phase: ASR consolidation
   - Artifact: `spec/ASR.md`
   - Depends: T-003
-  - Notes: `spec/ASR.md`에 ASR-033~038을 append하고 AC back-link를 갱신했다. 사용자 ASR 승인 대기.
+  - Notes: `spec/ASR.md`에 ASR-033~038을 append하고 AC back-link를 갱신했다. 2026-03-10 사용자 go-ahead("ok")로 승인되어 Spec 작성을 시작했다.
 
 - [ ] **T-005** — API별 turn note Spec 작성
   - Phase: Spec writing
   - Artifact: `spec/llm-proxy-turn-notes.md`
   - Depends: T-004
-  - Notes: 구현·검증 SSOT가 될 R/C 요구사항과 API/data/UI 계약을 작성한다.
+  - Notes: `spec/llm-proxy-turn-notes.md` 초안을 작성했다. 다음 단계는 Spec review다.
 
 - [ ] **T-006** — Spec review 및 승인
   - Phase: Spec review
