@@ -208,6 +208,13 @@
   - Depends: PB-025, PB-026, PB-027, PB-028
   - Notes: Sprint 14 Scope. DoD 충족. `npm run build`와 `npm run verify`로 검증했다. Sidebar All/Stored, arrow pagination, compact alignment, current-page unflagged bulk deletion을 포함한다.
 
+- [ ] **PB-030** — Turn 완료 후 API별 분석 note 파이프라인 요구사항 및 구현 backlog 확정
+  - Story: turn이 완료되면 Responses, Chat Completions, Claude Messages의 request/response 계약에 맞는 분석 adapter가 도구 사용 이력을 분석하고 turn note로 저장·조회·표시하도록, note 데이터 계약·완료 lifecycle·실패 처리·UI acceptance와 후속 구현 backlog를 확정한다.
+  - Spec: delta 예정
+  - Sprint: sprint-15
+  - Depends: PB-020, PB-022, PB-023, PB-027
+  - Notes: Sprint 15 Spec→backlog 후보. 제품 코드 구현은 승인 Spec 이후 Backlog→Implementation sprint에서 수행한다.
+
 ## Notes
 
 - 2026-03-10: Spec 승인 후 PB-002–PB-006을 초기 구현 백로그로 추가했다.
