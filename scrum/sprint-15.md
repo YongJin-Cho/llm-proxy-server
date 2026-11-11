@@ -30,3 +30,4 @@ Turn 종료 후 API별 request/response 분석으로 도구 사용 이력을 not
 
 ## Approval
 - Drafted 2026-03-10; Sprint 15 plan approved by user go-ahead ("ok") on 2026-03-10.
+- Completed 2026-03-10; Sprint completion approved by user go-ahead ("ok"). PB-030 closed and PB-031~PB-035 appended for follow-up implementation.

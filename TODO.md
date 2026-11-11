@@ -8,11 +8,11 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 4 | 4 | 0 | 0 |
+| 7 | 1 | 0 | 0 |
 
 **Sprint goal:** Turn 종료 후 API별 request/response 분석으로 도구 사용 이력을 note로 남기고 Turn view에서 확인하는 기능의 사용자 승인 요구사항, 설계 결정, 구현·검증 backlog를 확정한다.
-**Current focus:** T-005
-**Recommended next:** T-005 — API별 turn note Spec 작성 완료 및 review 대기
+**Current focus:** T-008
+**Recommended next:** T-008 — Sprint completion review 및 Boundary 승인 대기
 
 ## Tasks
 
@@ -40,23 +40,23 @@
   - Depends: T-003
   - Notes: `spec/ASR.md`에 ASR-033~038을 append하고 AC back-link를 갱신했다. 2026-03-10 사용자 go-ahead("ok")로 승인되어 Spec 작성을 시작했다.
 
-- [ ] **T-005** — API별 turn note Spec 작성
+- [x] **T-005** — API별 turn note Spec 작성
   - Phase: Spec writing
   - Artifact: `spec/llm-proxy-turn-notes.md`
   - Depends: T-004
-  - Notes: `spec/llm-proxy-turn-notes.md` 초안을 작성했다. 다음 단계는 Spec review다.
+  - Notes: `spec/llm-proxy-turn-notes.md` 초안을 작성했다. 2026-03-10 Spec review를 통과하고 SSOT 승인 대기 상태다.
 
-- [ ] **T-006** — Spec review 및 승인
+- [x] **T-006** — Spec review 및 승인
   - Phase: Spec review
   - Artifact: `spec/llm-proxy-turn-notes.md`, `spec-review/llm-proxy-turn-notes.md`
   - Depends: T-005
-  - Notes: 승인 Spec과 review record를 확정한다.
+  - Notes: `spec-review/llm-proxy-turn-notes.md`를 작성했다. 3 pass, 0 fail, 1 non-blocking clarification. 2026-03-10 사용자 go-ahead("계속 진행해줘")로 Spec-as-SSOT 승인.
 
-- [ ] **T-007** — PB-030을 구현 stories로 분해
+- [x] **T-007** — PB-030을 구현 stories로 분해
   - Phase: backlog encoding
   - Artifact: `scrum/product-backlog.md`
   - Depends: T-006
-  - Notes: 승인 Spec 기반으로 후속 Backlog→Implementation sprint 후보 PB stories를 append한다.
+  - Notes: PB-030을 종료하고 PB-031~PB-035 구현 stories를 `scrum/product-backlog.md`에 append했다.
 
 - [ ] **T-008** — Sprint Boundary → sprint-16
   - Phase: cross-cutting
@@ -83,9 +83,11 @@
 | 12 | Turn 관리·분석 UI 요구사항 및 구현 백로그 확정 | 2026-03-10 | [`TODO-12.md`](./scrum/TODO-12.md) |
 | 13 | Turn 관리·메타데이터·탐색·요약 구현 | 2026-03-10 | [`TODO-13.md`](./scrum/TODO-13.md) |
 | 14 | 안전한 traffic content viewer 구현·검증 | 2026-03-10 | [`TODO-14.md`](./scrum/TODO-14.md) |
+| 15 | Turn 완료 후 API별 분석 note 파이프라인 요구사항·구현 backlog 확정 | 2026-03-10 | [`TODO-15.md`](./scrum/TODO-15.md) |
 
 ## Notes
 
 - 2026-03-10: Sprint 15 계획을 사용자 go-ahead("ok")로 승인하고 Spec→backlog 실행 보드를 seed했다.
 - 2026-03-10: Sprint 15 첫 작업으로 API별 turn note 기능의 PRD delta를 작성했다.
 - 2026-03-10: PRD delta 승인 후 AC-029~AC-034를 `spec/AC.md`에 append했다. 사용자 목록 승인 후 AC-029 ADR 검토를 시작했다.
+- 2026-03-10: Sprint 15 completion 승인 후 `scrum/TODO-15.md`로 board를 archive했다. Sprint 16 plan은 작성했으나 아직 승인하지 않았다.
