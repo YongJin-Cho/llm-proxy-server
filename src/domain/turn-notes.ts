@@ -47,54 +47,73 @@ export interface TurnAnalysisPersistence {
   getTurnNote(turnId: string): TurnNoteProjection | null;
 }
 
-function objects(value: unknown): Array<Record<string, unknown>> {
-  return Array.isArray(value) ? value.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object') : [];
-}
-function asText(value: unknown): string {
-  if (typeof value === 'string') return value;
-  if (value === null || value === undefined) return '';
-  try { return JSON.stringify(value); } catch { return String(value); }
-}
-function toolCalls(value: unknown): Array<{ name: string; input: string; id: string }> {
-  const found: Array<{ name: string; input: string; id: string }> = [];
-  const walk = (node: unknown) => {
-    const entries = Array.isArray(node) ? objects(node) : (node && typeof node === 'object' ? [node as Record<string, unknown>] : []);
-    for (const item of entries) {
-      const type = typeof item.type === 'string' ? item.type : '';
-      if (type === 'function_call' || type === 'tool_use' || type === 'tool_call') {
-        const fn = item.function && typeof item.function === 'object' ? item.function as Record<string, unknown> : item;
-        found.push({ name: asText(item.name ?? fn.name ?? 'tool'), input: asText(item.arguments ?? item.input ?? fn.arguments ?? fn.input ?? ''), id: asText(item.call_id ?? item.id ?? '') });
-      }
-      if (item.tool_calls) for (const call of objects(item.tool_calls)) {
-        const fn = call.function && typeof call.function === 'object' ? call.function as Record<string, unknown> : call;
-        found.push({ name: asText(fn.name ?? call.name ?? 'tool'), input: asText(fn.arguments ?? call.arguments ?? ''), id: asText(call.id ?? '') });
-      }
-      walk(item.output); walk(item.content); walk(item.message); walk(item.choices); walk(item.input); walk(item.messages);
-    }
-  };
-  walk(value);
-  return found;
+export type ToolInteraction = {
+  id: string;
+  functionName: string;
+  parameters: unknown;
+  failed: boolean;
+  error?: unknown;
+};
+
+export function asObject(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null;
 }
 
-export function createMarkdownNotes(input: TurnAnalysisInput): TurnAnalysisResult {
-  const calls = input.traffic.flatMap((traffic) => toolCalls(traffic.response));
-  const results = input.traffic.flatMap((traffic) => toolCalls(traffic.request));
-  if (calls.length === 0 && results.length === 0) return { status: 'empty', notes: [] };
-  const lines = ['도구 사용 이력', ''];
-  if (calls.length > 0) {
-    lines.push('### 호출');
-    calls.forEach((call, index) => {
-      lines.push(`${index + 1}. **${call.name}**${call.id ? ` (id: \`${call.id}\`)` : ''}`);
-      if (call.input) lines.push(`   - 입력: \`${call.input.replace(/`/g, '\\`')}\``);
+export function asArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
+export function parseJson(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+  try { return JSON.parse(value); } catch { return value; }
+}
+
+function shortText(value: string): string {
+  const limit = 120;
+  return value.length <= limit ? value : `${value.slice(0, limit)}…`;
+}
+
+function displayValue(value: unknown): string {
+  const parsed = parseJson(value);
+  if (typeof parsed === 'string') return shortText(parsed);
+  try { return shortText(JSON.stringify(parsed)); } catch { return shortText(String(parsed)); }
+}
+
+function parameterRows(parameters: unknown): string {
+  const parsed = parseJson(parameters);
+  const object = asObject(parsed);
+  if (object) return Object.entries(object).map(([key, value]) => `${key}=${displayValue(value)}`).join('<br>');
+  return displayValue(parsed);
+}
+
+function escapeCell(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\n/g, ' ');
+}
+
+export function renderToolNotes(interactions: ToolInteraction[]): TurnNote[] {
+  if (interactions.length === 0) return [];
+  const rows = interactions.map((item, index) => `| ${index + 1} | ${escapeCell(item.functionName)} | ${escapeCell(parameterRows(item.parameters))} | ${item.failed ? 'Failed' : ''} |`);
+  const notes: TurnNote[] = [{
+    title: '도구 사용 이력',
+    content: ['| Sequence | Function | Parameters | Status |', '|---:|---|---|---|', ...rows].join('\n'),
+  }];
+  const failures = interactions.filter((item) => item.failed);
+  if (failures.length > 0) {
+    const errorRows = failures.map((item, index) => `| ${index + 1} | ${escapeCell(item.functionName)} | ${escapeCell(parameterRows(item.parameters))} | Failed |`);
+    notes.push({
+      title: '도구 사용 오류',
+      content: ['| Sequence | Function | Parameters | Status |', '|---:|---|---|---|', ...errorRows].join('\n'),
     });
   }
-  if (results.length > 0) {
-    lines.push('', '### 도구 결과/메시지', `- 관찰된 결과 항목: ${results.length}개`);
-  }
-  return { status: 'ready', notes: [{ title: '도구 사용 이력', content: lines.join('\n') }] };
+  return notes;
+}
+
+export function resultFromInteractions(interactions: ToolInteraction[]): TurnAnalysisResult {
+  const notes = renderToolNotes(interactions);
+  return notes.length === 0 ? { status: 'empty', notes: [] } : { status: 'ready', notes };
 }
 
 export abstract class BaseTurnAnalysisAdapter implements TurnAnalysisAdapter {
   abstract readonly apiKind: TrafficLogApiKind;
-  analyze(input: TurnAnalysisInput) { return createMarkdownNotes(input); }
+  abstract analyze(input: TurnAnalysisInput): TurnAnalysisResult;
 }

@@ -44,6 +44,7 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 | ASR-036 | Turn note persistence projection | AC-032 | AC-032 | adr/turn-note-persistence-projection.md |
 | ASR-037 | Note 실패 관찰성과 turn 완료 독립성 | AC-033 | AC-033 | adr/turn-note-failure-observability.md |
 | ASR-038 | Turn view note card contract | AC-034 | AC-034 | — |
+| ASR-039 | Tool history table and note card split | AC-035 | AC-035 | — |
 
 ## Dependency Order (recommended Spec encoding path)
 
@@ -341,6 +342,13 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 - **Depends on:** ASR-036, ASR-037
 - **Related AC:** AC-034
 
+### ASR-039 — Tool history table and note card split
+- **Source:** AC-035 — 도구 이력 table·오류 note·note card 표시 계약
+- **Statement:** 첫 번째 note는 API별 adapter가 해석한 모든 tool interaction을 `Sequence / Function / Parameters / Status` Markdown table로 렌더링한다. Parameters는 key/value를 유지하고 긴 문자열 value는 축약하며, `tmp/api-ref.md`의 API별 tool result JSON `error` field가 있는 interaction만 `Failed`로 표시한다. 오류 interaction만 별도 다음 note로 렌더링하고, Turn View는 비어 있지 않은 각 note를 독립 card로 표시하며 공통 title/status와 빈 카드를 제거한다.
+- **Decision summary:** API별 extraction은 adapter 내부에 유지하고 공통 renderer는 semantic interaction과 note 배열을 deterministic하게 렌더링한다.
+- **Depends on:** ASR-033, ASR-038
+- **Related AC:** AC-035
+
 - **Source:** AC-028 — 긴 문자열 형식 표시와 안전한 전체 보기
 - **Statement:** Viewer adapter는 JSON parse 성공 시 request/response를 read-only JSON object/array tree container로 표시해야 한다. object/array/number/boolean/null은 tree 탐색 대상으로 유지하고 문자열 leaf만 viewer 입력으로 취급해야 한다. 문자열 leaf는 기본 축약 preview를 제공하며 전체 보기 요청 시 popup viewer window/dialog에서 해당 문자열만 표시해야 한다. Popup viewer의 `Auto`는 선택된 문자열에 대해 content hint → JSON parse → 제한된 Markdown 판별 → `highlight.js` 후보 → plain text fallback 순서를 따른다. 사용자는 `Auto`, `JSON`, `Markdown`, `Code`, `Plain text`와 curated code language를 선택할 수 있고 선택은 현재 request/response field의 문자열 leaf viewer instance presentation 상태로만 유지해야 한다. 저장된 content는 실행하지 않고 raw HTML·iframe·`eval`·`new Function`을 허용하지 않는다. 각 JSON 문자열 값이 1 MiB(1,048,576 UTF-8 bytes) 이하이면 별도 문자 수·줄 수 truncation 없이 popup에서 전문을 제공한다. request/response JSON은 저장 단계에서 잘라내지 않으며 `maxBodyBytes`는 request 수신 한도다.
 - **Decision summary:** Option D와 후속 Option A 결정들을 채택한다. 형식별 전문 viewer 조합, 제한된 mode contract, viewer 인스턴스 범위 선택 보존, 1 MiB 전문 표시 기준을 사용한다.
@@ -352,6 +360,7 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 
 - 2026-03-10: 기존 ASR-001~ASR-009 승인.
 - 2026-03-10: Sprint 15 ASR-033~ASR-038 통합 초안 작성 완료. 사용자 승인 대기.
+- 2026-03-10: 사용자 요청과 `tmp/api-ref.md`를 반영해 ASR-039를 추가하고 tool history table, API별 오류 판정, 오류 note 분리, note별 독립 card 계약을 승인했다.
 - 2026-03-10: 사용자 go-ahead("ok")로 Sprint 15 ASR-033~ASR-038과 전체 ASR delta를 승인했다. `spec/llm-proxy-turn-notes.md` 작성으로 진행한다.
 - 2026-03-10: 사용자 go-ahead(“ok”)로 ASR-010~ASR-015 및 전체 ASR registry 승인. 다음 단계에서 `spec/llm-proxy-server.md`를 갱신한다.
 - 2026-03-10: 사용자 go-ahead(“ok”)로 ASR-016~ASR-020 및 전체 Sprint 07 ASR delta 승인. `spec/llm-proxy-server.md`에 반영한다.

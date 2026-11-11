@@ -84,7 +84,7 @@ export class MessagesAdapter extends ProxyAdapter {
       const input = inputTokens.every((value) => typeof value === 'number')
         ? inputTokens.reduce((total, value) => total + (value as number), 0)
         : null;
-      const cached = typeof usage?.cache_creation_input_tokens === 'number' ? usage.cache_creation_input_tokens : null;
+      const cached = typeof usage?.cache_read_input_tokens === 'number' ? usage.cache_read_input_tokens : null;
       const output = typeof usage?.output_tokens === 'number' ? usage.output_tokens : null;
       return {
         inputTokens: input,

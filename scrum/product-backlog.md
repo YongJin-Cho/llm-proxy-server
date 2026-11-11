@@ -250,6 +250,13 @@
   - Depends: PB-031, PB-032, PB-033, PB-034
   - Notes: `npm run build`와 `npm run verify`를 검증 진입점으로 사용한다.
 
+- [ ] **PB-036** — Tool history table·오류 note·note별 card 표시 개선
+  - Story: Turn 분석 결과가 `Sequence / Function / Parameters / Status` table로 도구 사용 이력을 표시하고 API별 오류 도구를 별도 note로 제공하며, UI는 note별 독립 card만 표시한다.
+  - Spec: `spec/llm-proxy-turn-notes.md` §R-004–R-005, R-011, R-013, C-007
+  - Sprint: sprint-16
+  - Depends: PB-030, PB-034
+  - Notes: `tmp/api-ref.md`의 Chat Completions·Responses·Messages tool result 오류 계약을 사용한다.
+
 ## Notes
 
 - 2026-03-10: Spec 승인 후 PB-002–PB-006을 초기 구현 백로그로 추가했다.

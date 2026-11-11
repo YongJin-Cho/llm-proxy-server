@@ -218,7 +218,7 @@ try {
   assert.equal(responsesLog.total_tokens, 5);
   assert.equal(responsesLog.cost_usd, 0.003);
   assert.equal(messagesLog.input_tokens, 9);
-  assert.equal(messagesLog.cached_input_tokens, 2);
+  assert.equal(messagesLog.cached_input_tokens, 3);
   assert.equal(messagesLog.output_tokens, 1);
   assert.equal(messagesLog.total_tokens, 10);
   assert.equal(messagesLog.cost_usd, 0.005);

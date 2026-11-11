@@ -466,6 +466,18 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - **Resolution path:** direct-input
 - **Resolution:** Turn view의 traffic usage summary table 바로 다음에 note card를 표시한다. `pending`은 loading indicator와 함께 대기 상태를 표시하고, `ready`는 `TurnNote[]`의 title과 Markdown content를 read-only로 렌더링한다. `empty`는 도구 사용 이력이 없음을 명시적으로 표시하며, `failed`는 안전한 오류 설명과 retryable 여부를 표시한다. note card의 오류는 turn summary와 traffic table 표시를 막지 않는다. 이번 범위의 UI는 수동 retry를 실행하지 않으며 worker retry 결과를 재조회한다. Markdown은 기존 안전한 renderer 정책을 따르고 HTML/script 실행을 허용하지 않는다.
 
+### AC-035 — 도구 이력 table·오류 note·note card 표시 계약
+
+- **Category:** Deliverable form
+- **Status:** designed
+- **Statement:** 도구 사용 이력을 어떤 구조로 표시하고 API별 오류 도구와 note card를 어떻게 분리할 것인가?
+- **Why it matters:** 기존 단일 Markdown 목록은 호출 순서·파라미터·오류 도구를 한눈에 비교하기 어렵고, 공통 상태 카드가 실제 note 존재 여부와 맞지 않는다.
+- **Depends on:** AC-029, AC-034
+- **Related ADRs:**
+  - 없음
+- **Resolution path:** direct-input
+- **Resolution:** 첫 번째 note는 `Sequence / Function / Parameters / Status` table로 모든 tool interaction을 표시한다. Sequence는 1부터 시작하고 Function은 tool 이름으로 하며 Parameters는 key/value로 표시하고 긴 문자열 value는 축약한다. tool result JSON object에 `error` field가 있을 때만 Status를 `Failed`로 표시한다. 오류 interaction이 있으면 오류가 있는 tool 사용만 별도 다음 note로 표시한다. Turn View는 note 배열의 각 note를 독립 card로 표시하고 공통 `Turn notes` title과 status를 제거하며, note가 없으면 card를 표시하지 않는다.
+
 ## Notes
 
 - 2026-03-10: 승인된 PRD를 바탕으로 초기 blocking AC 7개를 식별했다.
@@ -497,3 +509,4 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - 2026-03-10: 사용자 go-ahead("ok")로 AC-033을 designed 처리했다. pending/ready/empty/failed 네 상태, note_unavailable error code, completed turn과의 독립성을 확정했다.
 - 2026-03-10: AC-034를 reviewing으로 전환했다. 기존 turn summary의 traffic usage table 다음에 note card를 배치하고 상태별 표시 계약을 direct-input으로 확정할 예정이다.
 - 2026-03-10: 사용자 go-ahead("ok")로 AC-034를 designed 처리했다. usage table 다음 note card의 위치와 pending/ready/empty/failed 표시, 안전한 Markdown read-only rendering을 확정했다.
+- 2026-03-10: 사용자 요청으로 AC-035를 추가하고 direct-input으로 designed 처리했다. `tmp/api-ref.md`의 API별 tool result 오류 계약, tool history table, 오류 note 분리, note별 독립 card와 빈 note 미표시를 확정했다.
