@@ -34,7 +34,7 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 | AC-026 | 전체·flagged 필터의 조회 책임과 pagination 계약 | Integration & dependencies | identified | — | — |
 | AC-027 | Turn summary와 traffic usage summary 데이터 계약 | Integration & dependencies | identified | adr/usage-and-cost-metadata.md (approved) | — |
 | AC-028 | 긴 문자열 형식 표시와 안전한 전체 보기 | Constraints (structural) | designed | adr/long-string-safe-rendering.md (approved) | — |
-| AC-029 | API별 turn note contract와 semantic extraction | Integration & dependencies | identified | — | — |
+| AC-029 | API별 turn note contract와 semantic extraction | Integration & dependencies | reviewing | adr/turn-note-semantic-contract.md (proposed) | — |
 | AC-030 | Note 분석 adapter와 기존 turn grouping 경계 | Structure & organization | identified | — | — |
 | AC-031 | Turn 완료 후 note 분석 lifecycle·idempotency·재시도 | Constraints (structural) | identified | — | — |
 | AC-032 | Note persistence와 turn 조회 projection | Structure & organization | identified | — | — |
@@ -397,13 +397,13 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 ### AC-029 — API별 turn note contract와 semantic extraction
 
 - **Category:** Integration & dependencies
-- **Status:** identified
+- **Status:** reviewing
 - **Statement:** Responses, Chat Completions, Claude Messages의 request/response에서 tool call·tool result와 관련 metadata를 어떤 공통 note contract로 추출하고, API별 누락·다중 호출·stream aggregate 형태를 어떻게 표현할 것인가?
 - **Why it matters:** API별 payload 차이를 조용히 공통화하면 tool 사용 이력이 왜곡되거나 특정 API에서만 note가 누락될 수 있다. 반대로 API별 결과를 그대로 노출하면 Turn view와 저장 계약이 API 종류에 강하게 결합된다.
 - **Depends on:** AC-019, AC-024
 - **Related ADRs:**
-  - 없음
-- **Resolution path:** adr 또는 direct-input 검토 필요
+  - `adr/turn-note-semantic-contract.md` — proposed
+- **Resolution path:** adr
 - **Resolution:**
 
 ### AC-030 — Note 분석 adapter와 기존 turn grouping 경계
@@ -484,3 +484,4 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - 2026-03-10: 사용자 go-ahead("D로 해줘")로 `adr/long-string-safe-rendering.md`의 Option D를 승인하고 AC-028을 designed 처리했다. viewer dependency selection, format mode contract, preview thresholds는 후속 쟁점으로 분류했다.
 - 2026-03-10: 사용자 변경 요청에 따라 request/response 전체 viewer 감지를 폐기하고 JSON tree 내부 문자열 leaf만 popup viewer 대상으로 삼는 UI 표현 계약으로 Resolution을 수정했다.
 - 2026-03-10: 승인된 API별 turn note PRD delta에 따라 AC-029~AC-034를 blocking concern으로 식별했다. note contract, adapter 경계, 완료 후 lifecycle/idempotency, 별도 persistence projection, 실패 관찰성, Turn view 상태 표시가 이번 review의 결정 대상이다.
+- 2026-03-10: AC 목록 승인 후 AC-029를 reviewing으로 전환하고 `adr/turn-note-semantic-contract.md`를 proposed 상태로 연결했다. Option A(공통 Tool Interaction contract)를 권장한다.

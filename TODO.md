@@ -8,11 +8,11 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 1 | 7 | 0 | 0 |
+| 2 | 6 | 0 | 0 |
 
 **Sprint goal:** Turn 종료 후 API별 request/response 분석으로 도구 사용 이력을 note로 남기고 Turn view에서 확인하는 기능의 사용자 승인 요구사항, 설계 결정, 구현·검증 backlog를 확정한다.
-**Current focus:** T-001
-**Recommended next:** T-002 — Blocking AC 식별 및 목록 승인 대기
+**Current focus:** T-003
+**Recommended next:** T-003 — AC-029 ADR 검토 및 승인 대기
 
 ## Tasks
 
@@ -22,11 +22,11 @@
   - Depends: —
   - Notes: 기존 제품 PRD에 API별 turn note 분석·저장·표시 delta를 추가했다. 2026-03-10 사용자 go-ahead("ok")로 승인되어 AC 식별로 진행했다.
 
-- [ ] **T-002** — Blocking AC 식별 및 목록 승인
+- [x] **T-002** — Blocking AC 식별 및 목록 승인
   - Phase: AC identification
   - Artifact: `spec/AC.md`
   - Depends: T-001
-  - Notes: AC-029~AC-034로 note contract, adapter 경계, 완료 lifecycle, 실패·중복·재시도, 저장/조회 projection, UI 표시를 식별했다. 사용자 목록 승인 후 AC review로 진행.
+  - Notes: AC-029~AC-034를 식별하고 dependency order를 등록했다. 2026-03-10 사용자 go-ahead("ok")로 목록을 승인해 AC review를 시작했다.
 
 - [ ] **T-003** — Blocking AC 설계 결정
   - Phase: AC review
@@ -88,4 +88,4 @@
 
 - 2026-03-10: Sprint 15 계획을 사용자 go-ahead("ok")로 승인하고 Spec→backlog 실행 보드를 seed했다.
 - 2026-03-10: Sprint 15 첫 작업으로 API별 turn note 기능의 PRD delta를 작성했다.
-- 2026-03-10: PRD delta 승인 후 AC-029~AC-034를 `spec/AC.md`에 append했다. T-002는 목록 승인 대기 상태다.
+- 2026-03-10: PRD delta 승인 후 AC-029~AC-034를 `spec/AC.md`에 append했다. 사용자 목록 승인 후 AC-029 ADR 검토를 시작했다.
