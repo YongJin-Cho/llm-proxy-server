@@ -6,6 +6,7 @@ import { TurnView } from '../components/TurnView';
 import { type Log, type TurnNode } from '../types';
 
 const limit = 20;
+const refreshIntervalMs = 2000;
 type TurnFilter = 'all' | 'flagged';
 
 type Selection = { turn?: string; traffic?: string };
@@ -59,6 +60,17 @@ export function TrafficPage() {
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
+  const loadDetail = (trafficId: string, showLoading: boolean) => {
+    if (showLoading) {
+      setDetailLoading(true);
+      setDetailError('');
+    }
+    return fetchLog(trafficId)
+      .then((result) => { setDetail(result); setDetailError(''); })
+      .catch((reason: Error) => { setDetail(undefined); setDetailError(reason.message); })
+      .finally(() => { if (showLoading) setDetailLoading(false); });
+  };
+
   useEffect(() => {
     if (!selection.traffic) {
       setDetail(undefined);
@@ -66,13 +78,17 @@ export function TrafficPage() {
       setDetailLoading(false);
       return;
     }
-    setDetailLoading(true);
-    setDetailError('');
-    fetchLog(selection.traffic)
-      .then(setDetail)
-      .catch((reason: Error) => { setDetail(undefined); setDetailError(reason.message); })
-      .finally(() => setDetailLoading(false));
+    void loadDetail(selection.traffic, true);
   }, [selection.traffic]);
+
+  useEffect(() => {
+    const refresh = () => {
+      void loadTurns(turnPage, turnFilter);
+      if (selection.traffic) void loadDetail(selection.traffic, false);
+    };
+    const interval = window.setInterval(refresh, refreshIntervalMs);
+    return () => window.clearInterval(interval);
+  }, [turnPage, turnFilter, selection.traffic]);
 
   const changeTurnFilter = (next: TurnFilter) => { setTurnFilter(next); setTurnPage(1); };
   const selectTurn = (id: string) => { writeSelection(id); setSelection({ turn: id }); };

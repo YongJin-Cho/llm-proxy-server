@@ -96,6 +96,7 @@ TrafficPage
 - R-026: Popup viewer의 mode/language 선택 상태는 request/response field와 문자열 leaf 식별자별 현재 viewer instance에만 유지해야 한다. 다른 문자열 leaf 선택, traffic 변경, viewer close, 새로고침 시 자동 감지 상태로 초기화하며 URL, 서버, localStorage에 저장하지 않아야 한다. 저장된 각 문자열 값이 1 MiB 이하이면 별도 문자 수·줄 수 truncation 없이 popup에서 전체를 확인할 수 있어야 한다. ← ASR-031; R-009~R-010 of `spec/llm-proxy-turn-management.md`
 - R-027: TurnView는 별도 turn 제목 heading 없이 `Turn <turn 제목> summary` heading을 표시하고, TrafficView는 `Turn <turn 제목>/Traffic <traffic 표시값> summary` heading을 표시해야 한다. 두 summary는 `Status`, `Model`, `Provider`, `Cost`, `Input tokens`, `Cached input tokens`, `Output tokens`, `Elapsed time` 순서를 사용하며 cost는 소수점 4자리, token/time은 3자리 콤마로 표시한다. TurnView response는 `ContentViewer`의 plain text Markdown, JSON object/array tree, 긴 문자열 popup 동작을 재사용해야 한다. ← R-020~R-021 of `spec/llm-proxy-turn-management.md`
 - R-028: TurnView는 summary, request/response content, traffic table을 traffic view처럼 각각 독립 `card` section으로 렌더링해야 한다. request/response content에는 별도 Request/Response heading을 렌더링하지 않고 `ContentViewer` object만 표시하며, 각 object 안에는 `request:` 또는 `response:` label을 유지해야 한다. request와 response viewer 사이에 divider를 두고, 단순 문자열은 JSON string scalar 형식으로 표시하며, 양쪽의 긴 scalar 문자열은 JSON 형식 축약 preview와 popup viewer 전체 보기 동작을 제공해야 한다. ← R-022 of `spec/llm-proxy-turn-management.md`
+- R-029: `TrafficPage`는 sidebar turn tree와 현재 선택된 오른쪽 `TurnView` 또는 `TrafficView`를 기본 2초 간격으로 자동 갱신해야 한다. 각 주기마다 현재 page/filter의 turn projection을 재조회하고, traffic이 선택되어 있으면 선택된 traffic detail도 재조회해야 한다. 갱신 중에도 URL selection, 현재 page/filter, tree의 collapse/expand 같은 presentation state는 유지해야 하며, 한 영역의 fetch 실패가 다른 영역의 표시를 제거하거나 갱신을 중단시키지 않아야 한다.
 
 ## Constraints
 
@@ -103,7 +104,7 @@ TrafficPage
 
 - C-002: Tree 응답에는 request/response 본문을 포함하지 않는다. UI는 traffic 선택 이후 기존 detail API로 본문을 지연 조회하며, UI가 SQLite 또는 다른 persistence layer를 직접 조회하지 않는다. ← ASR-025; ASR-014
 
-- C-003: UI는 traffic의 실시간 streaming transcript, 자동 refresh, stream replay, event-level 영구 저장을 제공하지 않는다. 오른쪽 `TrafficView`는 저장된 final/partial aggregate를 표시한다. ← ASR-002; ASR-023
+- C-003: UI는 traffic의 실시간 streaming transcript, stream replay, event-level 영구 저장을 제공하지 않는다. 자동 갱신은 저장된 turn projection과 final/partial aggregate detail을 재조회하는 polling으로만 제공하며, 오른쪽 `TrafficView`는 매 주기 저장된 상태를 표시한다. ← ASR-002; ASR-023
 
 - C-004: UI는 provider가 보고하지 않은 cost를 추정하지 않고 서버가 제공한 null/partial 상태를 그대로 표시한다. summary 계산 규칙을 component에서 재구현하지 않는다. ← ASR-020; ASR-030
 
@@ -157,13 +158,13 @@ TrafficPage
 - Proxy routing, provider authentication, SSE transport, turn grouping semantic, SQLite schema, migration, and persistence implementation.
 - New turn/traffic API contract or server-side summary/usage calculation rules.
 - User authentication, RBAC, multi-user sharing, cross-tab preference synchronization.
-- Real-time streaming transcript, automatic refresh, replay, chart, alert, full-text search, and billing UI.
+- Real-time streaming transcript, replay, chart, alert, full-text search, and billing UI. 저장된 turn/traffic projection의 polling 기반 자동 갱신은 R-029 범위에 포함한다.
 - UI redesign unrelated to the turn/traffic navigation and content inspection contract.
 - Browser end-to-end test framework adoption unless a later implementation sprint explicitly scopes it.
 
 ## Open Questions
 
-- 없음. UI의 현재 view 분리와 state contract는 본 문서에서 고정한다. 별도 browser E2E framework 도입은 out of scope이며, 현재는 `npm run build`, `npm run verify`, 기존 viewer/turn verification과 source-level acceptance를 사용한다.
+- 자동 갱신 주기는 2초로 고정한다. 별도 browser E2E framework 도입은 out of scope이며, 현재는 `npm run build`, `npm run verify`, 기존 viewer/turn verification과 source-level acceptance를 사용한다.
 
 ## Related
 
@@ -187,3 +188,4 @@ TrafficPage
 - 2026-03-10: 사용자 UI 요구사항을 반영해 turn collapse/expand, sidebar header pagination, turn traffic summary table, traffic usage summary, request/response JSON tree view를 R-019~R-024로 추가했다. 현재 구현과의 차이는 Current Implementation Baseline에 기록했다.
 - 2026-03-10: request/response 전체 content viewer 감지 방식을 폐기하고, JSON object tree 내부 문자열 leaf만 축약 preview와 popup viewer의 대상으로 변경했다. 관련 요구사항을 R-012~R-016 및 C-009~C-010으로 기록했다.
 - 2026-03-10: Turn page 변경 요청을 반영해 Traffic page와 동일한 turn summary, API별 request/response 메시지 추출, turn usage 합계, sidebar와 일치하는 traffic 식별값 및 간소화된 traffic table column을 R-021~R-022에 반영했다.
+- 2026-03-10: 사용자 요청에 따라 sidebar와 선택된 TurnView/TrafficView의 저장 상태를 2초 polling으로 자동 갱신하도록 R-029를 추가하고, 자동 갱신 금지 문구를 C-003 및 Out of Scope에서 제거했다.
