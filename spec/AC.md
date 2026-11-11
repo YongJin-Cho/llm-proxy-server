@@ -34,6 +34,12 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 | AC-026 | 전체·flagged 필터의 조회 책임과 pagination 계약 | Integration & dependencies | identified | — | — |
 | AC-027 | Turn summary와 traffic usage summary 데이터 계약 | Integration & dependencies | identified | adr/usage-and-cost-metadata.md (approved) | — |
 | AC-028 | 긴 문자열 형식 표시와 안전한 전체 보기 | Constraints (structural) | designed | adr/long-string-safe-rendering.md (approved) | — |
+| AC-029 | API별 turn note contract와 semantic extraction | Integration & dependencies | identified | — | — |
+| AC-030 | Note 분석 adapter와 기존 turn grouping 경계 | Structure & organization | identified | — | — |
+| AC-031 | Turn 완료 후 note 분석 lifecycle·idempotency·재시도 | Constraints (structural) | identified | — | — |
+| AC-032 | Note persistence와 turn 조회 projection | Structure & organization | identified | — | — |
+| AC-033 | Note 상태·실패 관찰성과 기존 turn 완료 독립성 | Quality bar (architectural) | identified | — | — |
+| AC-034 | Turn view note card 표시·상태 계약 | Deliverable form | identified | — | — |
 
 ## Dependency Order (recommended review path)
 
@@ -42,6 +48,7 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 3. AC-014 → AC-015 → AC-016 → AC-017 → AC-018
 4. AC-019 → AC-023 → AC-024 → AC-020 → AC-022 → AC-021
 5. AC-025 → AC-026 → AC-027 → AC-028
+6. AC-029 → AC-030 → AC-031 → AC-032 → AC-033 → AC-034
 
 ## AC Detail
 
@@ -387,6 +394,78 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - **Resolution:** 기존 ADR Option D를 UI 표현 구조에 맞게 수정한다. request/response 전체 content를 하나의 viewer 형식으로 감지하지 않고, JSON parse 성공 시 read-only JSON object/array tree를 container로 표시한다. object/array/number/boolean/null은 tree 탐색 대상으로 유지하고 문자열 leaf만 viewer 입력으로 취급한다. 문자열 leaf는 기본 축약 preview를 제공하며 전체 보기 요청 시 popup viewer window/dialog에서 해당 문자열만 표시한다. Popup viewer는 `Auto`, `JSON`, `Markdown`, `Code`, `Plain text`와 curated code language를 제공하고, 선택된 문자열에 대해 content hint → JSON parse → 제한된 Markdown 판별 → `highlight.js` 후보 → escaped plain text fallback 순서로 감지한다. 사용자 선택은 자동 감지보다 우선하며 문자열 leaf별 현재 viewer instance presentation 상태로만 유지한다. 모든 표시 경로는 저장된 content를 실행하지 않고 raw HTML·iframe·`eval`·`new Function`을 허용하지 않는다. 각 JSON 문자열 값이 1 MiB(1,048,576 UTF-8 bytes) 이하이면 별도 문자 수·줄 수 truncation 없이 popup에서 전문을 제공한다. request/response JSON은 저장 단계에서 잘라내지 않으며 `maxBodyBytes`는 request 수신 한도다.
 
 
+### AC-029 — API별 turn note contract와 semantic extraction
+
+- **Category:** Integration & dependencies
+- **Status:** identified
+- **Statement:** Responses, Chat Completions, Claude Messages의 request/response에서 tool call·tool result와 관련 metadata를 어떤 공통 note contract로 추출하고, API별 누락·다중 호출·stream aggregate 형태를 어떻게 표현할 것인가?
+- **Why it matters:** API별 payload 차이를 조용히 공통화하면 tool 사용 이력이 왜곡되거나 특정 API에서만 note가 누락될 수 있다. 반대로 API별 결과를 그대로 노출하면 Turn view와 저장 계약이 API 종류에 강하게 결합된다.
+- **Depends on:** AC-019, AC-024
+- **Related ADRs:**
+  - 없음
+- **Resolution path:** adr 또는 direct-input 검토 필요
+- **Resolution:**
+
+### AC-030 — Note 분석 adapter와 기존 turn grouping 경계
+
+- **Category:** Structure & organization
+- **Status:** identified
+- **Statement:** 기존 turn grouping을 담당하는 semantic adapter·traffic lifecycle과, 완료 turn의 note를 생성하는 분석 adapter를 같은 adapter 책임으로 둘지 분리할지, 공통 application service와 persistence port를 어떻게 연결할 것인가?
+- **Why it matters:** grouping과 note 분석을 한 책임으로 묶으면 note 요구사항 변경이 turn 연결·완료 판정에 회귀를 만들 수 있다. 분리하더라도 동일한 최종 request/response와 API kind를 안정적으로 전달하는 경계가 필요하다.
+- **Depends on:** AC-011, AC-019, AC-029
+- **Related ADRs:**
+  - 없음
+- **Resolution path:** adr 또는 direct-input 검토 필요
+- **Resolution:**
+
+### AC-031 — Turn 완료 후 note 분석 lifecycle·idempotency·재시도
+
+- **Category:** Constraints (structural)
+- **Status:** identified
+- **Statement:** turn completion event 이후 note 분석을 동기·비동기 중 어떤 방식으로 실행하고, 중복 completion event·프로세스 재시작·분석 재시도에서 note를 어떻게 한 번만 확정할 것인가?
+- **Why it matters:** 분석을 요청 경로에 결합하면 client latency와 turn 완료 성공이 영향을 받고, 비동기 실행의 중복·유실을 정의하지 않으면 note가 중복 생성되거나 영구적으로 pending 상태에 머물 수 있다.
+- **Depends on:** AC-023, AC-029, AC-030
+- **Related ADRs:**
+  - 없음
+- **Resolution path:** adr 검토 필요
+- **Resolution:**
+
+### AC-032 — Note persistence와 turn 조회 projection
+
+- **Category:** Structure & organization
+- **Status:** identified
+- **Statement:** note를 traffic/turn 원본과 어떤 별도 record·schema로 저장하고, turn 조회 API가 note 상태·내용·버전·정렬 정보를 어떤 projection으로 반환할 것인가?
+- **Why it matters:** note를 원본 traffic에 덮어쓰면 기존 로그 회귀와 재분석이 어려워지고, 별도 저장하더라도 조회 시점의 turn/traffic 일관성·없는 note·복수 note 처리 규칙이 필요하다.
+- **Depends on:** AC-012, AC-020, AC-031
+- **Related ADRs:**
+  - 없음
+- **Resolution path:** adr 또는 direct-input 검토 필요
+- **Resolution:**
+
+### AC-033 — Note 상태·실패 관찰성과 기존 turn 완료 독립성
+
+- **Category:** Quality bar (architectural)
+- **Status:** identified
+- **Statement:** pending·empty·failed/unavailable note 상태와 실패 원인·재시도 가능성을 어떤 저장·API·검증 계약으로 관찰하며, note 분석 실패가 completed turn과 traffic 저장 성공을 어떻게 보존할 것인가?
+- **Why it matters:** note 부재가 tool 미사용인지 분석 지연인지 실패인지 구분되지 않으면 운영자가 turn 동작을 오해한다. 분석 실패를 turn 실패로 전파하면 기존 completion lifecycle의 신뢰성이 훼손된다.
+- **Depends on:** AC-031, AC-032
+- **Related ADRs:**
+  - 없음
+- **Resolution path:** direct-input 또는 adr 검토 필요
+- **Resolution:**
+
+### AC-034 — Turn view note card 표시·상태 계약
+
+- **Category:** Deliverable form
+- **Status:** identified
+- **Statement:** traffic summary table 다음 note card에 note의 제목·tool 사용 항목·API별 metadata·상태를 어떤 UI 모델과 loading/empty/error/partial 표시로 제공할 것인가?
+- **Why it matters:** note card 위치와 상태 표현이 고정되지 않으면 사용자는 분석 중·도구 미사용·분석 실패를 구분할 수 없고, 기존 turn summary와 조회 실패 처리의 일관성도 깨진다.
+- **Depends on:** AC-032, AC-033
+- **Related ADRs:**
+  - 없음
+- **Resolution path:** direct-input 또는 adr 검토 필요
+- **Resolution:**
+
 ## Notes
 
 - 2026-03-10: 승인된 PRD를 바탕으로 초기 blocking AC 7개를 식별했다.
@@ -404,3 +483,4 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - 2026-03-10: 사용자 go-ahead("ok")로 후속 ADR `ambiguous-missing-tool-id-fallback.md`를 승인했다. 매칭 불가 traffic은 fallback reason과 함께 새 standalone turn으로 격리한다.
 - 2026-03-10: 사용자 go-ahead("D로 해줘")로 `adr/long-string-safe-rendering.md`의 Option D를 승인하고 AC-028을 designed 처리했다. viewer dependency selection, format mode contract, preview thresholds는 후속 쟁점으로 분류했다.
 - 2026-03-10: 사용자 변경 요청에 따라 request/response 전체 viewer 감지를 폐기하고 JSON tree 내부 문자열 leaf만 popup viewer 대상으로 삼는 UI 표현 계약으로 Resolution을 수정했다.
+- 2026-03-10: 승인된 API별 turn note PRD delta에 따라 AC-029~AC-034를 blocking concern으로 식별했다. note contract, adapter 경계, 완료 후 lifecycle/idempotency, 별도 persistence projection, 실패 관찰성, Turn view 상태 표시가 이번 review의 결정 대상이다.
