@@ -99,5 +99,6 @@
 
 ## Notes
 
+- 2026-03-10: Chat Completions 오류 interaction defect closure re-verification에서 `npm run verify` 전체 통과. R-005/R-013 scoped re-verification pass.
 - 2026-03-10: Sprint 16 plan approval을 사용자 go-ahead("ok")로 받고 PB-031~PB-035 전체 Scope로 execution board를 seed했다.
 - 2026-03-10: Implementation은 승인 Spec `spec/llm-proxy-turn-notes.md`와 Sprint 16 Scope만 사용한다.
