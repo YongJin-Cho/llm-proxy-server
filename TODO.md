@@ -8,11 +8,11 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 5 | 1 | 0 | 0 |
+| 6 | 0 | 0 | 0 |
 
 **Sprint goal:** API schema 의존성을 adapter 경계 안에 가두고 persistence·domain·route의 역할을 정리하면서 기존 동작과 회귀 검증을 보존한다.
-**Current focus:** T-006
-**Recommended next:** T-006 — Sprint Boundary → sprint-18
+**Current focus:** —
+**Recommended next:** —
 
 ## Tasks
 
@@ -46,7 +46,7 @@
   - Depends: T-001, T-002, T-003, T-004
   - Notes: PB-041. `npm run build`와 `npm run verify` 통과. 세 API, turn, note, viewer 회귀와 summary projector/route boundary를 검증했다.
 
-- [ ] **T-006** — Sprint Boundary → sprint-18
+- [x] **T-006** — Sprint Boundary → sprint-18
   - Phase: cross-cutting
   - Artifact: `scrum/TODO-17.md`
   - Depends: T-001, T-002, T-003, T-004, T-005
@@ -73,9 +73,11 @@
 | 14 | 안전한 traffic content viewer 구현·검증 | 2026-03-10 | [`TODO-14.md`](./scrum/TODO-14.md) |
 | 15 | Turn 완료 후 API별 분석 note 파이프라인 요구사항·구현 backlog 확정 | 2026-03-10 | [`TODO-15.md`](./scrum/TODO-15.md) |
 | 16 | Turn analysis pipeline implementation and verification | 2026-03-10 | [`scrum/TODO-16.md`](./scrum/TODO-16.md) |
+| 17 | API adapter 경계와 코드 품질 개선 | 2026-03-10 | [`scrum/TODO-17.md`](./scrum/TODO-17.md) |
 
 ## Notes
 
 - 2026-03-10: Sprint 16 completion approval received from user; its archived board is `scrum/TODO-16.md`.
 - 2026-03-10: Sprint 17 plan approved by user go-ahead("ok"); live execution board seeded and T-001 selected as Current focus.
 - 2026-03-10: Sprint scope is limited to PB-037~PB-041. New API support and large ProviderClient extraction are explicitly out of scope.
+- 2026-03-10: Sprint 17 completion approved by user go-ahead("ok"); PB-037~PB-041 met DoD, with no carry-over or skips. This is the final planned sprint; no Sprint 18 was created.

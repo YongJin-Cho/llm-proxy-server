@@ -314,3 +314,5 @@
 - 2026-03-10: Sprint 15 Spec 승인 후 PB-030을 종료하고 승인 Spec 기반 구현 stories PB-031~PB-035를 append했다. 제품 구현은 후속 Backlog→Implementation sprint에서 수행한다.
 - 2026-03-10: Sprint 16 Boundary에서 PB-031~PB-036의 DoD를 충족해 종료했다. T-010은 PB-036의 일부로 귀속했으며 carry-over/skip은 없다.
 - 2026-03-10: Sprint 17 implementation에서 PB-037~PB-041의 DoD를 충족했다. API schema 누수, summary projector 경계, adapter registry/transport helper, DI/HTTP input boundary, note renderer를 반영하고 `npm run build`·`npm run verify`를 통과했다.
+- 2026-03-10: Sprint 17 Boundary 완료. PB-037~PB-041을 종료했으며 carry-over/skip은 없다. 현재 제품 backlog의 모든 story가 완료되었다.
+- 2026-03-10: Sprint 17 Boundary 완료. PB-037~PB-041을 종료했으며 carry-over/skip은 없다. 현재 제품 backlog의 모든 story가 완료되었다.

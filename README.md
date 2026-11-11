@@ -1,6 +1,37 @@
 # LLM Proxy Server
 
-단일 프로세스로 실행되는 localhost LLM Proxy입니다. Fastify API/server와 React monitoring UI가 하나의 프로세스에서 동작합니다.
+단일 프로세스로 실행되는 localhost LLM Proxy입니다. Fastify API/server와 React monitoring UI가 하나의 프로세스에서 동작합니다. 클라이언트의 LLM 요청을 provider로 전달하면서, 요청·응답 traffic을 SQLite에 기록하고 브라우저 UI에서 turn 단위로 추적할 수 있습니다.
+
+## 주요 기능
+
+- **LLM API 프록시**: Responses, Chat Completions, Messages API 요청을 설정된 provider endpoint로 전달합니다. 모델 이름은 `config.json`의 routing을 통해 provider 모델 이름으로 변환됩니다.
+- **traffic의 turn 그룹핑**: 하나의 대화형 작업에서 발생한 여러 provider 호출을 하나의 `turn` 아래 `traffic` child로 묶어 보여줍니다. Turn 목록에서 접기/펼치기, 상태·호출 수 확인, turn 이름 변경, flag 지정, 삭제가 가능합니다.
+- **Turn 요약**: 선택한 turn의 status, model, provider, 총 cost, input tokens, cached input tokens, output tokens, elapsed time을 한 화면에서 확인합니다. Provider가 usage를 일부만 반환한 경우 cost에 `partial`이 표시될 수 있습니다.
+- **Traffic별 비교**: turn 안의 각 traffic을 표로 나열하고 input/output token, cached input token, elapsed time, cost를 호출별로 비교할 수 있습니다. 특정 traffic을 선택하면 원본 request/response와 상세 metadata를 지연 로드합니다.
+- **안전한 content viewer**: request/response JSON은 tree 형태로 펼쳐 보며, 긴 문자열은 별도 viewer에서 전체 내용을 확인합니다. 문자열과 일반 본문은 `Auto`, `JSON`, `Markdown`, `Code`, `Plain text` 표시 형식을 선택할 수 있습니다. Markdown은 GFM과 sanitize 처리를 적용하고, Code는 읽기 전용 Monaco editor로 표시합니다.
+- **보안 저장**: Authorization, API key, Cookie 계열 header는 `[REDACTED]`로 마스킹한 뒤 저장합니다. API key 자체는 config 파일에 저장하지 않고 환경변수에서만 읽습니다.
+
+## UI 한눈에 보기
+
+서버를 실행한 뒤 브라우저에서 `http://127.0.0.1:8888`을 열면 monitoring UI를 사용할 수 있습니다.
+
+![LLM Proxy Server monitoring UI](./llm-proxy-server.png)
+
+스크린샷의 화면은 다음 영역으로 구성됩니다.
+
+1. **Turns 탐색 영역**: 왼쪽에서 turn을 시간순으로 탐색합니다. 각 turn 아래에 속한 traffic을 펼쳐 볼 수 있고, `All`/`Stored` 필터, 페이지 이동, flag 및 삭제 메뉴를 사용할 수 있습니다. `Stored`는 flag된 turn을 보존·관리하기 위한 목록입니다.
+2. **Turn summary**: turn을 선택하면 model/provider, 처리 상태, 비용, token usage, elapsed time을 요약합니다. 아래의 request/response preview는 해당 turn의 시작 입력과 마지막 AI 출력을 빠르게 확인하는 용도입니다.
+3. **Traffic summary table**: turn에 포함된 provider 호출을 행 단위로 표시합니다. 행을 클릭하면 특정 traffic의 상세 화면으로 이동하므로, 여러 호출이 있었던 turn에서 호출별 비용과 token 사용량을 비교할 수 있습니다.
+4. **Traffic detail**: 개별 traffic의 상태·model·provider·cost·token usage·지연 시간과 원본 request/response content를 확인합니다. 본문은 필요한 traffic을 선택했을 때만 조회하여 목록 화면을 가볍게 유지합니다.
+5. **Content viewer**: JSON object/array는 구조화된 tree로 탐색하고, 긴 문자열은 `전체 보기`로 엽니다. 표시 형식을 바꾸거나 Code 언어를 선택할 수 있으며, viewer는 읽기 전용입니다.
+
+### Turn과 traffic을 함께 보는 방법
+
+1. 왼쪽 `Turns`에서 관심 있는 turn을 선택합니다.
+2. Turn summary에서 전체 비용과 token usage를 확인합니다.
+3. Traffic summary table에서 개별 호출의 input/output token, latency, cost를 비교합니다.
+4. 세부 내용을 확인할 traffic 행을 클릭합니다.
+5. `← turn`으로 돌아와 같은 turn의 다른 traffic을 선택합니다.
 
 ## 실행
 
@@ -82,12 +113,15 @@ npm run verify
 
 ## UI 구조
 
-React UI는 기능별 책임을 분리해 확장할 수 있도록 구성되어 있습니다.
+React UI는 turn 탐색, 요약, 상세 조회, content rendering을 분리해 구성되어 있습니다.
 
-- `src/ui/data-query/`: `/api/v1/logs`, `/api/v1/logs/:id`, `/api/v1/turns` HTTP 조회 및 오류 변환
-- `src/ui/pages/`: 화면 상태, 필터·pagination·turn/traffic URL selection·상세 이동 조합
-- `src/ui/components/`: `Filters`, `LogTable`, `LogDetail`, `TurnTree` 등 API에 직접 의존하지 않는 표시·입력 컴포넌트
+- `src/ui/data-query/`: `/api/v1/logs`, `/api/v1/logs/:id`, `/api/v1/turns` 조회 및 viewer content 판별·직렬화
+- `src/ui/pages/TrafficPage.tsx`: turn/traffic 선택, pagination, 자동 새로고침, URL query 상태(`turn`, `traffic`) 관리
+- `src/ui/components/TurnTree.tsx`: Turn–Traffic 계층 탐색, 접기/펼치기, Stored filter, rename/flag/delete
+- `src/ui/components/TurnView.tsx`: turn 전체 usage/cost/latency 요약, request/response preview, traffic 비교 표
+- `src/ui/components/TrafficView.tsx`와 `LogDetail.tsx`: 선택한 traffic의 metadata와 원본 request/response 상세 표시
+- `src/ui/components/ContentViewer.tsx`: JSON tree, Markdown, Monaco 기반 Code, Plain text viewer 및 긴 문자열 popup
 - `src/ui/types.ts`: UI 공통 view-model과 filter 타입
-- `src/ui/main.tsx`: 선택한 page를 React root에 연결하는 bootstrap
+- `src/ui/main.tsx`: React root bootstrap
 
-새로운 analysis/report/chart 기능은 별도 page 또는 feature module로 추가합니다. 기존 `TrafficPage`와 `main.tsx`에 기능별 조회·상태를 누적하지 않아 기존 traffic 화면과 독립적으로 확장할 수 있습니다.
+UI는 약 2초 주기로 turn 목록과 선택된 traffic을 새로 고칩니다. Traffic 본문은 `/api/v1/logs/:id`로 선택 시 지연 조회하며, URL query를 사용하므로 화면을 새로 고치거나 링크를 공유해도 선택 상태를 유지할 수 있습니다. 새로운 analysis/report/chart 기능은 별도 page 또는 feature module로 추가해 기존 traffic 화면과 독립적으로 확장하는 것을 권장합니다.
