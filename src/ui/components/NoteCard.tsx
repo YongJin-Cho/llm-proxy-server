@@ -7,6 +7,8 @@ type Props = { notes?: TurnNoteProjection | null };
 
 export function NoteCard({ notes }: Props) {
   const items = notes?.notes ?? [];
+  if (items.length === 0) return null;
+
   return <>{items.map((note, index) => <section className="card turn-note-card" aria-label={note.title} key={`${note.title}-${index}`}>
     <h2>{note.title}</h2>
     <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>{note.content}</ReactMarkdown>

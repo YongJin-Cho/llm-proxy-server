@@ -47,7 +47,12 @@ assert.equal(store.listTurns(1, 20).data.find((turn) => turn.id === 'responses-t
 const noteCard = readFileSync(new URL('../src/ui/components/NoteCard.tsx', import.meta.url), 'utf8');
 assert.doesNotMatch(noteCard, /Turn notes/);
 assert.doesNotMatch(noteCard, /projection\.status/);
+assert.match(noteCard, /if \(items\.length === 0\) return null/);
 assert.match(noteCard, /items\.map/);
+assert.match(noteCard, /className="card turn-note-card"/);
+const styles = readFileSync(new URL('../src/ui/styles.css', import.meta.url), 'utf8');
+assert.match(styles, /main \{ width: 100%; box-sizing: border-box;/);
+assert.doesNotMatch(styles, /main \{ max-width: 1180px;/);
 store.close();
 rmSync(tempDir, { recursive: true, force: true });
 console.log('Turn note verification passed: API-specific table extraction, error notes, idempotency, empty projection, and independent note cards.');

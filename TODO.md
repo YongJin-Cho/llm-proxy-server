@@ -8,11 +8,11 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 6 | 3 | 0 | 0 |
+| 8 | 1 | 0 | 0 |
 
 **Sprint goal:** 승인된 turn note Spec의 전체 구현을 완료한다. 완료 turn을 분석·저장·조회하고 Turn view에 note card를 표시하며 세 API의 lifecycle·persistence·query·UI·통합 검증을 완료한다.
-**Current focus:** T-007
-**Recommended next:** T-007 — Tool history table·API별 오류 note·note별 card 구현
+**Current focus:** T-009
+**Recommended next:** T-009 — Sprint Boundary → sprint-17
 
 ## Tasks
 
@@ -52,17 +52,17 @@
   - Depends: T-005
   - Notes: 각 API note 생성, lifecycle/idempotency, query projection, note card 상태 표시와 `npm run build`·`npm run verify` evidence를 `scrum/sprint-16.md`에 기록했다.
 
-- [ ] **T-007** — Tool history table·API별 오류 note·note별 card 구현
+- [x] **T-007** — Tool history table·API별 오류 note·note별 card 구현
   - Phase: implementation
   - Artifact: `src/domain/turn-notes.ts`, `src/application/turn-analysis-adapters/`, `src/ui/components/NoteCard.tsx`, `src/ui/components/TurnView.tsx`
   - Depends: T-001, T-002, T-004
-  - Notes: PB-036. `tmp/api-ref.md` 기준으로 API별 call/result extraction, parameter 축약, 오류 interaction 분리, note별 독립 card를 구현한다.
+  - Notes: PB-036. `tmp/api-ref.md` 기준 API별 call/result extraction, parameter 축약, 오류 interaction 분리, note별 독립 card를 구현했다. note status/header는 UI에 표시하지 않는다.
 
-- [ ] **T-008** — Tool history/card 변경 통합·회귀 검증
+- [x] **T-008** — Tool history/card 변경 통합·회귀 검증
   - Phase: verification
   - Artifact: `scripts/verify-turn-notes.mjs`, `verification/llm-proxy-turn-notes.md`
   - Depends: T-007
-  - Notes: PB-035, PB-036. 세 API table/error fixture, no-note card, multi-card rendering과 기존 proxy/turn/viewer 회귀를 `npm run build`·`npm run verify`로 검증한다.
+  - Notes: PB-035, PB-036. 세 API table/error fixture, no-note card, multi-card rendering, full-width layout과 기존 proxy/turn/viewer 회귀를 `npm run build`·`npm run verify`로 검증했다.
 
 - [ ] **T-009** — Sprint Boundary → sprint-17
   - Phase: cross-cutting
