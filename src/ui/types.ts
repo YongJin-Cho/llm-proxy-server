@@ -38,6 +38,8 @@ export type TurnSummary = {
   duration_ms: number | null;
   usage: { input_tokens: number | null; cached_input_tokens: number | null; output_tokens: number | null; total_tokens: number | null; cost_usd: number | null; partial: boolean };
 };
+export type TurnNote = { title: string; content: string };
+export type TurnNoteProjection = { status: 'pending' | 'ready' | 'empty' | 'failed'; notes: TurnNote[]; error_code?: string | null; error_message?: string | null; retryable?: boolean; attempt_count?: number; updated_at?: string };
 export type TurnNode = {
   id: string;
   kind: 'turn' | 'legacy';
@@ -50,7 +52,8 @@ export type TurnNode = {
   fallback_reasons: string[];
   summary: TurnSummary;
   traffic: TurnTraffic[];
-};
+  notes?: TurnNoteProjection | null;
+  };
 
 export type TurnPage = { data: TurnNode[]; page: number; limit: number; total: number; has_next: boolean };
 export type Filters = { status: string; model: string; from: string; to: string };

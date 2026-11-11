@@ -4,6 +4,8 @@ import type { AppConfig, ProviderConfig } from '../configuration.js';
 import { bounded, maskedHeaders } from '../domain/policy.js';
 import type { TrafficLogWriter } from '../domain/traffic-log.js';
 import { TurnGroupingService } from '../domain/turn.js';
+import type { TurnAnalysisPersistence } from '../domain/turn-notes.js';
+import { TurnAnalysisService } from './turn-analysis-service.js';
 import type { TurnStore } from '../domain/turn.js';
 import { ChatCompletionsAdapter } from './proxy-adapters/chat-completions-adapter.js';
 import { MessagesAdapter } from './proxy-adapters/messages-adapter.js';
@@ -30,9 +32,11 @@ export class ProxyService {
   private readonly adapters: ReadonlyMap<ProxyApiPath, ProxyAdapter>;
 
   private readonly turns: TurnGroupingService;
+  private readonly analysis: TurnAnalysisService;
 
-  constructor(private readonly config: AppConfig, private readonly writer: TrafficLogWriter & TurnStore) {
+  constructor(private readonly config: AppConfig, private readonly writer: TrafficLogWriter & TurnStore & TurnAnalysisPersistence) {
     this.turns = new TurnGroupingService(writer);
+    this.analysis = new TurnAnalysisService(writer);
     const adapters = [new ResponsesAdapter(), new ChatCompletionsAdapter(), new MessagesAdapter()];
     this.adapters = new Map(adapters.map((adapter) => [adapter.apiPath, adapter]));
   }
@@ -97,7 +101,10 @@ export class ProxyService {
         error: upstream.ok ? null : bounded(response, this.config.maxBodyBytes),
         ...adapter.usageMetadata(response),
         });
-        if (turnId) this.turns.finishTraffic({ turnId, semantic: adapter.turnSemantic, response: safeJson(adapter.aggregateResponse(response)), finishedAt: new Date().toISOString(), succeeded: upstream.ok });
+        if (turnId) {
+          const finishedTurn = this.turns.finishTraffic({ turnId, semantic: adapter.turnSemantic, response: safeJson(adapter.aggregateResponse(response)), finishedAt: new Date().toISOString(), succeeded: upstream.ok });
+          if (finishedTurn.status === 'completed') this.analysis.enqueue(finishedTurn.turnId);
+        }
         res.writeHead(upstream.status, { 'content-type': upstream.headers.get('content-type') ?? 'application/json' });
       res.end(response);
     } catch (error) {
@@ -143,7 +150,10 @@ export class ProxyService {
     const response = Buffer.concat(chunks).toString('utf8');
     const completed = upstream.ok && adapter.isComplete(response) && !disconnected;
     this.writer.finish({ id, finishedAt: new Date().toISOString(), status: completed ? 'completed' : 'failed', httpStatus: upstream.status, latencyMs: Date.now() - started, responseJson: adapter.aggregateResponse(response), error: completed ? null : bounded(disconnected ? 'client disconnected before stream completion' : response || 'stream ended before completion', this.config.maxBodyBytes), ...adapter.usageMetadata(response) });
-    if (turnId) this.turns.finishTraffic({ turnId, semantic: adapter.turnSemantic, response: safeJson(adapter.aggregateResponse(response)), finishedAt: new Date().toISOString(), succeeded: upstream.ok });
+    if (turnId) {
+      const finishedTurn = this.turns.finishTraffic({ turnId, semantic: adapter.turnSemantic, response: safeJson(adapter.aggregateResponse(response)), finishedAt: new Date().toISOString(), succeeded: completed });
+      if (finishedTurn.status === 'completed') this.analysis.enqueue(finishedTurn.turnId);
+    }
     if (!disconnected) res.end();
     }
     }

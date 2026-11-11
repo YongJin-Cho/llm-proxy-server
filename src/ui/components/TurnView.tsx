@@ -1,5 +1,6 @@
 import type { TurnNode, TurnTraffic } from '../types';
 import { ContentViewer } from './ContentViewer';
+import { NoteCard } from './NoteCard';
 
 type Props = {
   turn?: TurnNode;
@@ -63,5 +64,6 @@ export function TurnView({ turn, loading, onTraffic }: Props) {
         {turn.traffic.map((traffic, index) => <TrafficSummaryRow key={traffic.id} traffic={traffic} index={index} onSelect={() => onTraffic(turn.id, traffic.id)} />)}
       </tbody></table></div>
     </section>
-  </>;
-}
+    <NoteCard notes={turn.notes} />
+    </>;
+    }

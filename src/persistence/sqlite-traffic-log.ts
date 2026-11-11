@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import type { MetadataUpdate, TrafficLog, TrafficLogFilters, TrafficLogFinish, TrafficLogReader, TrafficLogWrite, TrafficLogWriter, TurnSummary, TurnTreePage, TurnTreeNode, TurnTrafficSummary } from '../domain/traffic-log.js';
+import type { TurnAnalysisPersistence, TurnAnalysisResult, TurnAnalysisTraffic, TurnNoteProjection } from '../domain/turn-notes.js';
 
 type SummaryTraffic = TurnTrafficSummary & {
   request_json: string | null;
@@ -80,7 +81,7 @@ function buildSummary(traffic: SummaryTraffic[], status: TrafficLog['status']): 
   };
 }
 
-export class SqliteTrafficLogStore implements TrafficLogWriter, TrafficLogReader {
+export class SqliteTrafficLogStore implements TrafficLogWriter, TrafficLogReader, TurnAnalysisPersistence {
   private readonly db: Database.Database;
   constructor(path: string) {
     this.db = new Database(path);
@@ -88,6 +89,18 @@ export class SqliteTrafficLogStore implements TrafficLogWriter, TrafficLogReader
     this.db.exec(`CREATE TABLE IF NOT EXISTS turns (
       id TEXT PRIMARY KEY, started_at TEXT NOT NULL, finished_at TEXT, status TEXT NOT NULL, traffic_count INTEGER NOT NULL DEFAULT 0,
       title TEXT, flag INTEGER NOT NULL DEFAULT 0
+    )`);
+    this.db.exec(`CREATE TABLE IF NOT EXISTS turn_notes (
+      turn_id TEXT NOT NULL,
+      analysis_version INTEGER NOT NULL,
+      status TEXT NOT NULL,
+      notes_json TEXT NOT NULL DEFAULT '[]',
+      error_code TEXT,
+      error_message TEXT,
+      retryable INTEGER NOT NULL DEFAULT 0,
+      attempt_count INTEGER NOT NULL DEFAULT 0,
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (turn_id, analysis_version)
     )`);
     this.db.exec(`CREATE TABLE IF NOT EXISTS traffic_logs (
       id TEXT PRIMARY KEY, api_kind TEXT NOT NULL DEFAULT 'responses', provider TEXT, started_at TEXT NOT NULL, finished_at TEXT,
@@ -151,7 +164,7 @@ export class SqliteTrafficLogStore implements TrafficLogWriter, TrafficLogReader
         ? this.db.prepare(`SELECT id, api_kind, provider, started_at, finished_at, status, http_status, model, streaming, latency_ms, turn_sequence, fallback_reason, title, flag, request_json, response_json, input_tokens, cached_input_tokens, output_tokens, total_tokens, cost_usd FROM traffic_logs WHERE turn_id = ? ORDER BY turn_sequence ASC, id ASC`).all(row.id)
         : this.db.prepare(`SELECT id, api_kind, provider, started_at, finished_at, status, http_status, model, streaming, latency_ms, turn_sequence, fallback_reason, title, flag, request_json, response_json, input_tokens, cached_input_tokens, output_tokens, total_tokens, cost_usd FROM traffic_logs WHERE id = ?`).all(row.id)) as SummaryTraffic[];
       const fallbackReasons = [...new Set(traffic.map((item) => item.fallback_reason).filter((reason): reason is string => Boolean(reason)))];
-      return { ...row, fallback_reasons: fallbackReasons, summary: buildSummary(traffic, row.status), traffic: traffic.map(({ request_json: _request, response_json: _response, ...summary }) => summary) } satisfies TurnTreeNode;
+      return { ...row, fallback_reasons: fallbackReasons, summary: buildSummary(traffic, row.status), notes: row.kind === 'turn' ? this.getTurnNote(row.id) : null, traffic: traffic.map(({ request_json: _request, response_json: _response, ...summary }) => summary) } satisfies TurnTreeNode;
     });
     return { data, page: safePage, limit: safeLimit, total: totalRow.count, has_next: safePage * safeLimit < totalRow.count };
   }
@@ -163,6 +176,31 @@ export class SqliteTrafficLogStore implements TrafficLogWriter, TrafficLogReader
   }
   attachTraffic(traffic: { trafficId: string; turnId: string; sequence: number; fallbackReason: string | null }) {
     this.db.prepare('UPDATE traffic_logs SET turn_id=@turnId, turn_sequence=@sequence, fallback_reason=@fallbackReason WHERE id=@trafficId').run(traffic);
+  }
+  getTurnForAnalysis(turnId: string) {
+    const turn = this.db.prepare('SELECT id FROM turns WHERE id = ?').get(turnId) as { id: string } | undefined;
+    if (!turn) return undefined;
+    const rows = this.db.prepare(`SELECT api_kind, turn_sequence, status, request_json, response_json FROM traffic_logs WHERE turn_id = ? ORDER BY turn_sequence ASC, id ASC`).all(turnId) as Array<{ api_kind: TurnAnalysisTraffic['apiKind']; turn_sequence: number | null; status: string; request_json: string | null; response_json: string | null }>;
+    const decode = (value: string | null) => { if (!value) return null; try { const parsed = JSON.parse(value) as Record<string, unknown>; return parsed.body ?? parsed; } catch { return null; } };
+    return { turnId, analysisVersion: 1, traffic: rows.map((row) => ({ apiKind: row.api_kind, sequence: row.turn_sequence ?? 0, status: row.status, request: decode(row.request_json), response: decode(row.response_json) })) };
+  }
+  listPendingTurnAnalyses() {
+    return this.db.prepare("SELECT turn_id AS turnId, analysis_version AS analysisVersion FROM turn_notes WHERE status = 'pending' OR (status = 'failed' AND retryable = 1)").all() as Array<{ turnId: string; analysisVersion: number }>;
+  }
+  ensureTurnNotePending(turnId: string, analysisVersion: number) {
+    const result = this.db.prepare(`INSERT OR IGNORE INTO turn_notes (turn_id, analysis_version, status, notes_json, updated_at) VALUES (?, ?, 'pending', '[]', ?)`).run(turnId, analysisVersion, new Date().toISOString());
+    return result.changes > 0;
+  }
+  saveTurnNoteResult(input: { turnId: string; analysisVersion: number; result: TurnAnalysisResult }) {
+    const result = input.result;
+    this.db.prepare(`UPDATE turn_notes SET status=@status, notes_json=@notesJson, error_code=@errorCode, error_message=@errorMessage, retryable=@retryable, attempt_count=attempt_count+1, updated_at=@updatedAt WHERE turn_id=@turnId AND analysis_version=@analysisVersion`).run({ turnId: input.turnId, analysisVersion: input.analysisVersion, status: result.status, notesJson: JSON.stringify(result.notes), errorCode: result.errorCode ?? null, errorMessage: result.errorMessage?.slice(0, 256) ?? null, retryable: result.retryable ? 1 : 0, updatedAt: new Date().toISOString() });
+  }
+  getTurnNote(turnId: string): TurnNoteProjection | null {
+    try {
+      const row = this.db.prepare(`SELECT turn_id, analysis_version, status, notes_json, error_code, error_message, retryable, attempt_count, updated_at FROM turn_notes WHERE turn_id = ? ORDER BY analysis_version DESC LIMIT 1`).get(turnId) as { turn_id: string; analysis_version: number; status: TurnNoteProjection['status']; notes_json: string; error_code: string | null; error_message: string | null; retryable: number; attempt_count: number; updated_at: string } | undefined;
+      if (!row) return null;
+      try { return { turn_id: row.turn_id, analysis_version: row.analysis_version, status: row.status, notes: JSON.parse(row.notes_json), error_code: row.error_code, error_message: row.error_message, retryable: row.retryable === 1, attempt_count: row.attempt_count, updated_at: row.updated_at }; } catch { return { turn_id: row.turn_id, analysis_version: row.analysis_version, status: 'failed', notes: [], error_code: 'note_unavailable', error_message: 'note projection unavailable', retryable: false, attempt_count: row.attempt_count, updated_at: row.updated_at }; }
+    } catch { return { turn_id: turnId, analysis_version: 1, status: 'failed', notes: [], error_code: 'note_unavailable', error_message: 'note projection unavailable', retryable: false, attempt_count: 0, updated_at: new Date().toISOString() }; }
   }
   updateTurnMetadata(id: string, update: MetadataUpdate) {
     this.db.prepare('UPDATE turns SET title=COALESCE(@title, title), flag=COALESCE(@flag, flag) WHERE id=@id').run({ id, title: update.title ?? null, flag: update.flag === undefined ? null : (update.flag ? 1 : 0) });

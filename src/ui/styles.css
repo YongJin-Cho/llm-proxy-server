@@ -38,6 +38,12 @@ body { margin: 0; } main { max-width: 1180px; margin: 0 auto; padding: 32px 20px
 .request-response-content > .content-viewer + .content-viewer { border-top: 1px solid #edf0f4; }
 .content-expand { margin-left: 8px; }
 .turn-view-traffic-list { display: grid; gap: 8px; }
+.turn-note-card { margin-top: 16px; }
+.note-card-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.note-card-header h2 { margin: 0; }
+.turn-note { border-top: 1px solid #edf0f4; margin-top: 12px; padding-top: 12px; }
+.turn-note h3 { margin: 0 0 8px; }
+.status.note-ready { color: #18794e; }.status.note-empty { color: #596579; }.status.note-pending { color: #9a6700; }.status.note-failed { color: #bb2d3b; }
 .turn-view-traffic-list button { text-align: left; }
 .table-scroll { overflow-x: auto; }
 .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }

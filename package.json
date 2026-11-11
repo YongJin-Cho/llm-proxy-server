@@ -14,7 +14,7 @@
     "predev": "npm run native:ensure",
     "dev": "tsx src/server.ts",
     "dev:watch": "npm run native:ensure && node scripts/dev-watch.mjs",
-    "verify": "npm run native:ensure && npm run build && node scripts/verify.mjs && node scripts/verify-turn.mjs && tsx scripts/verify-viewer.ts"
+    "verify": "npm run native:ensure && npm run build && node scripts/verify.mjs && node scripts/verify-turn.mjs && node scripts/verify-turn-notes.mjs && tsx scripts/verify-viewer.ts"
   },
   "dependencies": {
     "@fastify/static": "^10.1.10",

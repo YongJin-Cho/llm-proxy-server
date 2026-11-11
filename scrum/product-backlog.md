@@ -232,21 +232,21 @@
 - [ ] **PB-033** — Turn note query projection API 구현
   - Story: 기존 turn query가 `turn_notes` projection의 status, notes, error/retry metadata를 기존 turn aggregate와 함께 반환하고 note read failure가 turn summary·traffic tree를 차단하지 않도록 한다.
   - Spec: `spec/llm-proxy-turn-notes.md` §R-010
-  - Sprint: —
+  - Sprint: sprint-16
   - Depends: PB-032, PB-022, PB-027
   - Notes: 기존 turn/traffic fields와 detail API 회귀를 포함한다.
 
 - [ ] **PB-034** — Turn view note card UI 구현
   - Story: traffic usage summary table 다음에 note card를 배치하고 pending/ready/empty/failed 상태, title/Markdown content, safe read-only rendering과 non-blocking error display를 구현한다.
   - Spec: `spec/llm-proxy-turn-notes.md` §R-011–R-012; §C-005–C-006
-  - Sprint: —
+  - Sprint: sprint-16
   - Depends: PB-033, PB-028
   - Notes: 수동 retry는 제공하지 않고 worker 결과 재조회로 갱신한다.
 
 - [ ] **PB-035** — API별 turn note 통합·회귀 검증과 실행 문서
   - Story: 세 API payload, 정상·empty·pending·failed, duplicate completion, retry/restart recovery, query projection, UI note card와 기존 proxy/turn/traffic 회귀를 자동 검증하고 실행 문서를 갱신한다.
   - Spec: `spec/llm-proxy-turn-notes.md` §R-013; 전체 §Constraints
-  - Sprint: —
+  - Sprint: sprint-16
   - Depends: PB-031, PB-032, PB-033, PB-034
   - Notes: `npm run build`와 `npm run verify`를 검증 진입점으로 사용한다.
 

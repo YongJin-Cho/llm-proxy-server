@@ -1,3 +1,5 @@
+import type { TurnNoteProjection, TurnAnalysisPersistence } from './turn-notes.js';
+
 export type TrafficLogStatus = 'pending' | 'completed' | 'failed';
 export type TrafficLogApiKind = 'responses' | 'chat_completions' | 'messages';
 
@@ -85,7 +87,8 @@ export type TurnTreeNode = {
   fallback_reasons: string[];
   summary: TurnSummary;
   traffic: TurnTrafficSummary[];
-};
+  notes?: TurnNoteProjection | null;
+  };
 export type TurnTreePage = { data: TurnTreeNode[]; page: number; limit: number; total: number; has_next: boolean };
 
 export interface TrafficLogWriter {
@@ -97,6 +100,8 @@ export interface TrafficLogReader {
   get(id: string): TrafficLog | undefined;
   listTurns(page: number, limit: number, filter?: 'all' | 'flagged'): TurnTreePage;
   }
+
+export type TurnNoteReader = Pick<TurnAnalysisPersistence, 'getTurnNote'>;
 
   export type MetadataUpdate = { title?: string | null; flag?: boolean };
 

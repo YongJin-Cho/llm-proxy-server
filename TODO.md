@@ -1,68 +1,62 @@
-# TODO: LLM Proxy Server — API별 turn note 요구사항·구현 backlog 확정
+# TODO: LLM Proxy Server — Turn analysis pipeline implementation and verification
 
 > **Project root:** `llm-proxy-server`
-> **Current sprint:** sprint-15 — [Turn 완료 후 API별 분석 note 파이프라인 요구사항·구현 backlog 확정](./scrum/sprint-15.md)
+> **Current sprint:** sprint-16 — [Turn analysis pipeline implementation and verification](./scrum/sprint-16.md)
 > **Product Backlog:** [`scrum/product-backlog.md`](./scrum/product-backlog.md)
 
 ## Snapshot
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 7 | 1 | 0 | 0 |
+| 6 | 1 | 0 | 0 |
 
-**Sprint goal:** Turn 종료 후 API별 request/response 분석으로 도구 사용 이력을 note로 남기고 Turn view에서 확인하는 기능의 사용자 승인 요구사항, 설계 결정, 구현·검증 backlog를 확정한다.
-**Current focus:** T-008
-**Recommended next:** T-008 — Sprint completion review 및 Boundary 승인 대기
+**Sprint goal:** 승인된 turn note Spec의 전체 구현을 완료한다. 완료 turn을 분석·저장·조회하고 Turn view에 note card를 표시하며 세 API의 lifecycle·persistence·query·UI·통합 검증을 완료한다.
+**Current focus:** T-007
+**Recommended next:** T-007 — Sprint completion review 및 Boundary 승인 대기
 
 ## Tasks
 
-- [x] **T-001** — PRD delta 작성 및 승인
-  - Phase: PRD
-  - Artifact: `spec/PRD.md`
+- [x] **T-001** — PB-031 TurnAnalysisService와 API별 TurnAnalysisAdapter 구현
+  - Phase: implementation
+  - Artifact: `src/application/turn-analysis-service.ts`, `src/application/turn-analysis-adapters/`, `src/domain/turn-notes.ts`
   - Depends: —
-  - Notes: 기존 제품 PRD에 API별 turn note 분석·저장·표시 delta를 추가했다. 2026-03-10 사용자 go-ahead("ok")로 승인되어 AC 식별로 진행했다.
+  - Notes: Spec R-001–R-005, C-001–C-003. `TurnAnalysisService`, API별 adapter와 deterministic Markdown `TurnNote[]`를 구현했다. `npm run verify`의 turn note fixture 통과.
 
-- [x] **T-002** — Blocking AC 식별 및 목록 승인
-  - Phase: AC identification
-  - Artifact: `spec/AC.md`
+- [x] **T-002** — PB-032 비동기 lifecycle·idempotent persistence 구현
+  - Phase: implementation
+  - Artifact: `src/persistence/sqlite-traffic-log.ts`, `src/application/turn-analysis-service.ts`, `src/domain/turn-notes.ts`
   - Depends: T-001
-  - Notes: AC-029~AC-034를 식별하고 dependency order를 등록했다. 2026-03-10 사용자 go-ahead("ok")로 목록을 승인해 AC review를 시작했다.
+  - Notes: Spec R-006–R-009, C-004–C-005. `turn_notes` schema, pending/ready/empty/failed, versioned upsert, startup pending recovery와 completed turn 독립성을 구현했다. Build/verify 통과.
 
-- [x] **T-003** — Blocking AC 설계 결정
-  - Phase: AC review
-  - Artifact: `spec/AC.md`, `adr/`
+- [x] **T-003** — PB-033 Turn note query projection API 구현
+  - Phase: implementation
+  - Artifact: `src/application/log-query-service.ts`, `src/api/routes.ts`, `src/persistence/sqlite-traffic-log.ts`, `src/ui/data-query/log-api.ts`
   - Depends: T-002
-  - Notes: AC-029~AC-034와 관련 ADR을 모두 승인·designed 처리했다. 2026-03-10 stage-exit go-ahead로 ASR consolidation을 시작했다.
+  - Notes: Spec R-010. 기존 `GET /api/v1/turns` aggregate에 note projection을 조합하고 기존 tree/detail regression을 유지했다. Build/verify 통과.
 
-- [x] **T-004** — ASR consolidation 및 승인
-  - Phase: ASR consolidation
-  - Artifact: `spec/ASR.md`
+- [x] **T-004** — PB-034 Turn view note card UI 구현
+  - Phase: implementation
+  - Artifact: `src/ui/components/TurnView.tsx`, `src/ui/components/NoteCard.tsx`, `src/ui/types.ts`, `src/ui/styles.css`
   - Depends: T-003
-  - Notes: `spec/ASR.md`에 ASR-033~038을 append하고 AC back-link를 갱신했다. 2026-03-10 사용자 go-ahead("ok")로 승인되어 Spec 작성을 시작했다.
+  - Notes: Spec R-011–R-012, C-005–C-006. usage table 다음 `NoteCard`, 네 상태, sanitized read-only Markdown과 non-blocking error를 구현했다. UI build/verify 통과.
 
-- [x] **T-005** — API별 turn note Spec 작성
-  - Phase: Spec writing
-  - Artifact: `spec/llm-proxy-turn-notes.md`
-  - Depends: T-004
-  - Notes: `spec/llm-proxy-turn-notes.md` 초안을 작성했다. 2026-03-10 Spec review를 통과하고 SSOT 승인 대기 상태다.
+- [x] **T-005** — PB-035 통합·회귀 검증과 실행 문서
+  - Phase: verification
+  - Artifact: `scripts/verify-turn-notes.mjs`, `scripts/verify.mjs`, `verification/llm-proxy-turn-notes.md`
+  - Depends: T-001, T-002, T-003, T-004
+  - Notes: Spec R-013 전체. `scripts/verify-turn-notes.mjs`를 추가하고 세 API adapter, empty, projection, idempotency와 기존 proxy/turn/viewer 회귀를 `npm run verify`로 검증했다. `verification/llm-proxy-turn-notes.md`에 19 pass, 0 fail, 0 partial, 0 not-verifiable를 기록했다.
 
-- [x] **T-006** — Spec review 및 승인
-  - Phase: Spec review
-  - Artifact: `spec/llm-proxy-turn-notes.md`, `spec-review/llm-proxy-turn-notes.md`
+- [x] **T-006** — Sprint 16 Demo Checklist 실행
+  - Phase: demo
+  - Artifact: `scrum/sprint-16.md`
   - Depends: T-005
-  - Notes: `spec-review/llm-proxy-turn-notes.md`를 작성했다. 3 pass, 0 fail, 1 non-blocking clarification. 2026-03-10 사용자 go-ahead("계속 진행해줘")로 Spec-as-SSOT 승인.
+  - Notes: 각 API note 생성, lifecycle/idempotency, query projection, note card 상태 표시와 `npm run build`·`npm run verify` evidence를 `scrum/sprint-16.md`에 기록했다.
 
-- [x] **T-007** — PB-030을 구현 stories로 분해
-  - Phase: backlog encoding
-  - Artifact: `scrum/product-backlog.md`
-  - Depends: T-006
-  - Notes: PB-030을 종료하고 PB-031~PB-035 구현 stories를 `scrum/product-backlog.md`에 append했다.
-
-- [ ] **T-008** — Sprint Boundary → sprint-16
+- [ ] **T-007** — Sprint Boundary → sprint-17
   - Phase: cross-cutting
-  - Artifact: `scrum/TODO-15.md`
-  - Depends: T-001, T-002, T-003, T-004, T-005, T-006, T-007
-  - Notes: Sprint completion 승인 후 board archive, PB-030 DoD 갱신, 후속 implementation sprint 계획을 준비한다.
+  - Artifact: `scrum/TODO-16.md`
+  - Depends: T-001, T-002, T-003, T-004, T-005, T-006
+  - Notes: Sprint completion 승인 후 board archive, PB-031~PB-035 DoD 갱신, 다음 sprint 계획을 처리한다.
 
 ## Completed sprints
 
@@ -87,7 +81,5 @@
 
 ## Notes
 
-- 2026-03-10: Sprint 15 계획을 사용자 go-ahead("ok")로 승인하고 Spec→backlog 실행 보드를 seed했다.
-- 2026-03-10: Sprint 15 첫 작업으로 API별 turn note 기능의 PRD delta를 작성했다.
-- 2026-03-10: PRD delta 승인 후 AC-029~AC-034를 `spec/AC.md`에 append했다. 사용자 목록 승인 후 AC-029 ADR 검토를 시작했다.
-- 2026-03-10: Sprint 15 completion 승인 후 `scrum/TODO-15.md`로 board를 archive했다. Sprint 16 plan은 작성했으나 아직 승인하지 않았다.
+- 2026-03-10: Sprint 16 plan approval을 사용자 go-ahead("ok")로 받고 PB-031~PB-035 전체 Scope로 execution board를 seed했다.
+- 2026-03-10: Implementation은 승인 Spec `spec/llm-proxy-turn-notes.md`와 Sprint 16 Scope만 사용한다.
