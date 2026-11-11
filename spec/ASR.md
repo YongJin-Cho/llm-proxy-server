@@ -38,6 +38,12 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 | ASR-030 | Turn summary와 usage projection | AC-027 | AC-027 | adr/usage-and-cost-metadata.md; adr/turn-summary-usage-projection.md |
 | ASR-031 | 안전한 긴 문자열 viewer 계약 | AC-028 | AC-028 | adr/long-string-safe-rendering.md; adr/viewer-dependency-selection.md; adr/format-mode-contract.md |
 | ASR-032 | Traffic summary provider·usage projection | Direct Input | — | — |
+| ASR-033 | Turn note semantic contract | AC-029 | AC-029 | adr/turn-note-semantic-contract.md |
+| ASR-034 | Turn analysis adapter boundary | AC-030 | AC-030 | adr/turn-note-adapter-boundary.md |
+| ASR-035 | Completion 후 비동기 turn analysis lifecycle | AC-031 | AC-031 | adr/turn-note-analysis-lifecycle.md |
+| ASR-036 | Turn note persistence projection | AC-032 | AC-032 | adr/turn-note-persistence-projection.md |
+| ASR-037 | Note 실패 관찰성과 turn 완료 독립성 | AC-033 | AC-033 | adr/turn-note-failure-observability.md |
+| ASR-038 | Turn view note card contract | AC-034 | AC-034 | — |
 
 ## Dependency Order (recommended Spec encoding path)
 
@@ -46,6 +52,7 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 3. ASR-016 → ASR-017 → ASR-018 → ASR-019 → ASR-020
 4. ASR-021 → ASR-022 → ASR-023 → ASR-024 → ASR-025 → ASR-026 → ASR-027
 5. ASR-028 → ASR-029 → ASR-030 → ASR-031
+6. ASR-033 → ASR-034 → ASR-035 → ASR-036 → ASR-037 → ASR-038
 
 ## ASR Detail
 
@@ -287,7 +294,53 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 - **Related AC:** —
 - **Related ADRs:** —
 
-### ASR-031 — 안전한 긴 문자열 viewer 계약
+### ASR-033 — Turn note semantic contract
+- **Source:** AC-029 — API별 turn note contract와 semantic extraction
+- **Statement:** 외부 note 저장·조회 contract는 turn별 `TurnNote[]`로 제공해야 하며 각 note는 `title`과 deterministic Markdown `content`를 가져야 한다. API별 분석 adapter는 payload를 공통 semantic 단계로 해석해 tool call/result의 의미·누락·매칭·순서를 검증한 뒤 Markdown note로 렌더링해야 한다. 분석 상태는 notes 배열과 별도 status envelope로 제공하고 원본 request/response는 기존 traffic 저장에 보존한다.
+- **Decision summary:** 저장 contract는 Option D, adapter 내부 semantic 분석은 Option A 조합을 사용한다.
+- **Depends on:** ASR-021, ASR-023
+- **Related AC:** AC-029
+- **Related ADRs:** `adr/turn-note-semantic-contract.md` — approved
+
+### ASR-034 — Turn analysis adapter boundary
+- **Source:** AC-030 — Note 분석 adapter와 기존 turn grouping 경계
+- **Statement:** `TurnAnalysisService`가 완료 turn을 `TurnReader` port로 조회하고 `api_kind`에 맞는 API별 `TurnAnalysisAdapter`를 선택해야 한다. Adapter는 전달받은 turn data를 분석해 `TurnNote[]`와 분석 결과를 반환하며 SQLite나 기존 turn lifecycle state에 직접 접근하지 않아야 한다. Service는 `TurnNoteWriter` port로 note projection을 저장하고 idempotency·재시도·상태 orchestration을 담당해야 한다.
+- **Decision summary:** 기존 proxy adapter와 분리된 `TurnAnalysisService` + `TurnAnalysisAdapter` 구조를 사용한다.
+- **Depends on:** ASR-033
+- **Related AC:** AC-030
+- **Related ADRs:** `adr/turn-note-adapter-boundary.md` — approved
+
+### ASR-035 — Completion 후 비동기 turn analysis lifecycle
+- **Source:** AC-031 — Turn 완료 후 note 분석 lifecycle·idempotency·재시도
+- **Statement:** turn completion을 먼저 확정하고 completion 후 비동기 note analysis job을 실행해야 한다. Job은 `turn_id + analysis_version`을 idempotency key로 사용하고 note 상태를 `pending`, `ready`, `empty`, `failed`로 관리해야 한다. 동일 completion event와 재실행은 upsert로 처리해 중복 note를 만들지 않으며 분석 실패는 completed turn·traffic 저장에 전파하지 않아야 한다. 프로세스 재시작 시 pending 또는 재시도 가능한 failed job을 복구해야 한다.
+- **Decision summary:** 동기 분석이나 조회 시 lazy analysis가 아닌 completion 후 비동기 job을 사용한다.
+- **Depends on:** ASR-034
+- **Related AC:** AC-031
+- **Related ADRs:** `adr/turn-note-analysis-lifecycle.md` — approved
+
+### ASR-036 — Turn note persistence projection
+- **Source:** AC-032 — Note persistence와 turn 조회 projection
+- **Statement:** 기존 turn/traffic 원본과 분리된 turn당 하나의 `turn_notes` projection row를 사용해야 한다. Row는 `turn_id`, `analysis_version`, `status`, `notes_json`, error/retry metadata를 저장하고 `TurnNote[]`를 JSON 배열로 원자적으로 upsert해야 한다. Turn query service는 기존 turn aggregate와 note projection을 조합해 반환하고 note별 검색·편집·pagination은 제공하지 않는다.
+- **Decision summary:** turn row 확장이나 note별 relational row가 아닌 별도 projection row를 사용한다.
+- **Depends on:** ASR-035
+- **Related AC:** AC-032
+- **Related ADRs:** `adr/turn-note-persistence-projection.md` — approved
+
+### ASR-037 — Note 실패 관찰성과 turn 완료 독립성
+- **Source:** AC-033 — Note 상태·실패 관찰성과 기존 turn 완료 독립성
+- **Statement:** Note projection의 canonical status는 `pending`, `ready`, `empty`, `failed` 네 가지여야 한다. Failed는 `retryable`, `error_code`, secret을 포함하지 않는 bounded `error_message`, `attempt_count`, `updated_at`을 제공해야 하며 projection/원본 조회 불능은 `error_code: note_unavailable`로 표현해야 한다. Note status와 error는 completed turn·traffic lifecycle과 독립적으로 저장·조회해야 한다.
+- **Decision summary:** unavailable을 별도 canonical status로 추가하지 않고 failed detail로 표현한다.
+- **Depends on:** ASR-035, ASR-036
+- **Related AC:** AC-033
+- **Related ADRs:** `adr/turn-note-failure-observability.md` — approved
+
+### ASR-038 — Turn view note card contract
+- **Source:** AC-034 — Turn view note card 표시·상태 계약
+- **Statement:** Turn view는 traffic usage summary table 바로 다음에 note card를 표시해야 한다. Pending은 loading indicator와 함께 표시하고, ready는 `TurnNote[]`의 title과 Markdown content를 read-only로 렌더링하며, empty는 도구 사용 이력 없음을 명시하고, failed는 안전한 오류 설명과 retryable 여부를 표시해야 한다. Note card 오류는 turn summary·traffic table 표시를 막지 않아야 하며 이번 범위에서는 수동 retry를 제공하지 않는다. Markdown renderer는 기존 안전 정책을 따르고 HTML/script 실행을 금지해야 한다.
+- **Decision summary:** 상태별 note card를 기존 Turn view의 usage table 다음에 배치하는 Direct Input을 사용한다.
+- **Depends on:** ASR-036, ASR-037
+- **Related AC:** AC-034
+
 - **Source:** AC-028 — 긴 문자열 형식 표시와 안전한 전체 보기
 - **Statement:** Viewer adapter는 JSON parse 성공 시 request/response를 read-only JSON object/array tree container로 표시해야 한다. object/array/number/boolean/null은 tree 탐색 대상으로 유지하고 문자열 leaf만 viewer 입력으로 취급해야 한다. 문자열 leaf는 기본 축약 preview를 제공하며 전체 보기 요청 시 popup viewer window/dialog에서 해당 문자열만 표시해야 한다. Popup viewer의 `Auto`는 선택된 문자열에 대해 content hint → JSON parse → 제한된 Markdown 판별 → `highlight.js` 후보 → plain text fallback 순서를 따른다. 사용자는 `Auto`, `JSON`, `Markdown`, `Code`, `Plain text`와 curated code language를 선택할 수 있고 선택은 현재 request/response field의 문자열 leaf viewer instance presentation 상태로만 유지해야 한다. 저장된 content는 실행하지 않고 raw HTML·iframe·`eval`·`new Function`을 허용하지 않는다. 각 JSON 문자열 값이 1 MiB(1,048,576 UTF-8 bytes) 이하이면 별도 문자 수·줄 수 truncation 없이 popup에서 전문을 제공한다. request/response JSON은 저장 단계에서 잘라내지 않으며 `maxBodyBytes`는 request 수신 한도다.
 - **Decision summary:** Option D와 후속 Option A 결정들을 채택한다. 형식별 전문 viewer 조합, 제한된 mode contract, viewer 인스턴스 범위 선택 보존, 1 MiB 전문 표시 기준을 사용한다.
@@ -298,6 +351,7 @@ LLM Proxy Server의 PRD와 승인된 AC 설계를 통합한 registry이다.
 ## Approval
 
 - 2026-03-10: 기존 ASR-001~ASR-009 승인.
+- 2026-03-10: Sprint 15 ASR-033~ASR-038 통합 초안 작성 완료. 사용자 승인 대기.
 - 2026-03-10: 사용자 go-ahead(“ok”)로 ASR-010~ASR-015 및 전체 ASR registry 승인. 다음 단계에서 `spec/llm-proxy-server.md`를 갱신한다.
 - 2026-03-10: 사용자 go-ahead(“ok”)로 ASR-016~ASR-020 및 전체 Sprint 07 ASR delta 승인. `spec/llm-proxy-server.md`에 반영한다.
 

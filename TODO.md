@@ -8,11 +8,11 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 2 | 6 | 0 | 0 |
+| 3 | 5 | 0 | 0 |
 
 **Sprint goal:** Turn 종료 후 API별 request/response 분석으로 도구 사용 이력을 note로 남기고 Turn view에서 확인하는 기능의 사용자 승인 요구사항, 설계 결정, 구현·검증 backlog를 확정한다.
-**Current focus:** T-003
-**Recommended next:** T-003 — AC review 전체 settled 결과 확인 및 ASR stage-exit 승인 대기
+**Current focus:** T-004
+**Recommended next:** T-004 — ASR consolidation 및 승인 대기
 
 ## Tasks
 
@@ -28,17 +28,17 @@
   - Depends: T-001
   - Notes: AC-029~AC-034를 식별하고 dependency order를 등록했다. 2026-03-10 사용자 go-ahead("ok")로 목록을 승인해 AC review를 시작했다.
 
-- [ ] **T-003** — Blocking AC 설계 결정
+- [x] **T-003** — Blocking AC 설계 결정
   - Phase: AC review
   - Artifact: `spec/AC.md`, `adr/`
   - Depends: T-002
-  - Notes: AC-029를 승인 처리했다. 다음은 AC-030 adapter와 turn grouping 경계이며, 이후 AC-031~034를 순차적으로 확정한다.
+  - Notes: AC-029~AC-034와 관련 ADR을 모두 승인·designed 처리했다. 2026-03-10 stage-exit go-ahead로 ASR consolidation을 시작했다.
 
 - [ ] **T-004** — ASR consolidation 및 승인
   - Phase: ASR consolidation
   - Artifact: `spec/ASR.md`
   - Depends: T-003
-  - Notes: PRD delta와 모든 설계 완료 AC 결과를 통합한다.
+  - Notes: `spec/ASR.md`에 ASR-033~038을 append하고 AC back-link를 갱신했다. 사용자 ASR 승인 대기.
 
 - [ ] **T-005** — API별 turn note Spec 작성
   - Phase: Spec writing

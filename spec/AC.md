@@ -34,12 +34,12 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 | AC-026 | 전체·flagged 필터의 조회 책임과 pagination 계약 | Integration & dependencies | identified | — | — |
 | AC-027 | Turn summary와 traffic usage summary 데이터 계약 | Integration & dependencies | identified | adr/usage-and-cost-metadata.md (approved) | — |
 | AC-028 | 긴 문자열 형식 표시와 안전한 전체 보기 | Constraints (structural) | designed | adr/long-string-safe-rendering.md (approved) | — |
-| AC-029 | API별 turn note contract와 semantic extraction | Integration & dependencies | designed | adr/turn-note-semantic-contract.md (approved) | — |
-| AC-030 | Note 분석 adapter와 기존 turn grouping 경계 | Structure & organization | designed | adr/turn-note-adapter-boundary.md (approved) | — |
-| AC-031 | Turn 완료 후 note 분석 lifecycle·idempotency·재시도 | Constraints (structural) | designed | adr/turn-note-analysis-lifecycle.md (approved) | — |
-| AC-032 | Note persistence와 turn 조회 projection | Structure & organization | designed | adr/turn-note-persistence-projection.md (approved) | — |
-| AC-033 | Note 상태·실패 관찰성과 기존 turn 완료 독립성 | Quality bar (architectural) | designed | adr/turn-note-failure-observability.md (approved) | — |
-| AC-034 | Turn view note card 표시·상태 계약 | Deliverable form | designed | — | — |
+| AC-029 | API별 turn note contract와 semantic extraction | Integration & dependencies | designed | adr/turn-note-semantic-contract.md (approved) | ASR-033 |
+| AC-030 | Note 분석 adapter와 기존 turn grouping 경계 | Structure & organization | designed | adr/turn-note-adapter-boundary.md (approved) | ASR-034 |
+| AC-031 | Turn 완료 후 note 분석 lifecycle·idempotency·재시도 | Constraints (structural) | designed | adr/turn-note-analysis-lifecycle.md (approved) | ASR-035 |
+| AC-032 | Note persistence와 turn 조회 projection | Structure & organization | designed | adr/turn-note-persistence-projection.md (approved) | ASR-036 |
+| AC-033 | Note 상태·실패 관찰성과 기존 turn 완료 독립성 | Quality bar (architectural) | designed | adr/turn-note-failure-observability.md (approved) | ASR-037 |
+| AC-034 | Turn view note card 표시·상태 계약 | Deliverable form | designed | — | ASR-038 |
 
 ## Dependency Order (recommended review path)
 
