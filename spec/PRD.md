@@ -104,6 +104,48 @@ Codex와 유사한 LLM 클라이언트와 OpenAI Model Provider 사이에서 요
 - 민감한 인증 정보가 로그와 UI에 평문으로 노출되지 않는다.
 - 자동화된 검증 절차로 핵심 프록시, 저장, UI 조회 동작을 재현할 수 있다.
 
+## Delta: Turn 완료 후 API별 분석 note
+
+### Delta Summary
+Turn이 완료된 뒤 Responses, OpenAI Chat Completions, Claude Messages의 API별 request/response 계약을 해석해 도구 사용 이력을 구조화된 turn note로 저장한다. 운영자는 Turn view의 traffic summary table 다음 note card에서 분석 결과를 확인하며, 분석 실패가 이미 완료된 turn과 traffic 저장을 훼손하지 않도록 한다.
+
+### Delta Goals
+- API별 semantic analysis adapter가 각 API의 request/response 구조에서 도구 사용 이력을 일관된 note contract로 추출한다.
+- 완료된 turn마다 note를 중복 없이 저장하고 Turn 조회 시 함께 반환한다.
+- Turn view에서 traffic summary table 바로 다음에 note card를 표시해 도구 사용 이력을 설명한다.
+- 분석 지연·재시도·실패를 정의해 기존 turn completion 저장과 관찰 가능성을 보장한다.
+- 승인 Spec에서 후속 구현·검증 stories를 독립적으로 계획할 수 있게 한다.
+
+### Delta In Scope
+- Responses, Chat Completions, Claude Messages의 request/response 분석 adapter 경계
+- tool call, tool result/message 및 API별 관련 metadata의 note 추출 규칙
+- turn 완료 후 분석 실행 lifecycle과 note 저장 idempotency
+- note persistence 및 turn query/read API projection
+- note card의 위치, loading/empty/error 및 partial/unavailable 표시 계약
+- 분석 실패·재시도·중복 완료 event 처리와 기존 turn/traffic 저장 일관성
+- 구현·통합·회귀 검증 기준과 후속 product backlog 분해
+
+### Delta Out of Scope
+- 제품 코드 구현 자체는 Sprint 15 Spec→backlog 범위에 포함하지 않는다.
+- 새로운 LLM 호출을 통한 자연어 요약, tool 품질 평가, 비용 예측은 포함하지 않는다.
+- 기존 turn grouping, traffic summary 계산, API payload forwarding 계약의 비관련 변경은 포함하지 않는다.
+- 실시간 streaming 중간 note 표시와 과거 traffic에 대한 무제한 소급 재분석은 포함하지 않는다.
+- 사용자·조직별 인증, note 편집·댓글·공유 및 고급 분석 차트는 포함하지 않는다.
+
+### Delta Constraints
+- 기존 `/api/v1` namespace, SQLite writer/query boundary, turn completion lifecycle, API adapter 확장 경계를 유지한다.
+- 분석 adapter는 API별 payload 차이를 캡슐화하고 공통 note persistence/query contract를 사용해야 한다.
+- note는 원본 request/response와 turn/traffic lifecycle 원본을 덮어쓰지 않는 별도 projection/data record여야 한다.
+- 분석 실패는 완료된 turn/traffic 저장 성공과 독립적으로 추적 가능해야 하며, note 부재를 완료 turn 자체의 실패로 오인하지 않아야 한다.
+- 구현·검증의 SSOT는 이 delta에 대한 사용자 승인 Spec이다.
+
+### Delta Success Criteria
+- 세 API의 대표적인 tool call/tool result 형태에 대해 승인된 note contract와 adapter별 추출 규칙으로 동일한 의미의 note를 재현할 수 있다.
+- turn 완료 이후 note가 정의된 lifecycle에 따라 생성·저장되고 중복 완료 처리에도 중복 note가 생기지 않는다.
+- turn 조회 응답이 note 상태와 내용을 명시적으로 제공하며, 기존 summary/table projection과 회귀 없이 동작한다.
+- Turn view가 traffic summary table 다음 note card에서 note를 표시하고, empty·pending·failed/unavailable 상태를 구분한다.
+- 구현 backlog가 persistence, adapter, lifecycle, API/UI, 통합 검증 단위로 분해된다.
+
 ## Delta: Turn 관리·분석 UI
 
 ### Delta Summary

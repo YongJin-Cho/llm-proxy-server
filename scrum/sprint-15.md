@@ -29,4 +29,4 @@ Turn 종료 후 API별 request/response 분석으로 도구 사용 이력을 not
 - [ ] 승인 Spec에서 구현 sprint로 가져갈 PB stories와 검증 시나리오를 확인한다.
 
 ## Approval
-- Drafted 2026-03-10; Sprint 15 plan approval pending.
+- Drafted 2026-03-10; Sprint 15 plan approved by user go-ahead ("ok") on 2026-03-10.

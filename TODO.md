@@ -1,22 +1,68 @@
-# TODO: LLM Proxy Server — 안전한 traffic content viewer 구현·검증
+# TODO: LLM Proxy Server — API별 turn note 요구사항·구현 backlog 확정
 
 > **Project root:** `llm-proxy-server`
-> **Current sprint:** sprint-14 — [안전한 traffic content viewer 구현·검증](./scrum/sprint-14.md) (completed)
+> **Current sprint:** sprint-15 — [Turn 완료 후 API별 분석 note 파이프라인 요구사항·구현 backlog 확정](./scrum/sprint-15.md)
 > **Product Backlog:** [`scrum/product-backlog.md`](./scrum/product-backlog.md)
 
 ## Snapshot
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 18 | 0 | 0 | 0 |
+| 0 | 8 | 0 | 0 |
 
-**Sprint goal:** 승인된 Turn 관리·분석 Spec의 남은 viewer slice로 traffic content를 형식별로 안전하게 표시하고, mode override·fallback·보안 경계를 자동 검증한다.
-**Current focus:** —
-**Recommended next:** — — Sprint 14 completed; no open product backlog stories remain.
+**Sprint goal:** Turn 종료 후 API별 request/response 분석으로 도구 사용 이력을 note로 남기고 Turn view에서 확인하는 기능의 사용자 승인 요구사항, 설계 결정, 구현·검증 backlog를 확정한다.
+**Current focus:** T-001
+**Recommended next:** T-001 — PRD delta 작성 및 승인 대기
 
 ## Tasks
 
-Sprint 14의 모든 task는 `scrum/TODO-14.md`에 archive되었으며, 현재 실행 가능한 task가 없습니다.
+- [ ] **T-001** — PRD delta 작성 및 승인
+  - Phase: PRD
+  - Artifact: `spec/PRD.md`
+  - Depends: —
+  - Notes: 기존 제품 PRD에 API별 turn note 분석·저장·표시 delta를 추가한다. 사용자 승인 후 AC 식별로 진행.
+
+- [ ] **T-002** — Blocking AC 식별 및 목록 승인
+  - Phase: AC identification
+  - Artifact: `spec/AC.md`
+  - Depends: T-001
+  - Notes: note contract, adapter 경계, 완료 lifecycle, 실패·중복·재시도, 저장/조회 API, UI 표시를 blocking concern으로 식별한다.
+
+- [ ] **T-003** — Blocking AC 설계 결정
+  - Phase: AC review
+  - Artifact: `spec/AC.md`, `adr/`
+  - Depends: T-002
+  - Notes: 필요한 concern별 ADR 또는 Direct Input을 사용자 승인 상태로 확정한다.
+
+- [ ] **T-004** — ASR consolidation 및 승인
+  - Phase: ASR consolidation
+  - Artifact: `spec/ASR.md`
+  - Depends: T-003
+  - Notes: PRD delta와 모든 설계 완료 AC 결과를 통합한다.
+
+- [ ] **T-005** — API별 turn note Spec 작성
+  - Phase: Spec writing
+  - Artifact: `spec/llm-proxy-turn-notes.md`
+  - Depends: T-004
+  - Notes: 구현·검증 SSOT가 될 R/C 요구사항과 API/data/UI 계약을 작성한다.
+
+- [ ] **T-006** — Spec review 및 승인
+  - Phase: Spec review
+  - Artifact: `spec/llm-proxy-turn-notes.md`, `spec-review/llm-proxy-turn-notes.md`
+  - Depends: T-005
+  - Notes: 승인 Spec과 review record를 확정한다.
+
+- [ ] **T-007** — PB-030을 구현 stories로 분해
+  - Phase: backlog encoding
+  - Artifact: `scrum/product-backlog.md`
+  - Depends: T-006
+  - Notes: 승인 Spec 기반으로 후속 Backlog→Implementation sprint 후보 PB stories를 append한다.
+
+- [ ] **T-008** — Sprint Boundary → sprint-16
+  - Phase: cross-cutting
+  - Artifact: `scrum/TODO-15.md`
+  - Depends: T-001, T-002, T-003, T-004, T-005, T-006, T-007
+  - Notes: Sprint completion 승인 후 board archive, PB-030 DoD 갱신, 후속 implementation sprint 계획을 준비한다.
 
 ## Completed sprints
 
@@ -40,4 +86,5 @@ Sprint 14의 모든 task는 `scrum/TODO-14.md`에 archive되었으며, 현재 �
 
 ## Notes
 
-- 2026-03-10: Sprint 14 Boundary에서 PB-028~PB-029의 DoD를 충족해 종료했다. 현재 제품 backlog의 모든 story가 완료되어 최종 sprint로 처리했다.
+- 2026-03-10: Sprint 15 계획을 사용자 go-ahead("ok")로 승인하고 Spec→backlog 실행 보드를 seed했다.
+- 2026-03-10: Sprint 15 첫 작업으로 API별 turn note 기능의 PRD delta를 작성했다.
