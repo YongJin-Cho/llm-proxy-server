@@ -103,7 +103,7 @@ export function renderToolNotes(interactions: ToolInteraction[]): TurnNote[] {
     if (!item.failed) continue;
     notes.push({
       title: `도구 사용 오류: ${index + 1}. ${item.functionName}`,
-      content: '',
+      content: item.error === undefined ? 'Tool call failed.' : `Error: ${displayValue(item.error)}`,
       call: item.call,
       result: item.result,
     });
