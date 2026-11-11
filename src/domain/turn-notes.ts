@@ -1,6 +1,6 @@
 import type { TrafficLogApiKind } from './traffic-log.js';
 
-export type TurnNote = { title: string; content: string };
+export type TurnNote = { title: string; content: string; call?: unknown; result?: unknown };
 export type TurnNoteStatus = 'pending' | 'ready' | 'empty' | 'failed';
 
 export type TurnAnalysisTraffic = {
@@ -51,6 +51,8 @@ export type ToolInteraction = {
   id: string;
   functionName: string;
   parameters: unknown;
+  call: unknown;
+  result?: unknown;
   failed: boolean;
   error?: unknown;
 };
@@ -97,12 +99,13 @@ export function renderToolNotes(interactions: ToolInteraction[]): TurnNote[] {
     title: '도구 사용 이력',
     content: ['| Sequence | Function | Parameters | Status |', '|---:|---|---|---|', ...rows].join('\n'),
   }];
-  const failures = interactions.filter((item) => item.failed);
-  if (failures.length > 0) {
-    const errorRows = failures.map((item, index) => `| ${index + 1} | ${escapeCell(item.functionName)} | ${escapeCell(parameterRows(item.parameters))} | Failed |`);
+  for (const [index, item] of interactions.entries()) {
+    if (!item.failed) continue;
     notes.push({
-      title: '도구 사용 오류',
-      content: ['| Sequence | Function | Parameters | Status |', '|---:|---|---|---|', ...errorRows].join('\n'),
+      title: `도구 사용 오류 ${index + 1}: ${item.functionName}`,
+      content: `도구 호출 결과에서 오류가 반환되었습니다.\n\n오류: ${displayValue(item.error)}`,
+      call: item.call,
+      result: item.result,
     });
   }
   return notes;

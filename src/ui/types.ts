@@ -38,7 +38,7 @@ export type TurnSummary = {
   duration_ms: number | null;
   usage: { input_tokens: number | null; cached_input_tokens: number | null; output_tokens: number | null; total_tokens: number | null; cost_usd: number | null; partial: boolean };
 };
-export type TurnNote = { title: string; content: string };
+export type TurnNote = { title: string; content: string; call?: unknown; result?: unknown };
 export type TurnNoteProjection = { status: 'pending' | 'ready' | 'empty' | 'failed'; notes: TurnNote[]; error_code?: string | null; error_message?: string | null; retryable?: boolean; attempt_count?: number; updated_at?: string };
 export type TurnNode = {
   id: string;

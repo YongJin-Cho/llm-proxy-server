@@ -5,7 +5,7 @@ export class MessagesTurnAnalysisAdapter extends BaseTurnAnalysisAdapter {
   readonly apiKind: TrafficLogApiKind = 'messages';
 
   analyze(input: TurnAnalysisInput): TurnAnalysisResult {
-    const results = new Map<string, { failed: boolean; error?: unknown }>();
+    const results = new Map<string, { failed: boolean; result: unknown; error?: unknown }>();
     for (const traffic of input.traffic) {
       const body = asObject(traffic.request) ?? {};
       for (const message of asArray(body.messages)) {
@@ -15,7 +15,7 @@ export class MessagesTurnAnalysisAdapter extends BaseTurnAnalysisAdapter {
           if (value.type !== 'tool_result') continue;
           const result = asObject(parseJson(value.content));
           const id = typeof value.tool_use_id === 'string' ? value.tool_use_id : '';
-          results.set(id, { failed: Boolean(result && Object.prototype.hasOwnProperty.call(result, 'error')), error: result?.error });
+          results.set(id, { result: value, failed: Boolean(result && Object.prototype.hasOwnProperty.call(result, 'error')), error: result?.error });
         }
       }
     }
@@ -30,7 +30,7 @@ export class MessagesTurnAnalysisAdapter extends BaseTurnAnalysisAdapter {
           if (value.type !== 'tool_use') continue;
           const id = typeof value.id === 'string' ? value.id : '';
           const result = results.get(id);
-          interactions.push({ id, functionName: typeof value.name === 'string' ? value.name : 'tool', parameters: value.input ?? {}, failed: result?.failed ?? false, error: result?.error });
+          interactions.push({ id, functionName: typeof value.name === 'string' ? value.name : 'tool', parameters: value.input ?? {}, call: value, result: result?.result, failed: result?.failed ?? false, error: result?.error });
         }
       }
     }

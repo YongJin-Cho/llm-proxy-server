@@ -6,7 +6,7 @@ export class ChatCompletionsTurnAnalysisAdapter extends BaseTurnAnalysisAdapter 
 
   analyze(input: TurnAnalysisInput): TurnAnalysisResult {
     const interactions: ToolInteraction[] = [];
-    const results = new Map<string, { failed: boolean; error?: unknown }>();
+    const results = new Map<string, { failed: boolean; result: unknown; error?: unknown }>();
     for (const traffic of input.traffic) {
       const body = asObject(traffic.request) ?? {};
       for (const message of asArray(body.messages)) {
@@ -14,7 +14,7 @@ export class ChatCompletionsTurnAnalysisAdapter extends BaseTurnAnalysisAdapter 
         if (item.role === 'tool') {
           const result = asObject(parseJson(item.content));
           const id = typeof item.tool_call_id === 'string' ? item.tool_call_id : '';
-          results.set(id, { failed: Boolean(result && Object.prototype.hasOwnProperty.call(result, 'error')), error: result?.error });
+          results.set(id, { result: item, failed: Boolean(result && Object.prototype.hasOwnProperty.call(result, 'error')), error: result?.error });
         }
       }
     }
@@ -27,7 +27,7 @@ export class ChatCompletionsTurnAnalysisAdapter extends BaseTurnAnalysisAdapter 
           const fn = asObject(callObject.function) ?? {};
           const id = typeof callObject.id === 'string' ? callObject.id : '';
           const result = results.get(id);
-          interactions.push({ id, functionName: typeof fn.name === 'string' ? fn.name : 'tool', parameters: fn.arguments ?? {}, failed: result?.failed ?? false, error: result?.error });
+          interactions.push({ id, functionName: typeof fn.name === 'string' ? fn.name : 'tool', parameters: fn.arguments ?? {}, call: callObject, result: result?.result, failed: result?.failed ?? false, error: result?.error });
         }
       }
     }

@@ -62,7 +62,7 @@
   - Phase: verification
   - Artifact: `scripts/verify-turn-notes.mjs`, `verification/llm-proxy-turn-notes.md`
   - Depends: T-007
-  - Notes: PB-035, PB-036. 세 API table/error fixture, no-note card, multi-card rendering, full-width layout과 기존 proxy/turn/viewer 회귀를 `npm run build`·`npm run verify`로 검증했다.
+  - Notes: PB-035, PB-036. 세 API table/error fixture, no-note card, multi-card rendering, full-width layout과 기존 proxy/turn/viewer 회귀를 `npm run build`·`npm run verify`로 검증했다. 오류 interaction별 call/result JSON 보존과 viewer 확대 동작도 검증했다.
 
 - [ ] **T-009** — Sprint Boundary → sprint-17
   - Phase: cross-cutting
