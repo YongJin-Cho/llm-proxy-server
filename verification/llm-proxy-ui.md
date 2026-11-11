@@ -2,8 +2,8 @@
 
 **Spec:** `spec/llm-proxy-ui.md` (with `spec/llm-proxy-server.md`, `spec/llm-proxy-turn-traffic.md`, and `spec/llm-proxy-turn-management.md` UI contracts)
 **Artifact(s):** `src/ui/`, `scripts/verify.mjs`, `scripts/verify-turn.mjs`, `scripts/verify-viewer.ts`
-**Verified:** 2026-03-10
-**Commands:** `npm run verify`; TypeScript/TSX diagnostics for the reviewed UI modules
+**Verified:** 2026-03-10 (current implementation re-verification)
+**Commands:** `npm run build`; `npm run verify`; TypeScript/TSX diagnostics for the reviewed UI modules
 **Summary:** 35 pass, 1 partial, 0 fail, 0 not-verifiable
 
 ## Scope
@@ -31,7 +31,7 @@ This audit covers the complete UI Spec (`spec/llm-proxy-ui.md`) and the UI-facin
 | 15 | UI R-015 | pass | Browser calls are in `src/ui/data-query/log-api.ts`; UI components do not import server or SQLite modules. |
 | 16 | UI R-016 | pass | UI consumes persisted API fields; no secret header or credential display path is present. Existing integration verification covers redaction. |
 | 17 | UI R-017 | pass | `styles.css` uses a two-column desktop layout and one-column narrow-screen fallback with overflow handling. |
-| 18 | UI R-018 | partial | `npm run verify` and `verify-viewer.ts` pass, but the required UI interactions are not browser-level reproduced: no automated assertion covers browser back/forward, exclusive rendered view, collapse/expand, popup open/close, or live mutation refresh. |
+| 18 | UI R-018 | partial | `npm run build`, `npm run verify`, and `verify-viewer.ts` pass, but the required UI interactions are not browser-level reproduced: no automated assertion covers browser back/forward, exclusive rendered view, collapse/expand, popup open/close, or live mutation refresh. This is a verification-coverage gap, not an observed product failure. |
 | 19 | UI R-019 | pass | `TurnTree.tsx` maintains per-node collapse state and independent collapse/flag buttons. |
 | 20 | UI R-020 | pass | `TurnTree.tsx` places `Turns` and pagination in the same header row; CSS provides narrow-screen wrapping behavior. |
 | 21 | UI R-021 | pass | `TurnView.tsx` table displays sequence/title fallback, model, provider, input/cached/output tokens, cost, and latency with null fallback. |
@@ -55,6 +55,7 @@ This audit covers the complete UI Spec (`spec/llm-proxy-ui.md`) and the UI-facin
 
 - The production build succeeds, but Vite reports a large Monaco-related bundle (`index` approximately 4.64 MB minified / 1.23 MB gzip plus worker assets). This is a documented performance trade-off in `verification/llm-proxy-turn-management.md`, not a functional pass for a bundle-budget requirement because no such budget is specified.
 - The current automated verification is primarily integration, source-level, and adapter-level. It does not prove actual browser event wiring or visual responsive behavior; those remain test-coverage limitations rather than an assertion that the interactions are broken.
+- Current re-verification evidence: `npm run build` passed with only the existing large Monaco chunk warning; `npm run verify` passed all configured integration/fixture suites; reviewed TypeScript/TSX diagnostics reported no errors.
 - The existing UI Spec Current Implementation Baseline is stale for collapse/expand, header pagination, summary table, and popup viewer: the reviewed source now implements those items. The baseline should be updated in a later documentation sync, but it was not used as the pass/fail authority.
 
 ## Deviations (Non-compliance)

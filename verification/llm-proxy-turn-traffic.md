@@ -1,10 +1,10 @@
 # Verification: Turn 기반 LLM traffic 그룹핑·탐색 — Sprint 10
 
 **Spec:** `spec/llm-proxy-turn-traffic.md`; 공통 SSE 계약은 `spec/llm-proxy-server.md`
-**Scope:** Sprint 10 PB-020/PB-021 backend lifecycle, tool identity matching/fallback isolation, and SSE aggregate regression
-**Verified:** 2026-03-10
+**Scope:** Full current turn traffic Spec regression: grouping lifecycle, tool identity matching/fallback isolation, tree projection, legacy compatibility, SSE aggregate/partial handling, and UI integration entrypoints
+**Verified:** 2026-03-10 (current implementation re-verification)
 **Commands:** `npm run build`; `npm run verify`
-**Summary:** turn domain fixture, tree query integration, existing multi-API integration, SSE aggregate persistence assertion, and lifecycle/fallback checks pass.
+**Summary:** Turn grouping, fallback, sequence, tree projection, SSE aggregate persistence, metadata/filter/cascade, and sidebar interaction fixtures passed. No turn-traffic fail or partial was observed in the exercised scope.
 
 ## Evidence
 

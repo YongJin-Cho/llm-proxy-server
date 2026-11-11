@@ -1,10 +1,10 @@
 # Verification: LLM Proxy Server
 
 **Spec:** `spec/llm-proxy-server.md`
-**Scope:** Sprint 08 multi-API routes, provider auth mode, api_kind/usage/cost persistence, and regression; prior Sprint 05–06 behavior remains covered
-**Verified:** 2026-03-10
+**Scope:** Full current server Spec regression: bootstrap, routes, provider auth/routing, persistence, SSE aggregate/partial handling, redaction, body limits, and turn/UI integration entrypoints
+**Verified:** 2026-03-10 (current implementation re-verification)
 **Commands:** `npm run build`; `npm run verify`
-**Summary:** Sprint 08 implementation slice currently passes build and expanded non-streaming integration verification. Streaming demo and final Sprint completion evidence remain open on the live board.
+**Summary:** Build and all configured integration/fixture verification passed. No server-side fail or partial was observed in the exercised scope. Vite emitted the existing large Monaco chunk warning; no bundle-size requirement is specified.
 
 ## Sprint 08 Evidence
 
@@ -62,7 +62,8 @@ None identified. The temporary verification configuration and restoration strate
 ## Evidence
 
 - `npm run build`: Vite production build and TypeScript compilation passed.
-- `npm run verify`: `Routing verification passed: two providers, provider model mapping, unknown model rejection, secret handling, and read/write boundaries.`
+- `npm run verify`: pass; UI entrypoint, three API routes, provider path mapping, usage/cost normalization, `api_kind` persistence, model rejection, secret handling, complete request/response persistence, turn grouping/fallbacks, metadata/filter/cascade behavior, and sidebar interaction contract passed.
+- TypeScript/TSX diagnostics for the reviewed server and UI modules: no errors reported.
 - `config.json`: default runtime configuration with `host`, `port`, `databasePath`, `maxBodyBytes`, provider `baseUrl`/`apiKeyEnv`, and model mappings.
 - `src/configuration.ts`: file loading and startup validation implementation.
 - `README.md` / `AGENTS.md`: configuration and execution documentation aligned with the Spec.
