@@ -12,7 +12,7 @@
 
 **Sprint goal:** Turn 종료 후 API별 request/response 분석으로 도구 사용 이력을 note로 남기고 Turn view에서 확인하는 기능의 사용자 승인 요구사항, 설계 결정, 구현·검증 backlog를 확정한다.
 **Current focus:** T-003
-**Recommended next:** T-003 — AC-029 ADR 검토 및 승인 대기
+**Recommended next:** T-003 — AC review 전체 settled 결과 확인 및 ASR stage-exit 승인 대기
 
 ## Tasks
 
@@ -32,7 +32,7 @@
   - Phase: AC review
   - Artifact: `spec/AC.md`, `adr/`
   - Depends: T-002
-  - Notes: 필요한 concern별 ADR 또는 Direct Input을 사용자 승인 상태로 확정한다.
+  - Notes: AC-029를 승인 처리했다. 다음은 AC-030 adapter와 turn grouping 경계이며, 이후 AC-031~034를 순차적으로 확정한다.
 
 - [ ] **T-004** — ASR consolidation 및 승인
   - Phase: ASR consolidation

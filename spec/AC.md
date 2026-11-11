@@ -34,12 +34,12 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 | AC-026 | 전체·flagged 필터의 조회 책임과 pagination 계약 | Integration & dependencies | identified | — | — |
 | AC-027 | Turn summary와 traffic usage summary 데이터 계약 | Integration & dependencies | identified | adr/usage-and-cost-metadata.md (approved) | — |
 | AC-028 | 긴 문자열 형식 표시와 안전한 전체 보기 | Constraints (structural) | designed | adr/long-string-safe-rendering.md (approved) | — |
-| AC-029 | API별 turn note contract와 semantic extraction | Integration & dependencies | reviewing | adr/turn-note-semantic-contract.md (proposed) | — |
-| AC-030 | Note 분석 adapter와 기존 turn grouping 경계 | Structure & organization | identified | — | — |
-| AC-031 | Turn 완료 후 note 분석 lifecycle·idempotency·재시도 | Constraints (structural) | identified | — | — |
-| AC-032 | Note persistence와 turn 조회 projection | Structure & organization | identified | — | — |
-| AC-033 | Note 상태·실패 관찰성과 기존 turn 완료 독립성 | Quality bar (architectural) | identified | — | — |
-| AC-034 | Turn view note card 표시·상태 계약 | Deliverable form | identified | — | — |
+| AC-029 | API별 turn note contract와 semantic extraction | Integration & dependencies | designed | adr/turn-note-semantic-contract.md (approved) | — |
+| AC-030 | Note 분석 adapter와 기존 turn grouping 경계 | Structure & organization | designed | adr/turn-note-adapter-boundary.md (approved) | — |
+| AC-031 | Turn 완료 후 note 분석 lifecycle·idempotency·재시도 | Constraints (structural) | designed | adr/turn-note-analysis-lifecycle.md (approved) | — |
+| AC-032 | Note persistence와 turn 조회 projection | Structure & organization | designed | adr/turn-note-persistence-projection.md (approved) | — |
+| AC-033 | Note 상태·실패 관찰성과 기존 turn 완료 독립성 | Quality bar (architectural) | designed | adr/turn-note-failure-observability.md (approved) | — |
+| AC-034 | Turn view note card 표시·상태 계약 | Deliverable form | designed | — | — |
 
 ## Dependency Order (recommended review path)
 
@@ -397,74 +397,74 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 ### AC-029 — API별 turn note contract와 semantic extraction
 
 - **Category:** Integration & dependencies
-- **Status:** reviewing
+- **Status:** designed
 - **Statement:** Responses, Chat Completions, Claude Messages의 request/response에서 tool call·tool result와 관련 metadata를 어떤 공통 note contract로 추출하고, API별 누락·다중 호출·stream aggregate 형태를 어떻게 표현할 것인가?
 - **Why it matters:** API별 payload 차이를 조용히 공통화하면 tool 사용 이력이 왜곡되거나 특정 API에서만 note가 누락될 수 있다. 반대로 API별 결과를 그대로 노출하면 Turn view와 저장 계약이 API 종류에 강하게 결합된다.
 - **Depends on:** AC-019, AC-024
 - **Related ADRs:**
-  - `adr/turn-note-semantic-contract.md` — proposed
+  - `adr/turn-note-semantic-contract.md` — approved
 - **Resolution path:** adr
-- **Resolution:**
+- **Resolution:** 외부 note 저장·조회 contract는 turn별 `TurnNote[]`로 한다. 각 note는 `title`과 deterministic하게 생성된 Markdown `content`를 가진다. API별 분석 adapter는 payload를 먼저 공통 semantic 단계로 해석해 tool call/result의 의미·누락·매칭·순서를 검증한 뒤 Markdown note로 렌더링한다. `pending`, `empty`, `failed` 등 분석 상태는 notes 배열과 별도의 status envelope로 제공한다. 원본 request/response는 기존 traffic 저장에 보존하고, note는 파생 projection으로 관리한다.
 
 ### AC-030 — Note 분석 adapter와 기존 turn grouping 경계
 
 - **Category:** Structure & organization
-- **Status:** identified
+- **Status:** designed
 - **Statement:** 기존 turn grouping을 담당하는 semantic adapter·traffic lifecycle과, 완료 turn의 note를 생성하는 분석 adapter를 같은 adapter 책임으로 둘지 분리할지, 공통 application service와 persistence port를 어떻게 연결할 것인가?
 - **Why it matters:** grouping과 note 분석을 한 책임으로 묶으면 note 요구사항 변경이 turn 연결·완료 판정에 회귀를 만들 수 있다. 분리하더라도 동일한 최종 request/response와 API kind를 안정적으로 전달하는 경계가 필요하다.
 - **Depends on:** AC-011, AC-019, AC-029
 - **Related ADRs:**
-  - 없음
-- **Resolution path:** adr 또는 direct-input 검토 필요
-- **Resolution:**
+  - `adr/turn-note-adapter-boundary.md` — approved
+- **Resolution path:** adr
+- **Resolution:** 별도 `TurnAnalysisService`가 완료된 turn을 `TurnReader` port로 조회하고 `api_kind`에 맞는 API별 `TurnAnalysisAdapter`를 선택한다. Adapter는 전달받은 turn data를 분석해 `TurnNote[]`와 분석 결과를 반환하며 SQLite나 기존 turn lifecycle state에 직접 접근하지 않는다. Service는 `TurnNoteWriter` port로 note projection을 저장하고 idempotency·재시도·상태 orchestration을 담당한다. 기존 proxy adapter, traffic writer, turn completion 저장은 note 분석과 독립적으로 동작한다.
 
 ### AC-031 — Turn 완료 후 note 분석 lifecycle·idempotency·재시도
 
 - **Category:** Constraints (structural)
-- **Status:** identified
+- **Status:** designed
 - **Statement:** turn completion event 이후 note 분석을 동기·비동기 중 어떤 방식으로 실행하고, 중복 completion event·프로세스 재시작·분석 재시도에서 note를 어떻게 한 번만 확정할 것인가?
 - **Why it matters:** 분석을 요청 경로에 결합하면 client latency와 turn 완료 성공이 영향을 받고, 비동기 실행의 중복·유실을 정의하지 않으면 note가 중복 생성되거나 영구적으로 pending 상태에 머물 수 있다.
 - **Depends on:** AC-023, AC-029, AC-030
 - **Related ADRs:**
-  - 없음
-- **Resolution path:** adr 검토 필요
-- **Resolution:**
+  - `adr/turn-note-analysis-lifecycle.md` — approved
+- **Resolution path:** adr
+- **Resolution:** turn completion을 먼저 확정하고 completion 후 비동기 note analysis job을 실행한다. job은 `turn_id + analysis_version`을 idempotency key로 사용하며 note 상태를 `pending`, `ready`, `empty`, `failed`로 관리한다. 동일 completion event와 재실행은 같은 key에 대한 upsert로 처리해 중복 note를 만들지 않는다. 분석 실패는 completed turn·traffic 저장에 전파하지 않는다. 프로세스 재시작 시 pending 또는 재시도 가능한 failed job을 복구할 수 있어야 한다.
 
 ### AC-032 — Note persistence와 turn 조회 projection
 
 - **Category:** Structure & organization
-- **Status:** identified
+- **Status:** reviewing
 - **Statement:** note를 traffic/turn 원본과 어떤 별도 record·schema로 저장하고, turn 조회 API가 note 상태·내용·버전·정렬 정보를 어떤 projection으로 반환할 것인가?
 - **Why it matters:** note를 원본 traffic에 덮어쓰면 기존 로그 회귀와 재분석이 어려워지고, 별도 저장하더라도 조회 시점의 turn/traffic 일관성·없는 note·복수 note 처리 규칙이 필요하다.
 - **Depends on:** AC-012, AC-020, AC-031
 - **Related ADRs:**
-  - 없음
-- **Resolution path:** adr 또는 direct-input 검토 필요
-- **Resolution:**
+  - `adr/turn-note-persistence-projection.md` — approved
+- **Resolution path:** adr
+- **Resolution:** 기존 turn/traffic 원본과 분리된 turn당 하나의 `turn_notes` projection row를 사용한다. row는 `turn_id`, `analysis_version`, `status`, `notes_json`, error/retry metadata를 저장한다. `TurnNote[]`는 JSON 배열로 원자적으로 upsert하며, turn query service가 기존 turn aggregate와 note projection을 조합해 반환한다. note별 검색·편집·pagination은 제공하지 않는다.
 
 ### AC-033 — Note 상태·실패 관찰성과 기존 turn 완료 독립성
 
 - **Category:** Quality bar (architectural)
-- **Status:** identified
+- **Status:** designed
 - **Statement:** pending·empty·failed/unavailable note 상태와 실패 원인·재시도 가능성을 어떤 저장·API·검증 계약으로 관찰하며, note 분석 실패가 completed turn과 traffic 저장 성공을 어떻게 보존할 것인가?
 - **Why it matters:** note 부재가 tool 미사용인지 분석 지연인지 실패인지 구분되지 않으면 운영자가 turn 동작을 오해한다. 분석 실패를 turn 실패로 전파하면 기존 completion lifecycle의 신뢰성이 훼손된다.
 - **Depends on:** AC-031, AC-032
 - **Related ADRs:**
-  - 없음
-- **Resolution path:** direct-input 또는 adr 검토 필요
-- **Resolution:**
+  - `adr/turn-note-failure-observability.md` — approved
+- **Resolution path:** adr
+- **Resolution:** note projection의 canonical status는 `pending`, `ready`, `empty`, `failed` 네 가지로 한다. `failed`는 `retryable`, `error_code`, secret을 포함하지 않는 bounded `error_message`, `attempt_count`, `updated_at`을 제공하며 projection/원본 조회 불능은 `error_code: note_unavailable`로 표현한다. note status와 error는 completed turn·traffic lifecycle과 독립적으로 저장·조회한다. `empty`는 분석 성공 후 tool interaction이 없는 정상 결과다.
 
 ### AC-034 — Turn view note card 표시·상태 계약
 
 - **Category:** Deliverable form
-- **Status:** identified
+- **Status:** designed
 - **Statement:** traffic summary table 다음 note card에 note의 제목·tool 사용 항목·API별 metadata·상태를 어떤 UI 모델과 loading/empty/error/partial 표시로 제공할 것인가?
 - **Why it matters:** note card 위치와 상태 표현이 고정되지 않으면 사용자는 분석 중·도구 미사용·분석 실패를 구분할 수 없고, 기존 turn summary와 조회 실패 처리의 일관성도 깨진다.
 - **Depends on:** AC-032, AC-033
 - **Related ADRs:**
   - 없음
-- **Resolution path:** direct-input 또는 adr 검토 필요
-- **Resolution:**
+- **Resolution path:** direct-input
+- **Resolution:** Turn view의 traffic usage summary table 바로 다음에 note card를 표시한다. `pending`은 loading indicator와 함께 대기 상태를 표시하고, `ready`는 `TurnNote[]`의 title과 Markdown content를 read-only로 렌더링한다. `empty`는 도구 사용 이력이 없음을 명시적으로 표시하며, `failed`는 안전한 오류 설명과 retryable 여부를 표시한다. note card의 오류는 turn summary와 traffic table 표시를 막지 않는다. 이번 범위의 UI는 수동 retry를 실행하지 않으며 worker retry 결과를 재조회한다. Markdown은 기존 안전한 renderer 정책을 따르고 HTML/script 실행을 허용하지 않는다.
 
 ## Notes
 
@@ -485,3 +485,15 @@ LLM Proxy Server를 위한 구조적 설계 쟁점의 living registry이다.
 - 2026-03-10: 사용자 변경 요청에 따라 request/response 전체 viewer 감지를 폐기하고 JSON tree 내부 문자열 leaf만 popup viewer 대상으로 삼는 UI 표현 계약으로 Resolution을 수정했다.
 - 2026-03-10: 승인된 API별 turn note PRD delta에 따라 AC-029~AC-034를 blocking concern으로 식별했다. note contract, adapter 경계, 완료 후 lifecycle/idempotency, 별도 persistence projection, 실패 관찰성, Turn view 상태 표시가 이번 review의 결정 대상이다.
 - 2026-03-10: AC 목록 승인 후 AC-029를 reviewing으로 전환하고 `adr/turn-note-semantic-contract.md`를 proposed 상태로 연결했다. Option A(공통 Tool Interaction contract)를 권장한다.
+- 2026-03-10: 사용자 go-ahead("ok")로 AC-029를 designed 처리했다. 저장 contract는 `TurnNote[]`(title + Markdown content), adapter 내부 semantic 분석은 공통 단계, 분석 상태는 별도 envelope로 확정했다.
+- 2026-03-10: AC-030을 reviewing으로 전환하고 `adr/turn-note-adapter-boundary.md`를 proposed 상태로 연결했다. 기존 lifecycle과 note 분석을 분리하는 Option B를 권장한다.
+- 2026-03-10: 사용자 go-ahead("좋아")로 AC-030을 designed 처리했다. `TurnAnalysisService`, API별 `TurnAnalysisAdapter`, `TurnReader`, `TurnNoteWriter` 경계를 확정했다.
+- 2026-03-10: AC-031을 reviewing으로 전환하고 `adr/turn-note-analysis-lifecycle.md`를 proposed 상태로 연결했다. completion 후 비동기 분석 job인 Option B를 권장한다.
+- 2026-03-10: 사용자 go-ahead("ok")로 AC-031을 designed 처리했다. completion 후 비동기 job, `turn_id + analysis_version` idempotency, pending/ready/empty/failed 상태를 확정했다.
+- 2026-03-10: 사용자 go-ahead("ok")로 AC-032를 designed 처리했다. turn당 별도 `turn_notes` projection row와 JSON `TurnNote[]` 원자적 upsert를 확정했다.
+- 2026-03-10: AC-033을 reviewing으로 전환하고 `adr/turn-note-failure-observability.md`를 proposed 상태로 연결했다.
+- 2026-03-10: AC-032를 reviewing으로 전환하고 `adr/turn-note-persistence-projection.md`를 proposed 상태로 연결했다. turn당 별도 `turn_notes` projection row인 Option B를 권장한다.
+- 2026-03-10: 사용자 go-ahead("ok")로 AC-032를 designed 처리했다. turn당 별도 `turn_notes` projection row와 JSON `TurnNote[]` 원자적 upsert를 확정했다.
+- 2026-03-10: 사용자 go-ahead("ok")로 AC-033을 designed 처리했다. pending/ready/empty/failed 네 상태, note_unavailable error code, completed turn과의 독립성을 확정했다.
+- 2026-03-10: AC-034를 reviewing으로 전환했다. 기존 turn summary의 traffic usage table 다음에 note card를 배치하고 상태별 표시 계약을 direct-input으로 확정할 예정이다.
+- 2026-03-10: 사용자 go-ahead("ok")로 AC-034를 designed 처리했다. usage table 다음 note card의 위치와 pending/ready/empty/failed 표시, 안전한 Markdown read-only rendering을 확정했다.
