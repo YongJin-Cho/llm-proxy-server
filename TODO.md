@@ -8,7 +8,7 @@
 
 | Done | Open | Blocked | Skipped |
 |------|------|---------|---------|
-| 8 | 1 | 0 | 0 |
+| 9 | 1 | 0 | 0 |
 
 **Sprint goal:** 승인된 turn note Spec의 전체 구현을 완료한다. 완료 turn을 분석·저장·조회하고 Turn view에 note card를 표시하며 세 API의 lifecycle·persistence·query·UI·통합 검증을 완료한다.
 **Current focus:** T-009
@@ -64,10 +64,16 @@
   - Depends: T-007
   - Notes: PB-035, PB-036. 세 API table/error fixture, no-note card, multi-card rendering, full-width layout과 기존 proxy/turn/viewer 회귀를 `npm run build`·`npm run verify`로 검증했다. 오류 interaction별 call/result JSON 보존과 viewer 확대 동작도 검증했다.
 
+- [x] **T-010** — 도구 사용 오류 card를 Traffic request/response 형식으로 표시
+  - Phase: implementation
+  - Artifact: `src/domain/turn-notes.ts`, `src/ui/components/NoteCard.tsx`, `scripts/verify-turn-notes.mjs`
+  - Depends: T-008
+  - Notes: 오류 note 제목을 `도구 사용 오류: {순번}. {함수명}`으로 표시하고 원본 tool_use/tool_result를 Traffic과 동일한 `request`/`response` viewer로 렌더링한다. `npm run build` 및 `npm run verify` 통과.
+
 - [ ] **T-009** — Sprint Boundary → sprint-17
   - Phase: cross-cutting
   - Artifact: `scrum/TODO-16.md`
-  - Depends: T-001, T-002, T-003, T-004, T-005, T-006, T-007, T-008
+  - Depends: T-001, T-002, T-003, T-004, T-005, T-006, T-007, T-008, T-010
   - Notes: Sprint completion 승인 후 board archive, PB-031~PB-036 DoD 갱신, 다음 sprint 계획을 처리한다.
 
 ## Completed sprints

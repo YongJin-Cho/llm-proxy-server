@@ -19,9 +19,9 @@
 | 8 | R-008 | pass | Projection uses canonical `pending`, `ready`, `empty`, `failed`; empty fixture returns empty status. |
 | 9 | R-009 | pass | Failed results are bounded and redacted at projection write; `note_unavailable` is represented; startup recovers pending and retryable failed rows. |
 | 10 | R-010 | pass | `listTurns` joins note projection into existing turn aggregate without adding request/response bodies to tree traffic summaries. |
-| 11 | R-011 | pass | `NoteCard` is rendered after the traffic summary table; each note is an independent card, common title/status are omitted, an empty note array renders no card, and error notes render call/result through the shared JSON viewer. |
+| 11 | R-011 | pass | `NoteCard` is rendered after the traffic summary table; each note is an independent card, common title/status are omitted, an empty note array renders no card, and error notes render the original tool_use/tool_result as request/response through the shared JSON viewer. |
 | 12 | R-012 | pass | Note content uses `react-markdown` with `rehype-sanitize`; no manual retry control is rendered. |
-| 13 | R-013 | pass | `scripts/verify-turn-notes.mjs` covers all three API fixtures, empty state, projection persistence, idempotency, independent note cards, omitted status/header, error call/result payload preservation, and full-width layout; existing `verify`, turn, and viewer suites pass. |
+| 13 | R-013 | pass | `scripts/verify-turn-notes.mjs` covers all three API fixtures, empty state, projection persistence, idempotency, independent note cards, omitted status/header, error request/response payload preservation, and full-width layout; existing `verify`, turn, and viewer suites pass. |
 | 14 | C-001 | pass | Analysis adapters receive turn data through service/persistence contract and do not import SQLite. |
 | 15 | C-002 | pass | Existing proxy adapter, grouping, SSE aggregate, and traffic lifecycle paths remain in place; existing regression suites pass. |
 | 16 | C-003 | pass | API-specific extraction is contained in the analysis adapter layer; no provider call or API canonical payload conversion is introduced. |
@@ -46,7 +46,7 @@
 
 - The note projection retains lifecycle status for API/persistence purposes, but the Turn view renders only actual note cards. It does not render `Turn notes`, `ready`, `pending`, `empty`, or `failed` labels.
 - `main` now uses the full available viewport width, so Turn and Traffic view cards expand with the window while preserving responsive sidebar/content layout.
-- Failed interactions now produce one note per error, with explicit `call` and `result` JSON payloads. `ContentViewer` supplies the same compact JSON tree and long-string expansion used by Traffic view.
+- Failed interactions now produce one note per error, titled `도구 사용 오류: {순번}. {함수명}`, with the original `tool_use` and `tool_result` JSON payloads shown as `request` and `response`. `ContentViewer` supplies the same compact JSON tree and long-string expansion used by Traffic view.
 
 ## Recommended Next Steps
 

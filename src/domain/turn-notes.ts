@@ -102,8 +102,8 @@ export function renderToolNotes(interactions: ToolInteraction[]): TurnNote[] {
   for (const [index, item] of interactions.entries()) {
     if (!item.failed) continue;
     notes.push({
-      title: `도구 사용 오류 ${index + 1}: ${item.functionName}`,
-      content: `도구 호출 결과에서 오류가 반환되었습니다.\n\n오류: ${displayValue(item.error)}`,
+      title: `도구 사용 오류: ${index + 1}. ${item.functionName}`,
+      content: '',
       call: item.call,
       result: item.result,
     });

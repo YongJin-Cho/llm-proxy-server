@@ -10,8 +10,8 @@ function NoteBody({ note }: { note: TurnNote }) {
   return <>
     <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>{note.content}</ReactMarkdown>
     {note.call !== undefined && <div className="note-tool-payloads">
-      <ContentViewer label="call" content={note.call} hint="json" />
-      <ContentViewer label="result" content={note.result} hint="json" />
+      <ContentViewer label="request" content={note.call} hint="json" />
+      <ContentViewer label="response" content={note.result} hint="json" />
     </div>}
   </>;
 }
