@@ -63,7 +63,7 @@ TrafficPage
 
 - R-010: Tree와 오른쪽 view는 loading, empty, error 상태를 사용자에게 식별 가능하게 표시해야 한다. Tree loading 중에는 tree loading 상태, 결과가 없으면 empty 안내, tree query 실패 시 error를 표시한다. selection이 없을 때는 turn 선택 안내를 표시하고, detail selection이 있으나 아직 응답이 없을 때는 traffic loading/empty 상태를 표시한다. ← R-007 of `spec/llm-proxy-turn-traffic.md`
 
-- R-011: TurnTree는 turn title 편집, flag 설정·해제, turn 삭제 action을 제공해야 한다. 삭제는 turn 단위만 가능하고 confirmation 이후 성공하면 현재 selection을 정리하며 현재 filter/page를 재조회해야 한다. legacy synthetic node에는 turn cascade 삭제 action을 제공하지 않아야 한다. ← ASR-028; R-001~R-004 of `spec/llm-proxy-turn-management.md`
+- R-011: TurnTree는 turn title 편집, flag 설정·해제, turn 삭제 action을 제공해야 한다. 삭제는 turn 단위만 가능하고 confirmation 이후 성공하면 현재 selection을 정리하며 현재 filter/page를 재조회해야 한다. Legacy synthetic node도 표시된 turn 단위 항목이므로 turn cascade 삭제 action을 제공해야 한다. ← ASR-028; R-001~R-004, R-014 of `spec/llm-proxy-turn-management.md`
 
 - R-012: Traffic detail의 `request`와 `response`는 전체 문자열을 하나의 표시 형식으로 감지하는 대상이 아니라 JSON object/array container로 처리해야 한다. JSON parse에 성공한 request/response는 read-only JSON tree로 표시하고, object/array/number/boolean/null node는 tree 탐색 대상으로 유지하며 문자열 leaf만 별도의 viewer 대상이 된다. JSON parse에 실패한 content는 안전한 plain text fallback으로 표시한다. ← ASR-031; R-007~R-012 of `spec/llm-proxy-turn-management.md`
 

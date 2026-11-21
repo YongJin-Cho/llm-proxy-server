@@ -25,7 +25,7 @@
 - R-011: Popup viewer의 Markdown raw HTML은 기본적으로 렌더링하지 않거나 sanitizer allowlist를 통과한 경우에만 처리해야 한다. 모든 viewer는 read-only여야 하며 JavaScript 실행, HTML 실행, iframe, `eval`, `new Function`, dynamic import를 허용하지 않아야 한다. Monaco language mode는 선택된 문자열의 syntax 표시만 변경해야 한다. ← ASR-031; AC-028; `adr/long-string-safe-rendering.md`
 - R-012: Viewer component는 raw request/response content를 임의 renderer에 직접 전달하지 않고 JSON tree adapter와 문자열 popup viewer adapter를 통해 표시해야 한다. Adapter는 `detectedMode`, `selectedMode`, `fallbackReason`을 구분하고 사용자 선택을 자동 감지 결과보다 우선해야 한다. Popup close는 기존 JSON tree 위치로 복귀시키며 원본 request/response와 문자열 값을 수정하지 않아야 한다. ← ASR-031; AC-028; `adr/long-string-safe-rendering.md`
 - R-013: `GET /api/v1/turns`의 각 child traffic summary는 본문 없이 다음 normalized display fields를 제공해야 한다: stable `provider` ID, client `model`, `input_tokens`, `cached_input_tokens`, `output_tokens`, `total_tokens`, `cost_usd`, `latency_ms`, status, sequence/title metadata. 값이 저장되지 않았으면 `null`을 반환해야 하며 UI는 값을 추정하거나 다른 traffic의 값으로 보완하지 않아야 한다. 동일한 provider/model/usage/cost/latency 필드는 기존 traffic detail API에서도 제공해야 한다. ← Direct Input; ASR-030; `adr/traffic-log-api-metadata.md`
-- R-014: Sidebar tree는 파일 탐색기처럼 turn과 child traffic을 박스형 action 영역 없이 텍스트 중심으로 표시해야 한다. Turn row의 순서는 펼치기/접기 아이콘 버튼, flag 표시·전환, turn title, `...` 메뉴 버튼이어야 하며 `...` 메뉴는 turn 이름 변경과 turn 삭제만 제공해야 한다. Traffic row에는 제목 변경·삭제 등 관리 메뉴를 제공하지 않아야 한다.
+- R-014: Sidebar tree는 파일 탐색기처럼 turn과 child traffic을 박스형 action 영역 없이 텍스트 중심으로 표시해야 한다. Turn row의 순서는 펼치기/접기 아이콘 버튼, flag 표시·전환, turn title, `...` 메뉴 버튼이어야 하며 `...` 메뉴는 turn 이름 변경과 turn 삭제만 제공해야 한다. Legacy synthetic node도 표시된 turn 단위 항목이므로 동일한 turn 삭제 action을 제공해야 하며, 삭제 시 연결된 child traffic을 cascade 삭제해야 한다. Traffic row에는 제목 변경·삭제 등 관리 메뉴를 제공하지 않아야 한다.
 - R-015: Sidebar page가 최초로 유효한 turn 목록을 표시할 때 첫 번째 turn을 기본 선택하고 첫 번째 turn만 펼치며 나머지 turn은 접어야 한다. URL에 이미 선택 상태가 있으면 이를 보존하고, 이후 사용자의 펼치기/접기 상태를 임의로 초기화하지 않아야 한다.
 - R-016: Sidebar turn row는 펼치기 아이콘, flag 아이콘, 왼쪽 정렬 title 사이의 간격을 최소화하고 `...` 메뉴를 오른쪽 끝에 정렬해야 한다. Filter label은 `All`과 `Stored`를 사용하며 현재 filter는 선택 상태와 접근성 상태(`aria-selected`)로 명확히 구별해야 한다. Pagination의 이전/다음 조작은 배경과 테두리 없는 왼쪽/오른쪽 삼각형 아이콘 버튼으로 제공하고 `Page N`은 보조 텍스트보다 작은 글꼴로 표시해야 한다. 휴지통도 배경 없는 아이콘 버튼으로 표시해야 하며, 펼치기/flag 버튼은 서로 붙여 배치하고 flag 아이콘은 작은 글꼴로 표시해야 한다. Turn 메뉴의 관리 항목은 `rename`과 `delete` 영문 label을 사용해야 한다.
 - R-017: Pagination 옆 휴지통 action은 현재 filter·page·limit로 서버가 계산한 현재 page의 표시 항목 중 flag=false인 turn/legacy 항목을 모두 삭제해야 한다. 삭제는 각 turn의 child traffic을 cascade하고, 단일 bulk operation으로 처리해야 하며, flag=true 항목은 보존해야 한다. 성공 후 현재 query를 재조회하고 빈 page는 마지막 유효 page로 보정해야 한다. 삭제 전에는 사용자 확인을 요구해야 한다. ← Direct Input
@@ -61,7 +61,7 @@
 
 - 실제 package 버전과 lockfile 조합은 구현 전 설치 검증에서 확정한다. React 19 호환성·bundle·worker·license·security 검증에 실패하면 구현 전에 Spec을 갱신하고 재승인한다.
 - 없음: provider는 stable routing ID로 표시하고, traffic summary 값은 `/api/v1/turns` child projection과 기존 detail API가 제공한다.
-- Direct Input (2026-03-10): 현재 page에 표시되는 legacy 노드도 사용자에게 표시된 unflagged 항목이므로 bulk 삭제 대상에 포함한다.
+- Direct Input (2026-03-10): 현재 page에 표시되는 legacy 노드도 사용자에게 표시된 turn 단위 항목이므로 개별 삭제와 unflagged bulk 삭제 대상에 포함한다.
 - Direct Input (2026-03-10): traffic 번호는 데이터 식별자가 아니라 parent turn 내부의 sidebar 표시 순서이며, 사용자 지정 title과 전역 저장 sequence에는 영향을 주지 않는다.
 - Direct Input (2026-03-10): Turn page의 request/response는 첫 traffic request와 마지막 traffic response에서 API별 user/assistant 메시지 규칙으로 추출하고, usage는 turn 전체 traffic 합계를 사용한다.
 - Direct Input (2026-03-10): Turn/Traffic summary의 제목·field 순서·숫자 표현과 Turn response viewer는 UI presentation delta로 고정한다.
