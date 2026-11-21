@@ -15,6 +15,44 @@ function json(res: ServerResponse, status: number, body: unknown) {
   res.end(JSON.stringify(body));
 }
 
+/** Flatten Error / AggregateError / Node system-error fields for traffic log and client diagnosis. */
+function describeError(error: unknown, depth = 0): string {
+  if (error == null) return 'proxy request failed';
+  if (typeof error !== 'object') return String(error);
+  if (depth > 6) return '...';
+
+  const err = error as Error & {
+    code?: string | number;
+    errno?: number;
+    syscall?: string;
+    address?: string;
+    port?: number;
+    cause?: unknown;
+    errors?: unknown[];
+  };
+
+  const name = err.name && err.name !== 'Error' ? err.name : undefined;
+  const text = typeof err.message === 'string' && err.message.length > 0 ? err.message : undefined;
+  const head = name && text ? `${name}: ${text}` : text ?? name ?? String(error);
+
+  const meta: string[] = [];
+  if (err.code != null && err.code !== '') meta.push(`code=${err.code}`);
+  if (err.errno != null) meta.push(`errno=${err.errno}`);
+  if (err.syscall) meta.push(`syscall=${err.syscall}`);
+  if (err.address) meta.push(`address=${err.address}`);
+  if (err.port != null) meta.push(`port=${err.port}`);
+  const detail = meta.length > 0 ? `${head} (${meta.join(', ')})` : head;
+
+  const nested: string[] = [];
+  if ('cause' in err && err.cause != null) nested.push(`cause: ${describeError(err.cause, depth + 1)}`);
+  if (Array.isArray(err.errors)) {
+    for (const [index, inner] of err.errors.entries()) {
+      nested.push(`errors[${index}]: ${describeError(inner, depth + 1)}`);
+    }
+  }
+  return nested.length > 0 ? `${detail}; ${nested.join('; ')}` : detail;
+}
+
 async function readBody(req: IncomingMessage, max: number) {
   const chunks: Buffer[] = [];
   let size = 0;
@@ -106,10 +144,13 @@ export class ProxyService {
         res.writeHead(upstream.status, { 'content-type': upstream.headers.get('content-type') ?? 'application/json' });
       res.end(response);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'proxy request failed';
-      const status = message.includes('body exceeds') ? 413 : message.startsWith('model ') ? 400 : message.startsWith('invalid provider') ? 500 : 502;
+      const detail = describeError(error);
+      const status = detail.includes('body exceeds') ? 413 : detail.startsWith('model ') ? 400 : detail.startsWith('invalid provider') ? 500 : 502;
+      const message = bounded(detail, this.config.maxBodyBytes);
+      const latencyMs = Date.now() - started;
+      console.error(`[proxy] request failed id=${id} status=${status} latencyMs=${latencyMs} ${message}`);
       if (inserted) {
-        this.deps.writer.finish({ id, finishedAt: new Date().toISOString(), status: 'failed', httpStatus: status, latencyMs: Date.now() - started, responseJson: null, error: bounded(message, this.config.maxBodyBytes), inputTokens: null, cachedInputTokens: null, outputTokens: null, totalTokens: null, costUsd: null });
+        this.deps.writer.finish({ id, finishedAt: new Date().toISOString(), status: 'failed', httpStatus: status, latencyMs, responseJson: null, error: message, inputTokens: null, cachedInputTokens: null, outputTokens: null, totalTokens: null, costUsd: null });
       }
       if (turnId) {
         this.deps.turns.finishTraffic({ turnId, semantic: adapter.turnSemantic, response: {}, finishedAt: new Date().toISOString(), succeeded: false });

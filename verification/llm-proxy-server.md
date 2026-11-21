@@ -59,6 +59,11 @@ None found for the Sprint 05 implementation slice.
 
 None identified. The temporary verification configuration and restoration strategy is test harness behavior and does not change the runtime contract.
 
+## Upstream fetch error diagnosis (2026-11-21)
+
+- `src/application/proxy-service.ts` now flattens `Error.cause` / `AggregateError.errors` plus Node fields (`code`, `errno`, `syscall`, `address`, `port`) into the bounded proxy error string returned to clients, stored on traffic rows, and printed as `[proxy] request failed ...` on stderr.
+- `npm run build` / `npm run verify`: pass after the change.
+
 ## Evidence
 
 - `npm run build`: Vite production build and TypeScript compilation passed.
