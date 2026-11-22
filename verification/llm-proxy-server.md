@@ -21,7 +21,7 @@
 |---|---|---|
 | R-001 | pass | `src/server.ts` owns Fastify bootstrap/lifecycle; `config.json` supplies host/port; APIs and static UI run in one process. |
 | R-017–R-018 | pass | `src/api/routes.ts` registers three public routes; route suffix maps to provider baseUrl; auth mode verification covers Bearer and Anthropic native headers. |
-| R-019 | pass | `src/application/proxy-service.ts` applies API-specific completion detectors; verify covers Responses/[DONE], Chat Completions/[DONE], and Messages/message_stop with transparent SSE body. |
+| R-019 | pass | `src/application/proxy-service.ts` applies API-specific completion detectors; verify covers Responses/[DONE], Chat Completions/[DONE], and Messages/message_stop with transparent SSE body. Client disconnect after `isComplete` is recorded as `completed`, not `failed`. |
 | R-020–R-022 | pass | SQLite migration adds `api_kind` and nullable normalized usage/cost columns; verify covers legacy-compatible defaults, API kind, usage normalization, provider USD cost, and absent cost as NULL. |
 | R-002–R-005 | pass | `src/application/proxy-service.ts` forwards Responses requests through resolved provider/model routes and preserves provider/network error and SSE failure handling. |
 | R-006–R-008 | pass | `src/domain/traffic-log.ts` defines shared model and writer/reader ports; proxy depends on writer, query service on reader, and `src/persistence/sqlite-traffic-log.ts` owns schema and adapter. |
@@ -62,6 +62,12 @@ None identified. The temporary verification configuration and restoration strate
 ## Upstream fetch error diagnosis (2026-11-21)
 
 - `src/application/proxy-service.ts` now flattens `Error.cause` / `AggregateError.errors` plus Node fields (`code`, `errno`, `syscall`, `address`, `port`) into the bounded proxy error string returned to clients, stored on traffic rows, and printed as `[proxy] request failed ...` on stderr.
+- `npm run build` / `npm run verify`: pass after the change.
+
+## Stream completion vs client disconnect (2026-11-22)
+
+- `src/application/proxy-service.ts` stream finish now marks traffic `completed` when `upstream.ok && adapter.isComplete(response)`, even if the client closed the connection after receiving the completion sentinel. Incomplete streams that disconnect still store `failed` with `client disconnected before stream completion`.
+- Aligns with R-004/R-005/R-019: only pre-sentinel disconnect/upstream failure is `failed`; post-completion client close is normal completion.
 - `npm run build` / `npm run verify`: pass after the change.
 
 ## Evidence

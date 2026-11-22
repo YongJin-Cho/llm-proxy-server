@@ -187,7 +187,7 @@ export class ProxyService {
       reader.releaseLock();
     }
     const response = Buffer.concat(chunks).toString('utf8');
-    const completed = upstream.ok && adapter.isComplete(response) && !disconnected;
+    const completed = upstream.ok && adapter.isComplete(response);
     this.deps.writer.finish({ id, finishedAt: new Date().toISOString(), status: completed ? 'completed' : 'failed', httpStatus: upstream.status, latencyMs: Date.now() - started, responseJson: adapter.aggregateResponse(response), error: completed ? null : bounded(disconnected ? 'client disconnected before stream completion' : response || 'stream ended before completion', this.config.maxBodyBytes), ...adapter.usageMetadata(response) });
     if (turnId) {
       const finishedTurn = this.deps.turns.finishTraffic({ turnId, semantic: adapter.turnSemantic, response: safeJson(adapter.aggregateResponse(response)), finishedAt: new Date().toISOString(), succeeded: completed });
